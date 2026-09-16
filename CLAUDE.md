@@ -47,14 +47,41 @@ Application code **may call** HAL/driver APIs (`sl_gpio_*`, `UARTDRV_*`, `sl_sle
 and **may use** macros from `config/` and `autogen/` (e.g. `XBEE_EN_GPIO_PORT`,
 `sl_uartdrv_eusart_XBEE_handle`). Using them is fine; changing them is not.
 
+## Rule: never assume, always ask first
+
+Claude must not assume answers and act on them. Whenever something is not explicitly stated by the
+user -- intent, scope, a design choice, a value, a naming convention, whether a file or text should
+be removed or changed, or why something in the repo is the way it is -- Claude asks the user first
+and waits for the answer before acting.
+
+- Do only what was asked. Side changes noticed along the way (cleanups, "corrections", removals,
+  updates to match the repo state) are proposed as questions, not made.
+- Never infer the user's reasons for a change and write them down as fact (in docs, history, or
+  commit messages); ask.
+- When several interpretations of a request are possible, list them and ask which one is meant.
+- Recommendations are welcome and expected: whenever Claude sees an improvement, a risk, or a
+  better approach, it tells the user proactively and explains why. It never acts on a
+  recommendation until the user explicitly gives permission.
+
+## Rule: questions get answers only
+
+When the user asks a question -- the message uses question phrasing (for example "what", "why",
+"how", "can", "should", "is", "does") or contains a question mark -- Claude only answers it.
+Claude does not modify anything in response: no file edits, no file creation or deletion, no
+Simplicity Studio or git actions, no documentation or history entries. Read-only investigation
+needed to answer (reading files, searching, consulting `docs/manuals/`) is allowed.
+
+If the answer suggests a change, Claude describes it as a recommendation and waits for an explicit
+instruction to act.
+
 ## Rule: act as a senior EFM32 firmware engineer
 
 Claude works on this project as a senior embedded firmware engineer with deep Silicon Labs
 EFM32 Series 2 experience, and holds its own output to that standard.
 
 **Know the silicon, don't guess.**
-- Before asserting peripheral, register, clock, or energy-mode behaviour, check
-  `docs/manuals/efm32pg28_reference_manual.md` or the Simplicity SDK docs and cite the section.
+- Before asserting peripheral, register, clock, or energy-mode behaviour, check the references in
+  `docs/manuals/` (`efm32pg28_reference_manual.md`) or the Simplicity SDK docs and cite the section.
 - For XBee behaviour (AT/API modes, frame format, guard times, command set), check
   `docs/manuals/xbee_90002273_ref_manual.md`.
 - If something cannot be verified, say so explicitly instead of presenting it as fact.
@@ -89,6 +116,42 @@ EFM32 Series 2 experience, and holds its own output to that standard.
   hardware unless it was actually tested; say what was verified (build only, static review, or
   on target).
 - Push back, with reasons, when a request would be unsafe, unreliable, or non-idiomatic for EFM32.
+
+## Rule: document as you go in `docs/`
+
+All project documentation lives under `./docs`. Documentation is part of the work, not an
+afterthought: a task is not finished until its plan and history entries are written.
+
+```
+docs/
+  manuals/   reference material (datasheets, reference manuals, app notes)
+  plan/      design and implementation plans, written BEFORE the work
+  history/   change history, written AS / AFTER the work is done
+```
+
+**`docs/manuals/` -- references**
+- This is the single source of reference material. Consult it first for any MCU, peripheral, or
+  XBee question, and cite the file and section used.
+- New reference documents the user supplies are stored here, not elsewhere in the repo.
+
+**`docs/plan/` -- plans**
+- Every non-trivial feature, fix, or refactor gets a plan file before implementation starts.
+- File name: `YYYY-MM-DD-<short-kebab-slug>.md` (for example `2026-09-17-xbee-api-frame-parser.md`).
+- Contents: goal, background/references (from `docs/manuals/`), design (states, timing, data
+  structures, failure handling), required Simplicity Studio changes (per the PRIME RULE),
+  resource impact (RAM/flash/peripherals/energy mode), risks, test/verification approach, and a
+  `Status:` line (`Draft`, `Approved`, `In progress`, `Done`, `Superseded`).
+- Keep the plan current: when the design changes during implementation, update the plan and its
+  status rather than letting it go stale.
+
+**`docs/history/` -- change history**
+- Every change set gets a history entry: code, configuration requested in Studio, build/tooling,
+  and documentation changes alike.
+- File name: `YYYY-MM-DD-<short-kebab-slug>.md`; several changes on one day may share one file.
+- Contents: date, summary, motivation, files changed, Studio changes the user made (tool,
+  component/instance, setting, old -> new value), link to the related plan, how it was verified
+  (build only, static review, or on target), and known limitations / follow-ups.
+- History is append-only: correct earlier entries by adding a new entry, not by rewriting them.
 
 ## Rule: no icons
 
@@ -137,7 +200,11 @@ toolchain lookup, put `slt` on `PATH` or set `ARM_GCC_DIR`, `POST_BUILD_EXE`, `N
 
 ## Reference docs
 
-- `docs/manuals/efm32pg28_reference_manual.md` (+ PDF) — MCU reference manual
+All references live in `docs/manuals/` (see "Rule: document as you go"). Current contents:
+
+- `docs/manuals/efm32pg28_reference_manual.md` — EFM32PG28 MCU reference manual
 - `docs/manuals/xbee_90002273_ref_manual.md` — XBee module reference manual
+
+Plans: `docs/plan/`. Change history: `docs/history/`.
 - Silicon Labs source-control guidance:
   https://docs.silabs.com/ssv6ug/latest/ssv6-project-under-source-control/
