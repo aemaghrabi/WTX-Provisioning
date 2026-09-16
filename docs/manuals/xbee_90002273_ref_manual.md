@@ -1,0 +1,10888 @@
+| Digi  | XBee®     | 3 802.15.4  |
+| ----- | --------- | ----------- |
+| Radio | Frequency | (RF) Module |
+| User  | Guide     |             |
+
+Revision history—90002273
+Revision Date Description
+L December UpdatedESDrequirementstobesplitpermodel(RR& XBee3vs
+2023 868& 900)
+AddedGeneralPurposeFlashMemory
+AddedGPMReturnCodesandupdatedrelevantcodes(0x05,0x06,
+0x80,0x81,0x82,0x83,0x84,0x85,0x86)
+AddedInstallApplicationandVerifyApplicationinstructions
+UpdatedFrameTypes0x90,0x91,and0x92tomatch0x95
+AddedD%command
+UpdatedCB,D0,ETcommands
+M May2025 UpdatedGettingStartedwithBLE sectionwithinformationfrom
+XBeeRR manual.
+FixedCalculateChecksumcalculations.
+N September FixedissuesinTransmitRequest-0x10:added16-bitdestinationto
+2025 64-bitunicastandbroadcasttables.
+UpdatedBD baudratecommandtoshowbaudratedifference
+betweenFW versions0x2014andearliervs.0x2015andlater.
+P June2026 UpdatedtobeinlinewithBluetooth®SIG branding
+guidelines: changedreferencesfrom"BLE"to"Bluetooth®Low
+Energy(LE)," verifiedallinstancesof"Bluetooth"includedthe
+registeredtrademarkandareuppercase,removedanyinstancesof
+"-enabled."
+UpdatedPR(Pull-up/DownResistorEnable)toreflectcorrect
+informationfordisabledI/O lines.
+R July2026 RemovedreferencetoDigiMeshfromCommandmode.
+Trademarks and copyright
+Digi,DigiInternational,andtheDigilogoaretrademarksorregisteredtrademarksintheUnited
+Statesandothercountriesworldwide.Allothertrademarksmentionedinthisdocumentarethe
+propertyoftheirrespectiveowners.
+©2018-2026DigiInternationalInc.Allrightsreserved.
+Disclaimers
+Informationinthisdocumentissubjecttochangewithoutnoticeanddoesnotrepresenta
+commitmentonthepartofDigiInternational.Digiprovidesthisdocument“asis,”withoutwarranty
+ofanykind,expressedorimplied,including,butnotlimitedto,theimpliedwarrantiesoffitnessor
+merchantabilityforaparticularpurpose.Digimaymakeimprovementsand/orchangesinthis
+manualorintheproduct(s)and/ortheprogram(s)describedinthismanualatanytime.
+DigiXBee®3802.15.4RFModuleUserGuide 2
+
+Warranty
+Toviewproductwarrantyinformation,gotothefollowingwebsite:
+www.digi.com/howtobuy/terms
+Customer support
+Gathersupportinformation:BeforecontactingDigitechnicalsupportforhelp,gatherthefollowing
+information:
+Productnameandmodel
+Productserialnumber(s)
+Firmwareversion
+Operatingsystem/browser(ifapplicable)
+Logs(fromtimeofreportedissue)
+Trace(ifpossible)
+Descriptionofissue
+Stepstoreproduce
+ContactDigitechnicalsupport:Digioffersmultipletechnicalsupportplansandservicepackages.
+Contactusat+1952.912.3444orvisitusatwww.digi.com/support.
+Feedback
+Toprovidefeedbackonthisdocument,emailyourcommentsto
+techcomm@digi.com
+Includethedocumenttitleandpartnumber(DigiXBee®3802.15.4RFModuleUserGuide,
+90002273R)inthesubjectlineofyouremail.
+DigiXBee®3802.15.4RFModuleUserGuide 3
+
+Contents
+Digi XBee® 3 802.15.4 RF Module User Guide
+Applicablefirmwareandhardware 17
+Changethefirmwareprotocol 17
+Regulatoryinformation 17
+DigiRFresources 17
+Safety instructions
+Safetyinstructions 20
+XBeemodules 20
+Инструкциизабезопасност 20
+XBeeмодули 20
+Sigurnosneupute 21
+XBeemoduli 21
+Bezpečnostníinstrukce 21
+modulyXBee 21
+Sikkerhedsinstruktioner 22
+XBeemoduler 22
+Veiligheidsinstructies 22
+XBee-modules 22
+Ohutusjuhised 23
+XBeemoodulid 23
+Turvallisuusohjeet 24
+XBeemoduulit 24
+Consignesdesécurité 24
+ModulesXBee 24
+Sicherheitshinweise 25
+XBee-Module 25
+Οδηγίεςασφαλείας 25
+ΜονάδεςXBee 25
+Biztonságiutasítások 26
+XBeemodulok 26
+Istruzionidisicurezza 27
+ModuliXBee 27
+Drošībasinstrukcijas 27
+XBeemoduļi 27
+Saugosinstrukcijos 28
+XBeemoduliai 28
+Sikkerhetsinstruksjoner 28
+XBee-moduler 28
+DigiXBee®3802.15.4RFModuleUserGuide 4
+
+Instrukcjebezpieczeństwa 29
+ModułyXBee 29
+Instruçõesdesegurança 30
+MódulosXBee 30
+Instructiunidesiguranta 30
+moduleXBee 30
+Bezpečnostnéinštrukcie 31
+modulyXBee 31
+Varnostnanavodila 31
+XBeemoduli 31
+Instruccionesdeseguridad 32
+MódulosXBee 32
+Säkerhetsinstruktioner 32
+XBee-moduler 32
+Get started
+Verifykitcontents 35
+Assemblethehardware 35
+PlugintheXBee3802.15.4RFModule 36
+UnpluganXBee3802.15.4RFModule 37
+ConfigurethedeviceusingXCTU 37
+Configureremotedevices 37
+Configurethedevicesforarangetest 39
+Performarangetest 40
+XBIB-CMicroMountreference 44
+Incorrect 45
+Correct 46
+XBIB-CSMTreference 49
+XBIB-CUTHreference 51
+XBIB-C-GPSreference 53
+InterfacewiththeXBIB-C-GPSmodule 55
+I2Ccommunication 56
+UARTcommunication 56
+RuntheMicroPythonGPSdemo 56
+Get started with MicroPython
+AboutMicroPython 59
+MicroPythonontheXBee3802.15.4RFModule 59
+UseXCTUtoentertheMicroPythonenvironment 59
+UsetheMicroPythonTerminalinXCTU 60
+MicroPythonexamples 60
+Example:helloworld 60
+Example:enterMicroPythonpastemode 60
+Example: usethetimemodule 61
+Example:ATcommandsusingMicroPython 61
+MicroPythonnetworkingandcommunicationexamples 62
+ExitMicroPythonmode 69
+Otherterminalprograms 69
+TeraTermforWindows 69
+UsepicocominLinux 70
+Micropythonhelp() 71
+DigiXBee®3802.15.4RFModuleUserGuide 5
+
+Secure access
+SecureSessions 74
+Configurethesecuresessionpasswordforadevice 74
+Startasecuresession 74
+Endasecuresession 75
+SecuredremoteATcommands 75
+Secureanodeagainstunauthorizedremoteconfiguration 75
+Remotelyconfigureanodethathasbeensecured 76
+Senddatatoasecuredremotenode 77
+Endasessionfromaserver 78
+SecureSessionAPIframes 78
+Securetransmissionfailures 79
+DataFrames-0x10and0x11frames 79
+RemoteATCommands-0x17frames 79
+File system
+Overviewofthefilesystem 82
+Directorystructure 82
+Paths 82
+Limitations 82
+XCTUinterface 83
+Get started with Bluetooth® Low Energy
+EnableBluetooth®LowEnergy(LE) ontheXBee3802.15.4RFModule 85
+EnableBluetooth®Low Energy(LE) andconfiguretheBluetoothLEpassword 85
+GettheDigiXBee Mobilephoneapplication 86
+ConnectwithBluetooth®LowEnergy (LE)andconfigureyourXBee3802.15.4RFModule 87
+Bluetooth® Low Energy reference
+Bluetooth®LowEnergyadvertisingbehaviorandservices 89
+DeviceInformationService 89
+XBeeAPIBluetooth®LowEnergy Service 89
+APIRequestcharacteristic 89
+APIResponsecharacteristic 90
+Configure the XBee 3 802.15.4 RF Module
+Softwarelibraries 92
+Firmwareover-the-air(FOTA)update 92
+Customdefaults 92
+Setcustomdefaults 92
+Restorefactorydefaults 92
+Limitations 92
+Customconfiguration:Createanewfactorydefault 93
+Setacustomconfiguration 93
+Clearallcustomconfigurationonadevice 93
+XBeebootloader 93
+Sendafirmwareimage 94
+DigiXBee®3802.15.4RFModuleUserGuide 6
+
+XBeeNetworkAssistant 94
+XBeeMultiProgrammer 95
+Modes
+Transparentoperatingmode 97
+Serial-to-RFpacketization 97
+APIoperatingmode 97
+Commandmode 97
+EnterCommandmode 98
+Troubleshooting 98
+SendATcommands 98
+ResponsetoATcommands 99
+Applycommandchanges 99
+Makecommandchangespermanent 99
+ExitCommandmode 100
+Idlemode 100
+Transmitmode 100
+Receivemode 100
+Serial communication
+Serialinterface 102
+Serialreceivebuffer 102
+Serialtransmitbuffer 102
+UARTdataflow 102
+Serialdata 102
+Flowcontrol 103
+Clear-to-send(CTS)flowcontrol 103
+RTSflowcontrol 104
+SPI operation
+SPIcommunications 105
+Fullduplexoperation 106
+Lowpoweroperation 106
+SelecttheSPIport 107
+ForceUARToperation 108
+I/O support
+Legacysupport 110
+Mixednetworkconsiderations 111
+DigitalI/Osupport 111
+AnalogI/Osupport 112
+MonitorI/Olines 113
+I/Osampledataformat 114
+Legacydataformat 114
+Enhanceddataformat 115
+APIframesupport 116
+On-demandsampling 116
+Example:Commandmode 117
+Example:LocalATcommandinAPImode 117
+DigiXBee®3802.15.4RFModuleUserGuide 7
+
+Example:RemoteATcommandinAPImode 118
+PeriodicI/Osampling 119
+Source 119
+Destination 119
+Multiplesamplesperpacket 120
+Example:RemoteATcommandinAPImode 120
+DigitalI/Ochangedetection 121
+I/Olinepassing 122
+Digitallinepassing 122
+Example: Digitallinepassing 122
+Analoglinepassing 123
+Example: Analoglinepassing 123
+Outputsampledata 124
+Outputcontrol 124
+I/Obehaviorduringsleep 124
+DigitalI/Olines 124
+AnalogandPWMI/Olines 124
+Networking
+Networkingterms 126
+MACModeconfiguration 126
+ClearChannelAssessment(CCA) 127
+CCAoperations 127
+Retriesconfiguration 127
+TransmitstatusbasedonMACmodeandXBeeretriesconfigurations 128
+Addressing 129
+SendpacketstoaspecificdeviceinTransparentAPI mode 129
+Addressingmodes 129
+Peer-to-peernetworks 130
+Master/slavenetworks 130
+Enddeviceassociation 130
+Coordinatorassociation 131
+Associationindicators 132
+Modemstatusmessages 132
+Associationindicatorstatuscodes 133
+Directandindirecttransmission 133
+Configureanindirectmessagingcoordinator 134
+Sendindirectmessages 134
+Receiveindirectmessages 134
+Encryption 135
+Maximumpayload 136
+Maximumpayloadrules 136
+Maximumpayloadsummarytables 137
+WorkwithLegacydevices 138
+Network commissioning and diagnostics
+Remoteconfigurationcommands 140
+Sendaremotecommand 140
+Applychangesonremotedevices 140
+Remotecommandresponses 140
+Nodediscovery 141
+Aboutnodediscovery 141
+DigiXBee®3802.15.4RFModuleUserGuide 8
+
+Nodediscoveryincompatibilitymode 141
+Directednodediscovery 141
+Directednodediscoveryincompatibilitymode 142
+DestinationNode 142
+Sleep support
+Sleepmodes 144
+PinSleepmode(SM=1) 144
+CyclicSleepmode(SM=4) 144
+CyclicSleepwithPinWake-upmode(SM=5) 145
+MicroPythonsleepwithoptionalpinwake(SM=6) 145
+Sleepparameters 145
+Sleeppins 145
+Sleepconditions 146
+AT commands
+Networkingcommands 148
+CH(OperatingChannel) 148
+ID(ExtendedPANID) 148
+MM(MACMode) 148
+C8(CompatibilityOptions) 149
+Discoverycommands 150
+NI(NodeIdentifier) 150
+DD(DeviceTypeIdentifier) 151
+NT(NodeDiscoverTimeout) 151
+NO(NetworkDiscoveryOptions) 151
+ND(NetworkDiscover) 152
+DN(DiscoverNode) 153
+AS(ActiveScan) 153
+Coordinator/EndDeviceconfigurationcommands 155
+CE(DeviceRole) 155
+A1(EndDeviceAssociation) 155
+A2(CoordinatorAssociation) 156
+SC(ScanChannels) 157
+SD(ScanDuration) 158
+DA(ForceDisassociation) 158
+AI(AssociationIndication) 159
+802.15.4Addressingcommands 159
+SH(SerialNumberHigh) 159
+SL(SerialNumberLow) 160
+MY(16-bitSourceAddress) 160
+DH(DestinationAddressHigh) 160
+DL(DestinationAddressLow) 160
+RR(XBeeRetries) 161
+TO(TransmitOptions) 161
+NP(MaximumPacketPayloadBytes) 162
+Securitycommands 162
+EE(EncryptionEnable) 162
+KY(AESEncryptionKey) 163
+DM(DisableFeatures) 163
+US(OTAUpgradeServer) 164
+SecureSessioncommands 164
+DigiXBee®3802.15.4RFModuleUserGuide 9
+
+SA(SecureAccess) 164
+*S(SecureSessionSalt) 165
+*V,*W,*X,*Y(SecureSessionVerifier) 165
+RFinterfacingcommands 166
+PL(TXPowerLevel) 166
+PP(OutputPowerindBm) 166
+CA(CCAThreshold) 166
+RN(RandomDelaySlots) 167
+MACdiagnosticscommands 167
+DB(LastPacketRSSI) 167
+EA(ACKFailures) 167
+EC(CCAFailures) 168
+ED(EnergyDetect) 168
+Sleepsettingscommands 168
+SM(SleepMode) 168
+SP(CyclicSleepPeriod) 169
+ST(CyclicSleepWakeTime) 170
+DP(DisassociatedCyclicSleepPeriod) 170
+SN(NumberofSleepPeriods) 170
+SO(SleepOptions) 170
+FP(ForcePoll) 171
+MicroPythoncommands 171
+PS(PythonStartup) 171
+PY(MicroPythonCommand) 172
+FileSystemcommands 172
+FS(FileSystem) 173
+FK(FileSystemPublicKey) 174
+Bluetooth®LowEnergycommands 175
+BT(Bluetooth®Enable) 175
+BL(Bluetooth®MACAddress) 176
+BI(Bluetooth®Identifier) 176
+BP(Bluetooth®Power) 176
+$S(SRPSalt) 176
+$V,$W,$X,$Ycommands(SRP Saltverifier) 177
+APIconfigurationcommmands 177
+AP (APIEnable) 177
+AO(APIOutputOptions) 178
+AZ(ExtendedAPIOptions) 178
+UARTinterfacecommands 179
+BD(UARTBaudRate) 179
+NB(Parity) 180
+SB(StopBits) 180
+FT(FlowControlThreshold) 180
+RO(PacketizationTimeout) 181
+ATCommandoptions 181
+CC(CommandCharacter) 181
+CT(CommandModeTimeout) 182
+GT(GuardTimes) 182
+CN(ExitCommandmode) 182
+UARTpinconfigurationcommands 182
+D6(DIO6/RTSConfiguration) 182
+D7(DIO7/CTSConfiguration) 183
+P3(DIO13/UART_DOUTConfiguration) 183
+P4(DIO14/UART_DINConfiguration) 184
+SMT/MMTSPIinterfacecommands 184
+DigiXBee®3802.15.4RFModuleUserGuide 10
+
+P5(DIO15/SPI_MISOConfiguration) 184
+P6(DIO16/SPI_MOSIConfiguration) 185
+P7(DIO17/SPI_SSELConfiguration) 185
+P8(DIO18/SPI_CLKConfiguration) 186
+P9(DIO19/SPI_ATTNConfiguration) 186
+I/Osettingscommands 187
+D0(DIO0/ADC0/CommissioningConfiguration) 187
+CB (CommissioningPushbutton) 187
+D1(DIO1/ADC1/TH_SPI_ATTNConfiguration) 188
+D2(DIO2/ADC2/TH_SPI_CLKConfiguration) 188
+D3(DIO3/ADC3/TH_SPI_SSELConfiguration) 189
+D4(DIO4/TH_SPI_MOSIConfiguration) 189
+D5(DIO5/AssociateConfiguration) 190
+D8(DIO8/DTR/SLP_RequestConfiguration) 190
+D9(DIO9/ON_SLEEPConfiguration) 191
+P0(DIO10/RSSI/PWM0Configuration) 191
+P1(DIO11/PWM1Configuration) 192
+P2(DIO12/TH_SPI_MISOConfiguration) 192
+PR(Pull-up/DownResistorEnable) 193
+PD(PullUp/DownDirection) 194
+M0(PWM0DutyCycle) 194
+M1(PWM1DutyCycle) 195
+RP(RSSIPWMTimer) 195
+LT(AssociateLEDBlinkTime) 195
+I/Osamplingcommands 196
+IS(I/OSample) 196
+IR(SampleRate) 197
+IC(DIOChangeDetect) 197
+AV(AnalogVoltageReference) 198
+IT(SamplesbeforeTX) 199
+IF(SleepSampleRate) 199
+IO(DigitalOutputLevel) 199
+I/Olinepassingcommands 199
+IA(I/OInputAddress) 200
+IU(I/OOutputEnable) 200
+T0(D0TimeoutTimer) 200
+T1(D1OutputTimeoutTimer) 200
+T2(D2OutputTimeoutTimer) 201
+T3(D3OutputTimeoutTimer) 201
+T4(D4OutputTimeoutTimer) 201
+T5(D5OutputTimeoutTimer) 201
+T6(D6OutputTimeoutTimer) 201
+T7(D7OutputTimeoutTimer) 202
+T8(D8OutputTimer) 202
+T9(D9OutputTimer) 202
+Q0(P0OutputTimer) 202
+Q1(P1OutputTimer) 203
+Q2(P2OutputTimer) 203
+PT(PWMOutputTimeout) 203
+Locationcommands 203
+LX(LocationX—Latitude) 203
+LY(LocationY—Longitude) 204
+LZ(LocationZ—Elevation) 204
+Diagnosticcommands-firmware/hardwareinformation 204
+VR(FirmwareVersion) 204
+DigiXBee®3802.15.4RFModuleUserGuide 11
+
+VL(VersionLong) 204
+VH(BootloaderVersion) 204
+HV(HardwareVersion) 205
+R?(PowerVariant) 205
+%C(Hardware/SoftwareCompatibility) 205
+%V(SupplyVoltage) 206
+TP(ModuleTemperature) 206
+CK(ConfigurationCRC) 206
+%P(InvokeBootloader) 206
+D%(ManufacturingDate) 207
+Memoryaccesscommands 207
+FR(SoftwareReset) 207
+AC(ApplyChanges) 207
+WR(Write) 208
+RE(RestoreDefaults) 208
+CustomDefaultcommands 208
+%F(SetCustomDefault) 208
+!C(ClearCustomDefaults) 209
+R1(RestoreFactoryDefaults) 209
+Operate in API mode
+APImodeoverview 211
+UsetheAPcommandtosettheoperationmode 211
+APIframeformat 211
+APIoperation(APparameter=1) 211
+APIoperationwithescapedcharacters(APparameter=2) 212
+Frame descriptions
+64-bitTransmitRequest-0x00 216
+Description 216
+Format 216
+Examples 217
+16-bitTransmitRequest -0x01 218
+Description 218
+Format 218
+Examples 219
+LocalATCommandRequest-0x08 220
+Description 220
+Format 220
+Examples 220
+QueueLocalATCommandRequest-0x09 222
+Description 222
+Format 222
+Examples 222
+TransmitRequest-0x10 223
+Description 223
+Format 224
+Transmitoptionsbitfield 224
+Examples 225
+ExplicitAddressingCommandRequest-0x11 226
+Description 226
+64-bitaddressing 226
+DigiXBee®3802.15.4RFModuleUserGuide 12
+
+Reservedendpoints 226
+ReservedclusterIDs 226
+ReservedprofileIDs 226
+Transmitoptionsbitfield 227
+Examples 228
+RemoteATCommandRequest-0x17 230
+Description 230
+Format 230
+Examples 231
+Bluetooth®LowEnergy(LE) UnlockRequest-0x2C 232
+Description 232
+Format 233
+Phasetables 234
+Examples 235
+UserDataRelayInput -0x2D 235
+Description 235
+Usecases 236
+Format 236
+Errorcases 236
+Examples 237
+SecureSessionControl-0x2E 237
+Description 237
+Format 237
+Examples 239
+64-bitReceivePacket-0x80 241
+Description 241
+Format 241
+Examples 242
+16-bitReceivePacket-0x81 243
+Description 243
+Format 243
+Examples 244
+64-bitI/OSampleIndicator-0x82 245
+Description 245
+Format 245
+16-bitI/OSampleIndicator-0x83 247
+Description 247
+Format 247
+LocalATCommandResponse-0x88 249
+Description 249
+Format 249
+Examples 249
+TransmitStatus-0x89 251
+Description 251
+Format 251
+Deliverystatuscodes 252
+Example 253
+ModemStatus-0x8A 254
+Description 254
+Format 254
+Modemstatuscodes 255
+ExtendedTransmitStatus-0x8B 256
+Description 256
+Format 256
+Deliverystatuscodes 257
+DigiXBee®3802.15.4RFModuleUserGuide 13
+
+ReceivePacket-0x90 258
+Description 258
+Format 258
+Examples 259
+ExplicitReceiveIndicator-0x91 260
+Description 260
+Format 260
+Examples 261
+I/OSampleIndicator -0x92 262
+Description 262
+Format 262
+Examples 263
+RemoteATCommandResponse-0x97 265
+Description 265
+Format 265
+Examples 266
+ExtendedModemStatus-0x98 267
+Description 267
+Format 267
+SecureSessionstatuscodes 267
+Examples 268
+Bluetooth®LowEnergy(LE) UnlockResponse-0xAC 268
+Description 269
+UserDataRelayOutput-0xAD 269
+Description 269
+Format 269
+Errorcases 269
+Examples 270
+SecureSessionResponse-0xAE 270
+Description 270
+Format 270
+Examples 271
+OTA firmware/file system upgrades
+Overview 274
+Firmwareover-the-airupgrades 274
+Filesystemover-the-airupgrades 274
+Scheduledupgrades 274
+CreateanOTAupgradeserver 275
+ZCLfirmwareupgradeclusterspecification 275
+DifferencesfromtheZCLspecification 275
+OTAfiles 275
+OTAupgradeprocess 277
+OTAcommands 278
+Scheduleanupgrade 294
+Scheduledupgradesonsleepingdevices 294
+Considerationsforolderfirmwareversions 295
+DoesthedownloadincludetheOTAheader? 296
+OTA file system upgrades
+OTAfilesystemupdateprocess 298
+OTAfilesystemupdatesusingXCTU 298
+DigiXBee®3802.15.4RFModuleUserGuide 14
+
+Generateapublic/privatekeypair 298
+SetthepublickeyontheXBeedevice 299
+CreatetheOTAfilesystemimage 300
+PerformtheOTAfilesystemupdate 301
+OTAfilesystemupdates:OEM 302
+Generateapublic/privatekeypair 303
+SetthepublickeyontheXBee3device 303
+CreatetheOTAfilesystemimage 303
+PerformtheOTAfilesystemupdate 305
+General Purpose Flash Memory
+GeneralPurposeFlashMemory 306
+AccessGeneralPurposeFlashMemory 306
+GeneralPurposeFlashMemorycommands 307
+PLATFORM_INFO_REQUEST(0x00) 307
+PLATFORM_INFO(0x80) 308
+ERASE(0x01) 308
+ERASE_RESPONSE(0x81) 309
+WRITE(0x02)andERASE_THEN_WRITE(0x03) 309
+WRITE_RESPONSE(0x82)andERASE_THEN_WRITE_RESPONSE(0x83) 310
+READ(0x04) 311
+READ_RESPONSE(0x84) 311
+FIRMWARE_VERIFY(0x05)andFIRMWARE_VERIFY_AND_INSTALL(0x06) 312
+FIRMWARE_VERIFY_RESPONSE(0x85) 312
+FIRMWARE_VERIFY_AND_INSTALL_RESPONSE(0x86) 313
+PossibleErrorsReturnedfromGPMCommands 313
+Updatethefirmwareover-the-air 314
+Over-the-airfirmwareupdates 315
+Distributethenewapplication 315
+Installtheapplication 316
+Verifythenewapplication 316
+DigiXBee®3802.15.4RFModuleUserGuide 15
+
+Digi XBee® 3 802.15.4 RF Module User Guide
+XBee3802.15.4RFModulesareembeddedsolutionsprovidingwirelessend-pointconnectivityto
+devices.ThesedevicesusetheIEEE802.15.4networkingprotocolforfastpoint-to-multipointor
+peer-to-peernetworking.Theyaredesignedforhigh-throughputapplicationsrequiringlowlatency
+andpredictablecommunicationtiming.
+TheXBee3802.15.4RFModulesupportstheneedsoflow-cost,low-powerwirelesssensor
+networks.Thedevicesrequireminimalpowerandprovidereliabledeliveryofdatabetween
+devices.ThedevicesoperatewithintheISM2.4GHzfrequencyband.
+TheXBee3802.15.4RFModuleusesXBee3hardwareandtheSiliconLabsEFR32chipset.As
+thenamesuggests,the802.15.4moduleisover-the-aircompatiblewithourLegacy802.15.4
+modules(S1andS2Chardware).
+ForinformationaboutXBee3hardware,seetheXBee3RFModuleHardwareReferenceManual.
+Applicablefirmwareandhardware 17
+Changethefirmwareprotocol 17
+Regulatoryinformation 17
+DigiRFresources 17
+DigiXBee®3802.15.4RFModuleUserGuide 16
+
+DigiXBee®3802.15.4RFModuleUserGuide Applicablefirmwareandhardware
+Applicable firmware and hardware
+Thisuserguidesupportsthefollowingfirmware:
+n v.20xxDigi802.15.4
+Itsupportsthefollowinghardware:
+n XBee3
+Change the firmware protocol
+YoucanswitchthefirmwareloadedontotheXBee3hardwaretorunanyofthefollowingprotocols:
+n Zigbee
+n 802.15.4
+n DigiMesh
+Tochangeprotocols,usetheUpdatefirmwarefeatureinXCTUandselectthefirmware.Seethe
+XCTUUserGuide.
+Regulatory information
+SeetheRegulatoryinformationsectionoftheXBee3RFModuleHardwareReferenceManualfor
+theXBee3hardware'sregulatoryandcertificationinformation.
+Digi RF resources
+TherearemanyresourcestofurtheryourunderstandingofDigi'sRFdevices.Youcan:
+n ReadtheXBeeBuyingGuide.
+n AskquestionsontheDigiSupportForum.
+n SearchtheKnowledgeBase.
+n SearchtheResourceLibrary.
+n ReadXBee-relatedpostsontheDigiBlog.
+n Explorehardwarecertifications.
+OnewaytocommunicatewiththeXBeedeviceisbyusingasoftwarelibrary.Thelibraries
+availableforusewiththeXBee3802.15.4RFModuleinclude:
+n XBeeJavalibrary
+n XBeePythonlibrary
+n XBeeANSIClibrary
+n XBeembedlibrary
+TheXBeeJavaLibraryisaJavaAPI.ThepackageincludestheXBeelibrary,itssourcecodeanda
+collectionofsamplesthathelpyoudevelopJavaapplicationstocommunicatewithyourXBee
+devices.
+DigiXBee®3802.15.4RFModuleUserGuide 17
+
+DigiXBee®3802.15.4RFModuleUserGuide DigiRFresources
+TheXBeePythonLibraryisaPythonAPIthatdramaticallyreducesthetimetomarketofXBee
+projectsdevelopedinPythonandfacilitatesthedevelopmentofthesetypesofapplications,
+makingitaneasyprocess.
+TheXBeeANSICLibraryprojectisacollectionofportableANSICcodeforcommunicatingwith
+thedevicesinAPImode.
+TheXBeembedlibraryisaready-to-importmbedextensionthatdramaticallyreduces
+developmenttimeforXBeeprojectsonmbedplatforms.
+OnGitHub,wemaintainmodulesandsamplecodeforuseonXBeedeviceswithMicroPython.The
+codeisavailableat github.com/digidotcom/xbee-micropython.Thesamplesinclude:
+n SecureSocketsLayer(SSL) andTransportLayerSecurity(TLS).
+n AmazonWebServices(AWS).ThesesamplesdemonstratehowtoconnecttoAWSIoTand
+publishandsubscribetotopicsusingtheumqtt.simplemodule.
+n FileTransferProtocol(FTP).MicroFileTransferProtocolclient.
+n MQTelemetryTransport(MQTT).MQTTclientforpublish/subscribe.
+n DigiRemoteManager.AnHTTPclientforDigiRemoteManager.
+DigiXBee®3802.15.4RFModuleUserGuide 18
+
+Safety instructions
+Safetyinstructions 20
+Инструкциизабезопасност 20
+Sigurnosneupute 21
+Bezpečnostníinstrukce 21
+Sikkerhedsinstruktioner 22
+Veiligheidsinstructies 22
+Ohutusjuhised 23
+Turvallisuusohjeet 24
+Consignesdesécurité 24
+Sicherheitshinweise 25
+Οδηγίεςασφαλείας 25
+Biztonságiutasítások 26
+Istruzionidisicurezza 27
+Drošībasinstrukcijas 27
+Saugosinstrukcijos 28
+Sikkerhetsinstruksjoner 28
+Instrukcjebezpieczeństwa 29
+Instruçõesdesegurança 30
+Instructiunidesiguranta 30
+Bezpečnostnéinštrukcie 31
+Varnostnanavodila 31
+Instruccionesdeseguridad 32
+Säkerhetsinstruktioner 32
+DigiXBee®3802.15.4RFModuleUserGuide 19
+
+Safetyinstructions Safetyinstructions
+Safety instructions
+XBee modules
+n TheXBeeradiomodulecannotbeguaranteedoperationduetotheradiolinkandsoshould
+notbeusedforinterlocksinsafetycriticaldevicessuchasmachinesorautomotive
+applications.
+n TheXBeeradiomodulehasnotbeenapprovedforusein(thislistisnotexhaustive):
+l medicaldevices
+l nuclearapplications
+l explosiveorflammableatmospheres
+n TherearenouserserviceablecomponentsinsidetheXBeeradiomodule.Donotremove
+theshieldormodifytheXBeeinanyway.Modificationsmayexcludethemodulefromany
+warrantyandcancausetheXBeeradiotooperateoutsideofregulatorycompliancefora
+givencountry,leadingtothepossibleillegaloperationoftheradio.
+n UseindustrystandardESDprotectionwhenhandlingtheXBeemodule.
+n TakecarewhilehandlingtoavoidelectricaldamagetothePCBandcomponents.
+n DonotexposeXBeeradiomodulestowaterormoisture.
+n UsethisproductwiththeantennasspecifiedintheXBeemoduleuserguides.
+n TheendusermustbetoldhowtoremovepowerfromtheXBeeradiomoduleortolocatethe
+antennas20cmfromhumansoranimals.
+Инструкции за безопасност
+XBee модули
+n РадиомодулътXBeeнеможедабъдегарантиранзаработапорадирадиовръзкатаи
+затованетрябвадасеизползвазаблокировкивкритичнизабезопасността
+устройствакатомашиниилиавтомобилниприложения.
+n РадиомодулътXBeeнееодобрензаизползванев(тозисписъкнееизчерпателен):
+l медицинскиизделия
+l ядрениприложения
+l експлозивнаилизапалимаатмосфера
+n ВрадиомодулаXBeeнямакомпоненти,коитомогатдасеобслужватотпотребителя.
+НепремахвайтещитаинемодифицирайтеXBeeпоникакъвначин.Модификациите
+могатдаизключатмодулаотвсякаквагаранцияиданакаратрадиотоXBeeда
+работиизвънрегулаторнотосъответствиезададенадържава,коетоводидо
+възможнанезаконнаработанарадиото.
+n ИзползвайтестандартнаESDзащитаприработасXBeeмодула.
+n Внимавайте,докатоборавите,задаизбегнетеелектрическиповрединапечатната
+платкаикомпонентите.
+n НеизлагайтерадиомодулитеXBeeнаводаиливлага.
+DigiXBee®3802.15.4RFModuleUserGuide 20
+
+Safetyinstructions Sigurnosneupute
+n Използвайтетозипродуктсантените,посоченивръководстватазапотребителяна
+модулаXBee.
+n Крайниятпотребителтрябвадабъдеказанокакдапремахнезахранванетоот
+радиомодулаXBeeилидаразположиантенитена20смотхораилиживотни.
+Sigurnosne upute
+XBee moduli
+n RadiomoduluXBeenemožesejamčitiradzbogradiovezeistogasenesmijekoristitiza
+blokadeusigurnosnimkritičnimuređajimakaoštosustrojeviiliautomobilskeaplikacije.
+n XBeeradiomodulnijeodobrenzaupotrebuu(ovajpopisnijekonačan):
+l medicinskihuređaja
+l nuklearneprimjene
+l eksplozivneilizapaljiveatmosfere
+n UnutarXBeeradiomodulanemakomponentikojemožeservisiratikorisnik.Nemojte
+uklanjatištitininakojinačinmodificiratiXBee.Izmjenemoguisključitimodulizbilokakvog
+jamstvaimoguuzrokovatiradXBeeradijaizvanusklađenostispropisimazaodređenu
+zemlju,štomožedovestidomogućegnezakonitogradaradija.
+n KoristitestandardnuESDzaštituprirukovanjuXBeemodulom.
+n BuditeopreznitijekomrukovanjakakobisteizbjeglielektričnaoštećenjaPCB-ai
+komponenti.
+n NeizlažiteXBeeradiomodulevodiilivlazi.
+n KoristiteovajproizvodsantenamanavedenimukorisničkimvodičimazaXBeemodul.
+n KrajnjemkorisnikusemorarećikakodaisključinapajanjeizXBeeradiomodulailidalocira
+antene20cmodljudiiliživotinja.
+Bezpečnostní instrukce
+moduly XBee
+n RádiovýmodulXBeenemůžezaručitprovozkvůlirádiovémuspojení,aprotobynemělbýt
+používánproblokovánívzařízeníchkritickýchzhlediskabezpečnosti,jakojsoustrojenebo
+automobilovéaplikace.
+n RádiovýmodulXBeenebylschválenpropoužitív(tentoseznamnenívyčerpávající):
+l zdravotnicképrostředky
+l jadernéaplikace
+l výbušnénebohořlavéatmosféry
+n UvnitřrádiovéhomoduluXBeenejsoužádnéuživatelskyopravitelnésoučásti.
+NeodstraňujteštítaninijakneupravujteXBee.Úpravymohouvyjmoutmodulzjakékoli
+zárukyamohouzpůsobit,žerádioXBeebudefungovatmimozákonnoushoduprodanou
+zemi,cožpovedekmožnémunezákonnémuprovozurádia.
+DigiXBee®3802.15.4RFModuleUserGuide 21
+
+Safetyinstructions Sikkerhedsinstruktioner
+n PřimanipulacismodulemXBeepoužívejtestandardníochranuESD.
+n Přimanipulacibuďteopatrní,abynedošlokelektrickémupoškozenídeskyplošnýchspojůa
+součástí.
+n NevystavujterádiovémodulyXBeevoděnebovlhkosti.
+n PoužívejtetentoproduktsanténamiuvedenýmivuživatelskýchpříručkáchmoduluXBee.
+n Koncovýuživatelmusíbýtinformován,jakodpojitnapájenírádiovéhomoduluXBeenebo
+jakumístitantény20cmodlidínebozvířat.
+Sikkerhedsinstruktioner
+XBee moduler
+n XBee-radiomoduletkanikkegaranteresdriftpågrundafradioforbindelsenogbørderfor
+ikkebrugestilaflåsningerisikkerhedskritiskeenhedersåsommaskinereller
+bilapplikationer.
+n XBee-radiomoduleterikkegodkendttilbrugi(dennelisteerikkeudtømmende):
+l medicinskudstyr
+l nukleareapplikationer
+l eksplosiveellerbrandfarligeatmosfærer
+n Dereringenkomponenter,derkanrepareresafbrugeren,indeiXBee-radiomodulet.Fjern
+ikkeskjoldetellermodificerXBeepånogenmåde.Ændringerkanudelukkemoduletfra
+enhvergarantiogkanfåXBee-radioentilatfungereudenforlovgivningsoverholdelseforet
+givetland,hvilketkanføretildenmuligeulovligedriftafradioen.
+n BrugindustristandardESD-beskyttelse,nårduhåndtererXBee-modulet.
+n Værforsigtigunderhåndteringenforatundgåelektriskbeskadigelseafprintetog
+komponenterne.
+n UdsætikkeXBee-radiomodulerforvandellerfugt.
+n Brugdetteproduktmeddeantenner,dererspecificeretiXBee-modulets
+brugervejledninger.
+n Slutbrugerenskalfortælles,hvordanmanfjernerstrømmenfraXBee-radiomoduleteller
+placererantennerne20cmframenneskerellerdyr.
+Veiligheidsinstructies
+XBee-modules
+n DewerkingvandeXBee-radiomodulekannietwordengegarandeerdvanwegede
+radioverbindingenmagdaaromnietwordengebruiktvoorvergrendelingenin
+veiligheidskritiekeapparatenzoalsmachinesofautotoepassingen.
+n DeXBee-radiomoduleisnietgoedgekeurdvoorgebruikin(dezelijstisnietuitputtend):
+DigiXBee®3802.15.4RFModuleUserGuide 22
+
+Safetyinstructions Ohutusjuhised
+l omedischeapparaten
+l onucleairetoepassingen
+l oexplosieveofontvlambareatmosferen
+n ErzijngeendoordegebruikerteonderhoudencomponentenindeXBee-radiomodule.
+VerwijderhetschildnietenwijzigdeXBeeopgeenenkelemanier.Modificatieskunnende
+moduleuitsluitenvanenigegarantieenkunnenertoeleidendatdeXBee-radiowerktbuiten
+deregelgevingvooreenbepaaldland,watkanleidentotdemogelijkeillegalewerkingvan
+deradio.
+n GebruikindustriestandaardESD-beschermingbijhethanterenvandeXBee-module.
+n Weesvoorzichtigbijhethanterenomelektrischeschadeaandeprintplaatencomponenten
+tevoorkomen.
+n StelXBee-radiomodulesnietblootaanwaterofvocht.
+n Gebruikditproductmetdeantennesdiezijngespecificeerdindegebruikershandleidingen
+vandeXBee-module.
+n DeeindgebruikermoetwordenverteldhoedevoedingvandeXBee-radiomodulemoet
+wordenlosgekoppeldofhoedeantennesop20cmvanmensenofdierenmoetenworden
+geplaatst.
+Ohutusjuhised
+XBee moodulid
+n XBeeraadiomoodulitöödeisaaraadiolingitõttugaranteeridajaseetõttueitohiksseda
+kasutadaohutuseseisukohaltolulisteseadmete(ntmasinadvõiautorakendused)
+blokeerimiseks.
+n XBeeraadiomooduliteioleheakskiidetudkasutamiseks(seeloetelueioleammendav):
+l meditsiiniseadmed
+l tuumarakendused
+l plahvatusohtlikvõituleohtlikkeskkond
+n XBeeraadiomooduliseiolekasutajapoolthooldatavaidkomponente.Ärgeeemaldage
+kaitsetegamuutkeXBeemingilviisil.Muudatusedvõivadmooduligarantiistväljajättaja
+XBeeraadiotöötabväljaspoolantudriigiregulatiivseidvastavusi,põhjustadesraadio
+võimalikuebaseaduslikukasutamise.
+n KasutageXBeemoodulikäsitsemiseltööstusharustandardsetESD-kaitset.
+n Olgekäsitsemiselettevaatlik,etvältidaPCBjakomponentideelektrikahjustusi.
+n ÄrgejätkeXBeeraadiomooduleidveevõiniiskusekätte.
+n KasutagesedatoodetXBeemoodulikasutusjuhendiskirjeldatudantennidega.
+n Lõppkasutajaletuleböelda,kuidasXBeeraadiomoodulilttoideeemaldadavõiantennid
+inimestestvõiloomadest20cmkauguselepaigutada.
+DigiXBee®3802.15.4RFModuleUserGuide 23
+
+Safetyinstructions Turvallisuusohjeet
+Turvallisuusohjeet
+XBee moduulit
+n XBee-radiomoduulintoimintaaeivoidataataradiolinkinvuoksi,jotensitäeitulekäyttää
+turvallisuudenkannaltakriittistenlaitteiden,kutenkoneidentaiautosovellusten,
+lukitsemiseen.
+n XBee-radiomoduuliaeiolehyväksyttykäytettäväksi(tämäluetteloeioletyhjentävä):
+l lääketieteellisetlaitteet
+l ydinvoimasovellukset
+l räjähdysvaarallisiintaisyttyviintiloihin
+n XBee-radiomoduulinsisälläeiolekäyttäjänhuollettaviaosia.Äläpoistasuojustatai
+muokkaaXBeetämillääntavalla.Muutoksetvoivatsulkeamoduulintakuunulkopuolelleja
+aiheuttaasen,ettäXBee-radiotoimiitietynmaansäädöstenmukaisuudenulkopuolella,
+mikäjohtaaradionmahdolliseenlaittomaankäyttöön.
+n KäytäalanstandardiaESD-suojaustakäsitellessäsiXBee-moduulia.
+n Olevarovainenkäsitellessäsi,jottavältätpiirilevynjakomponenttiensähkövauriot.
+n ÄläaltistaXBee-radiomoduulejavedelletaikosteudelle.
+n KäytätätätuotettaXBee-moduulinkäyttöoppaissamääriteltyjenantennienkanssa.
+n Loppukäyttäjälleonkerrottava,kuinkaXBee-radiomoduulinvirtakatkaistaantaiantennit
+sijoitetaan20cm:netäisyydelleihmisistätaieläimistä.
+Consignes de sécurité
+Modules XBee
+n LefonctionnementdumoduleradioXBeenepeutpasêtregarantienraisondelaliaison
+radioetnedoitdoncpasêtreutilisépourlesverrouillagesdansdesdispositifscritiquespour
+lasécuritételsquedesmachinesoudesapplicationsautomobiles.
+n LemoduleradioXBeen'apasétéapprouvépouruneutilisationdans(cettelisten'estpas
+exhaustive):
+l dispositifsmédicaux
+l applicationsnucléaires
+l atmosphèresexplosivesouinflammables
+n Iln'yaaucuncomposantréparableparl'utilisateuràl'intérieurdumoduleradioXBee.Ne
+retirezpaslaprotectionetnemodifiezenaucunefaçonleXBee.Lesmodificationspeuvent
+exclurelemoduledetoutegarantieetpeuvententraînerlefonctionnementdelaradioXBee
+endehorsdelaconformitéréglementairepourunpaysdonné,cequipeutentraînerun
+fonctionnementillégaldelaradio.
+n UtilisezlaprotectionESDstandarddel'industrielorsdelamanipulationdumoduleXBee.
+n Soyezprudentlorsdelamanipulationafind'éviterdesdommagesélectriquesaucircuit
+impriméetauxcomposants.
+DigiXBee®3802.15.4RFModuleUserGuide 24
+
+Safetyinstructions Sicherheitshinweise
+n N'exposezpaslesmodulesradioXBeeàl'eauouàl'humidité.
+n Utilisezceproduitaveclesantennesspécifiéesdanslesguidesd'utilisationdumodule
+XBee.
+n L'utilisateurfinaldoitsavoircommentcouperl'alimentationdumoduleradioXBeeouplacer
+lesantennesà20cmdeshumainsoudesanimaux.
+Sicherheitshinweise
+XBee-Module
+n DerBetriebdesXBee-FunkmodulskannaufgrundderFunkverbindungnichtgarantiert
+werdenundsolltedahernichtfürVerriegelungeninsicherheitskritischenGerätenwie
+MaschinenoderAutomobilanwendungenverwendetwerden.
+n DasXBee-FunkmodulistnichtzugelassenfürdenEinsatzin(dieseListeistnicht
+vollständig):
+l Medizinprodukte
+l nukleareAnwendungen
+l explosiveoderbrennbareAtmosphären
+n DasXBee-FunkmodulenthältkeinevomBenutzerzuwartendenKomponenten.Entfernen
+SienichtdieAbschirmungodermodifizierenSiedasXBeeinirgendeinerWeise.
+ModifikationenkönnendasModulvonjeglicherGarantieausschließenunddazuführen,
+dassdasXBee-FunkgerätaußerhalbdergesetzlichenVorschriftenfüreinbestimmtesLand
+betriebenwird,waszueinemmöglichenillegalenBetriebdesFunkgerätsführenkann.
+n VerwendenSiebeimUmgangmitdemXBee-ModulESD-SchutznachIndustriestandard.
+n SeienSievorsichtigbeiderHandhabung,umelektrischeSchädenanderLeiterplatteund
+denKomponentenzuvermeiden.
+n XBee-FunkmodulenichtWasseroderFeuchtigkeitaussetzen.
+n VerwendenSiediesesProduktmitdenindenBenutzerhandbücherndesXBee-Moduls
+angegebenenAntennen.
+n DemEndbenutzermussmitgeteiltwerden,wieerdasXBee-Funkmodulvonder
+StromversorgungtrenntoderdieAntennen20cmvonMenschenoderTierenentfernt
+aufstellt.
+Οδηγίες ασφαλείας
+Μονάδες XBee
+n ΗμονάδαραδιοφώνουXBeeδενμπορείναεγγυηθείτηλειτουργίατηςλόγωτης
+ραδιοζεύξηςκαιεπομένωςδενπρέπειναχρησιμοποιείταιγιαασφάλειεςσεκρίσιμεςγια
+τηνασφάλειασυσκευές,όπωςμηχανήματαήεφαρμογέςαυτοκινήτου.
+n ΗμονάδαραδιοφώνουXBeeδενέχειεγκριθείγιαχρήσησε(αυτήηλίσταδενείναι
+εξαντλητική):
+DigiXBee®3802.15.4RFModuleUserGuide 25
+
+Safetyinstructions Biztonságiutasítások
+l ιατροτεχνολογικάπροϊόντα
+l πυρηνικέςεφαρμογές
+l εκρηκτικέςήεύφλεκτεςατμόσφαιρες
+n Δενυπάρχουνεξαρτήματαπουναμπορούνναεπισκευαστούναπότοχρήστημέσαστη
+μονάδαραδιοφώνουXBee.ΜηναφαιρείτετηνασπίδακαιμηντροποποιείτετοXBeeμε
+κανέναντρόπο.Οιτροποποιήσειςενδέχεταινααποκλείουντημονάδααπόοποιαδήποτε
+εγγύησηκαιμπορείναπροκαλέσουντηλειτουργίατουραδιοφώνουXBeeεκτόςτης
+συμμόρφωσηςμετουςκανονισμούςγιαμιαδεδομένηχώρα,οδηγώνταςσεπιθανή
+παράνομηλειτουργίατουραδιοφώνου.
+n ΧρησιμοποιήστεβιομηχανικήπροστασίαESDκατάτοχειρισμότηςμονάδαςXBee.
+n ΠροσέχετεκατάτοχειρισμόγιανααποφύγετεηλεκτρικήβλάβηστοPCBκαιστα
+εξαρτήματα.
+n ΜηνεκθέτετετιςμονάδεςραδιοφώνουXBeeσενερόήυγρασία.
+n Χρησιμοποιήστεαυτότοπροϊόνμετιςκεραίεςπουκαθορίζονταιστουςοδηγούςχρήσης
+τηςμονάδαςXBee.
+n Πρέπειναενημερωθείοτελικόςχρήστηςπώςνααφαιρέσειτηντροφοδοσίααπότη
+μονάδαραδιοφώνουXBeeήναεντοπίσειτιςκεραίεςσεαπόσταση20cmαπόανθρώπους
+ήζώα.
+Biztonsági utasítások
+XBee modulok
+n AzXBeerádiómodulműködésenemgarantálhatóarádiókapcsolatmiatt,ezértnem
+használhatóbiztonságiszempontbólkritikuseszközök,példáulgépekvagyautóipari
+alkalmazásokreteszelésére.
+n AzXBeerádiómodulnemengedélyezettakövetkezőterületekenvalóhasználatra(eza
+listanemteljes):
+l orvosieszközök
+l nukleárisalkalmazások
+l robbanásveszélyesvagygyúlékonylégkör
+n AzXBeerádiómodulbannincsenekfelhasználóáltaljavíthatóalkatrészek.Netávolítsaela
+pajzsot,éssemmilyenmódonnemódosítsaazXBee-t.Amódosításokkizárhatjákamodult
+ajótállásból,ésazXBeerádióműködésétazadottországjogszabályielőírásaitóleltérően
+okozhatják,amiarádióesetlegesillegálisműködéséhezvezethet.
+n AzXBeemodulkezelésekorhasználjonipariszabványosESDvédelmet.
+n Akezeléssoránügyeljenarra,hogyelkerüljeaPCBésazalkatrészekelektromos
+károsodását.
+n NetegyekiazXBeerádiómodulokatvíznekvagynedvességnek.
+n HasználjaeztaterméketazXBeemodulhasználatiútmutatójábanmeghatározott
+antennákkal.
+DigiXBee®3802.15.4RFModuleUserGuide 26
+
+Safetyinstructions Istruzionidisicurezza
+n Avégfelhasználóttájékoztatnikellarról,hogyantávolítsaelazXBeerádiómodul
+áramellátását,vagyhogyanhelyezzeelazantennákatazemberektőlvagyállatoktól20cm-
+re.
+Istruzioni di sicurezza
+Moduli XBee
+n IlfunzionamentodelmoduloradioXBeenonpuòesseregarantitoacausadelcollegamento
+radioequindinondeveessereutilizzatopergliinterblocchiindispositivicriticiperla
+sicurezzacomemacchineoapplicazioniautomobilistiche.
+n IlmoduloradioXBeenonèstatoapprovatoperl'usoin(questoelencononèesaustivo):
+l dispositivimedici
+l applicazioninucleari
+l atmosfereesplosiveoinfiammabili
+n Noncisonocomponentiriparabilidall'utenteall'internodelmoduloradioXBee.Non
+rimuovereloscudoomodificareinalcunmodol'XBee.Lemodifichepossonoescludereil
+modulodaqualsiasigaranziaepossonocausareilfunzionamentodellaradioXBeealdi
+fuoridellaconformitànormativaperundeterminatopaese,portandoalpossibile
+funzionamentoillegaledellaradio.
+n UtilizzarelaprotezioneESDstandarddelsettoredurantelamanipolazionedelmodulo
+XBee.
+n PrestareattenzionedurantelamanipolazioneperevitaredannielettricialPCBeai
+componenti.
+n NonesporreimoduliradioXBeeall'acquaoall'umidità.
+n Utilizzarequestoprodottoconleantennespecificatenelleguideperl'utentedelmodulo
+XBee.
+n L'utentefinaledevesaperecometoglierel'alimentazionealmoduloradioXBeeocome
+posizionareleantennea20cmdapersoneoanimali.
+Drošības instrukcijas
+XBee moduļi
+n RadiomoduļaXBeedarbībanevartiktgarantētaradiosavienojumadēļ,tāpēcto
+nevajadzētuizmantotbloķēšanaidrošībasziņākritiskāsierīcēs,piemēram,mašīnāsvai
+automobiļos.
+n XBeeradiomodulisnavapstiprinātslietošanai(šissarakstsnavpilnīgs):
+l medicīniskāsierīces
+l kodolprogrammas
+l sprādzienbīstamāvaiuzliesmojošāvidē
+DigiXBee®3802.15.4RFModuleUserGuide 27
+
+Safetyinstructions Saugosinstrukcijos
+n XBeeradiomoduļaiekšpusēnavnevienakomponenta,kolietotājsvarētuapkopt.
+NenoņemietvairoguunnekādāveidānepārveidojietXBee.Modifikācijasrezultātāmodulis
+vartiktizslēgtsnojebkādasgarantijasunvarizraisītXBeeradiodarbību,kasneatbilst
+noteiktāsvalstsnormatīvajiemaktiem,izraisotiespējamunelegāluradiodarbību.
+n StrādājotarXBeemoduli,izmantojietnozaresstandartaESDaizsardzību.
+n Rīkojoties,rīkojietiesuzmanīgi,laiizvairītosnoPCBunkomponentuelektriskiem
+bojājumiem.
+n NepakļaujietXBeeradiomoduļusūdensvaimitrumaiedarbībai.
+n Izmantojietšoizstrādājumuarantenām,kasnorādītasXBeemoduļalietotāja
+rokasgrāmatās.
+n Galalietotājamirjāpaskaidro,kāatvienotXBeeradiomoduļastrāvuvainovietotantenas20
+cmattālumānocilvēkiemvaidzīvniekiem.
+Saugos instrukcijos
+XBee moduliai
+n Negalimagarantuoti,kad„XBee“ radijomodulisveiksdėlradijoryšio,todėljoneturėtųbūti
+naudojamasblokuotisaugaisvarbiuoseįrenginiuose,pvz.,mašinosearautomobiliuose.
+n XBeeradijomodulisnebuvopatvirtintasnaudoti(šissąrašasnėrabaigtinis):
+l medicinosprietaisai
+l branduolinėsprogramos
+l sprogiojeardegiojeaplinkoje
+n XBeeradijomoduliovidujenėrakomponentų,kuriuosvartotojasgalėtųprižiūrėti.Jokiu
+būdunenuimkiteskydoirnekeiskiteXBee.Dėlmodifikacijųmoduliuigalibūtinetaikoma
+jokiagarantija,o„XBee“ radijasgaliveiktinepagaltamtikrosšaliesnorminiusreikalavimus,
+otaigalisukeltineteisėtąradijonaudojimą.
+n DirbdamisuXBeemoduliunaudokitepramonėsstandartinęESDapsaugą.
+n Dirbdamibūkiteatsargūs,kadnepažeistumėtePCBirkomponentų.
+n SaugokiteXBeeradijomoduliusnuovandensardrėgmės.
+n Naudokitešįgaminįsuantenomis,nurodytomisXBeemoduliovartotojovadove.
+n Galutiniamvartotojuituribūtipaaiškinta,kaipatjungtiXBeeradijomoduliomaitinimąarba
+nustatytiantenas20cmatstumunuožmoniųargyvūnų.
+Sikkerhetsinstruksjoner
+XBee-moduler
+n XBee-radiomodulenkanikkegaranteresdriftpågrunnavradiolinken,ogbørderforikke
+brukestilforriglingerisikkerhetskritiskeenhetersommaskinerellerbilapplikasjoner.
+n XBee-radiomodulenerikkegodkjentforbruki(dennelistenerikkeuttømmende):
+DigiXBee®3802.15.4RFModuleUserGuide 28
+
+Safetyinstructions Instrukcjebezpieczeństwa
+l medisinskutstyr
+l kjernefysiskeapplikasjoner
+l eksplosiveellerbrennbareatmosfærer
+n DeteringenkomponentersomkanrepareresavbrukereninneiXBee-radiomodulen.Ikke
+fjernskjoldetellermodifiserXBeepånoenmåte.Endringerkanekskluderemodulenfra
+enhvergarantiogkanføretilatXBee-radioenfungererutenforregelverketforetgittland,
+noesomkanføretilulovligdriftavradioen.
+n BrukindustristandardESD-beskyttelsenårduhåndtererXBee-modulen.
+n VærforsiktigvedhåndteringforåunngåelektriskskadepåPCBogkomponenter.
+n IkkeutsettXBeeradiomodulerforvannellerfuktighet.
+n BrukdetteproduktetmedantennenespesifisertiXBee-modulensbrukerveiledninger.
+n SluttbrukerenmåblifortalthvordanmanfjernerstrømmenfraXBee-radiomoduleneller
+plassererantennene20cmframenneskerellerdyr.
+Instrukcje bezpieczeństwa
+Moduły XBee
+n ModułradiowyXBeeniemożezagwarantowaćdziałaniazewzględunałączeradiowe,
+dlategonienależygoużywaćdoblokadwurządzeniachokrytycznymznaczeniudla
+bezpieczeństwa,takichjakmaszynylubaplikacjemotoryzacyjne.
+n ModułradiowyXBeeniezostałdopuszczonydoużytkuw(listataniejestwyczerpująca):
+l wyrobymedyczne
+l zastosowanianuklearne
+l atmosferachwybuchowychlubłatwopalnych
+n WewnątrzmodułuradiowegoXBeeniemażadnychelementów,któremogłybybyć
+serwisowaneprzezużytkownika.NiezdejmujosłonyaniniemodyfikujXBeewżaden
+sposób.Modyfikacjemogąwykluczyćmodułzjakiejkolwiekgwarancjiispowodować,że
+radioXBeebędziedziałaćniezgodniezprzepisamiobowiązującymiwdanymkraju,co
+możeprowadzićdonielegalnegodziałaniaradia.
+n PodczasobsługimodułuXBeenależystosowaćstandardowąochronęESD.
+n Podczasobsługinależyzachowaćostrożność,abyuniknąćuszkodzeńelektrycznychPCBi
+komponentów.
+n NiewystawiajmodułówradiowychXBeenadziałaniewodylubwilgoci.
+n UżywajtegoproduktuzantenamiokreślonymiwpodręcznikachużytkownikamodułuXBee.
+n Użytkownikkońcowymusizostaćpoinformowany,jakodłączyćzasilaniemodułuradiowego
+XBeelubzlokalizowaćantenywodległości20cmodludzilubzwierząt.
+DigiXBee®3802.15.4RFModuleUserGuide 29
+
+Safetyinstructions Instruçõesdesegurança
+Instruções de segurança
+Módulos XBee
+n OmóduloderádioXBeenãopodeteroperaçãogarantidadevidoaolinkderádioe,
+portanto,nãodeveserusadoparaintertravamentosemdispositivoscríticosdesegurança,
+comomáquinasouaplicaçõesautomotivas.
+n OmóduloderádioXBeenãofoiaprovadoparausoem(estalistanãoéexaustiva):
+l odispositivosmédicos
+l oaplicaçõesnucleares
+l oatmosferasexplosivasouinflamáveis
+n Nãohácomponentesquepossamserreparadospelousuáriodentrodomóduloderádio
+XBee.NãoremovaablindagemnemmodifiqueoXBeedeformaalguma.Asmodificações
+podemexcluiromódulodequalquergarantiaefazercomqueorádioXBeeopereforada
+conformidaderegulatóriadeumdeterminadopaís,levandoàpossíveloperaçãoilegaldo
+rádio.
+n UseproteçãoESDpadrãodaindústriaaomanusearomóduloXBee.
+n TomecuidadoaomanusearparaevitardanoselétricosàPCBeaoscomponentes.
+n NãoexponhaosmódulosderádioXBeeàáguaouumidade.
+n UseesteprodutocomasantenasespecificadasnosguiasdousuáriodomóduloXBee.
+n OusuáriofinaldeveserinformadosobrecomoremoveraenergiadomóduloderádioXBee
+oulocalizarasantenasa20cmdehumanosouanimais.
+Instructiuni de siguranta
+module XBee
+n NusepoategarantafuncționareamodululuiradioXBeedincauzaconexiuniiradioși,prin
+urmare,nutrebuieutilizatpentruinterblocăriîndispozitivecriticepentrusiguranță,cumarfi
+mașinisauaplicațiiauto.
+n ModululradioXBeenuafostaprobatpentruutilizareîn(aceastălistănuesteexhaustivă):
+l dispozitivemedicale
+l aplicațiinucleare
+l atmosfereexplozivesauinflamabile
+n Nuexistăcomponentecaresăpoatăfireparatedeutilizatorîninteriorulmodululuiradio
+XBee.NuîndepărtațiscutulșinumodificațiXBeeînniciunfel.Modificărilepotexclude
+modululdinoricegaranțieșipotfacecaradioulXBeesăfuncționezeînafaraconformității
+cureglementărilepentruoanumitățară,ceeaceducelaoposibilăfuncționareilegalăa
+radioului.
+n FolosițiprotecțiaESDstandardînindustriecândmanipulațimodululXBee.
+n AvețigrijăîntimpulmanipulăriipentruaevitadeteriorareaelectricăaPCB-uluișia
+componentelor.
+DigiXBee®3802.15.4RFModuleUserGuide 30
+
+Safetyinstructions Bezpečnostnéinštrukcie
+n NuexpunețimoduleleradioXBeelaapăsauumezeală.
+n UtilizațiacestproduscuantenelespecificateînghidurileutilizatoruluimodululuiXBee.
+n UtilizatoruluifinaltrebuiesăisespunăcumsăscoatăalimentareadelamodululradioXBee
+sausăgăseascăantenelela20cmdeoamenisauanimale.
+Bezpečnostné inštrukcie
+moduly XBee
+n RádiovýmodulXBeenemôžebyťzaručenýkvôlirádiovémuspojeniu,apretobysanemal
+používaťnablokovanievzariadeniachkritickýchzhľadiskabezpečnosti,akosústrojealebo
+automobilovéaplikácie.
+n RádiovýmodulXBeenebolschválenýnapoužitiev(tentozoznamniejeúplný):
+l zdravotníckepomôcky
+l jadrovéaplikácie
+l výbušnéalebohorľavéatmosféry
+n VovnútrirádiovéhomoduluXBeesanenachádzajúžiadnepoužívateľskyopraviteľné
+komponenty.NeodstraňujteštítanižiadnymspôsobomneupravujteXBee.Úpravymôžu
+vyňaťmodulzozárukyamôžuspôsobiť,žerádioXBeebudefungovaťmimozhodys
+predpismipredanúkrajinu,čovediekmožnejnezákonnejprevádzkerádia.
+n PrimanipuláciismodulomXBeepoužívajteštandardnúochranupredESD.
+n Primanipuláciibuďteopatrní,abystepredišlielektrickémupoškodeniudoskyplošných
+spojovakomponentov.
+n RádiovémodulyXBeenevystavujtevodeanivlhkosti.
+n Tentoproduktpoužívajtesanténamišpecifikovanýmivpoužívateľskýchpríručkáchmodulu
+XBee.
+n Koncovýpoužívateľmusíbyťinformovanýotom,akoodpojiťnapájanierádiovéhomodulu
+XBeealeboakoumiestniťantény20cmodľudíalebozvierat.
+Varnostna navodila
+XBee moduli
+n RadijskegamodulaXBeenimogočezagotovitidelovanjazaradiradijskepovezaveinga
+zatonesmeteuporabljatizazaklepanjevvarnostnokritičnihnapravah,kotsostrojiali
+avtomobilskeaplikacije.
+n RadijskimodulXBeenibilodobrenzauporabov(taseznamniizčrpen):
+l medicinskihpripomočkov
+l jedrskeaplikacije
+l eksplozivnealivnetljiveatmosfere
+n VradijskemmoduluXBeenikomponent,kibijihlahkopopraviluporabnik.Neodstranjujte
+ščitainnanobennačinnespreminjajteXBee.Spremembelahkomodulizključijoizkakršne
+DigiXBee®3802.15.4RFModuleUserGuide 31
+
+Safetyinstructions Instruccionesdeseguridad
+koligarancijeinlahkopovzročijo,daradioXBeedelujezunajzakonskeskladnostizadano
+državo,karvodidomožneganezakonitegadelovanjaradia.
+n PriravnanjuzmodulomXBeeuporabitestandardnoindustrijskozaščitopredESD.
+n Prirokovanjupazite,daseizogneteelektričnimpoškodbamtiskanegavezjainkomponent.
+n RadijskihmodulovXBeeneizpostavljajtevodialivlagi.
+n Taizdelekuporabljajtezantenami,navedenimivuporabniškihpriročnikihmodulaXBee.
+n Končnemuuporabnikujetrebapovedati,kakoodstranitinapajanjezradijskegamodula
+XBeealinajlociraantene20cmodljudialiživali.
+Instrucciones de seguridad
+Módulos XBee
+n NosepuedegarantizarelfuncionamientodelmóduloderadioXBeedebidoalenlacede
+radioy,porlotanto,nodebeusarseparaenclavamientosendispositivoscríticosparala
+seguridad,comomáquinasoaplicacionesautomotrices.
+n ElmóduloderadioXBeenohasidoaprobadoparasuusoen(estalistanoesexhaustiva):
+l dispositivosmédicos
+l aplicacionesnucleares
+l atmósferasexplosivasoinflamables
+n NohaycomponentesreparablesporelusuariodentrodelmóduloderadioXBee.Noquite
+elescudonimodifiqueelXBeedeningunamanera.Lasmodificacionespuedenexcluirel
+módulodecualquiergarantíaypuedenhacerquelaradioXBeefuncionefueradel
+cumplimientonormativodeunpaísdeterminado,loquepuedeprovocarunaoperación
+ilegaldelaradio.
+n UtilicelaprotecciónESDestándardelaindustriaalmanipularelmóduloXBee.
+n TengacuidadoalmanipularloparaevitardañoseléctricosenlaPCByloscomponentes.
+n NoexpongalosmódulosderadioXBeealaguanialahumedad.
+n Utiliceesteproductoconlasantenasespecificadasenlasguíasdeusuariodelmódulo
+XBee.
+n SedebeindicaralusuariofinalcómodesconectarlaalimentacióndelmóduloderadioXBee
+oubicarlasantenasa20cmdepersonasoanimales.
+Säkerhets instruktioner
+XBee-moduler
+n XBee-radiomodulenkanintegaranterasfunktionpågrundavradiolänkenochbördärför
+inteanvändasförförreglingarisäkerhetskritiskaenhetersommaskinereller
+biltillämpningar.
+n XBee-radiomodulenharintegodkäntsföranvändningi(dennalistaärinteuttömmande):
+DigiXBee®3802.15.4RFModuleUserGuide 32
+
+Safetyinstructions Säkerhetsinstruktioner
+l medicinskutrustning
+l kärnkraftstillämpningar
+l explosivellerbrandfarligatmosfär
+n DetfinnsingakomponentersomanvändarenkanreparerainutiXBee-radiomodulen.Ta
+intebortsköldenellermodifieraXBeepånågotsätt.Ändringarkanuteslutamodulenfrån
+allagarantierochkangöraattXBee-radionfungerarutanförbestämmelsernaförettvisst
+land,vilketkanledatillattradionkananvändasolagligt.
+n AnvändindustristandardESD-skyddnärduhanterarXBee-modulen.
+n Varförsiktigvidhanteringenförattundvikaelektriskaskadorpåkretskortetoch
+komponenterna.
+n UtsättinteXBeeradiomodulerförvattenellerfukt.
+n AnvänddenhärproduktenmedantennernasomspecificerasiXBee-modulens
+användarguider.
+n SlutanvändarenmåsteinformerasomhurmankopplarbortströmmenfrånXBee-
+radiomodulenellerförattplaceraantennerna20cmfrånmänniskorellerdjur.
+DigiXBee®3802.15.4RFModuleUserGuide 33
+
+Get started
+Thissectioncoversthefollowingtasksandfeatures:
+Verifykitcontents 35
+Assemblethehardware 35
+ConfigurethedeviceusingXCTU 37
+Configureremotedevices 37
+Configurethedevicesforarangetest 39
+Performarangetest 40
+XBIB-CMicroMountreference 44
+XBIB-CSMTreference 49
+XBIB-CUTHreference 51
+XBIB-C-GPSreference 53
+InterfacewiththeXBIB-C-GPSmodule 55
+DigiXBee®3802.15.4RFModuleUserGuide 34
+
+Getstarted Verifykitcontents
+Verify kit contents
+TheXBee3802.15.4RFModuledevelopmentkitcontainsthefollowingcomponents:
+Part
+XBee3ZigbeeSMTmodule(3)
+XBeeGrovedevelopmentboard(3)
+MicroUSBcable(3)
+Antenna-2.4GHz,half-wavedipole,2.1dBi,U.FLfemale,
+articulating(3)
+XBeestickers
+Assemble the hardware
+Thisguidewalksyouthroughthestepsrequiredtoassembleanddisassemblethehardware
+componentsofyourkit.
+n PlugintheXBee3802.15.4RFModule
+n UnpluganXBee3802.15.4RFModule
+DigiXBee®3802.15.4RFModuleUserGuide 35
+
+Getstarted Assemblethehardware
+ThekitincludesseveralXBeeGroveDevelopmentBoards.Formoreinformationaboutthis
+hardware,seetheXBeeGroveDevelopmentBoarddocumentation.
+Plug in the XBee 3 802.15.4 RF Module
+ThiskitincludestwoXBeeGroveDevelopmentBoards.Formoreinformationaboutthishardware,
+visittheXBeeGroveDevelopmentBoarddocumentation.
+FollowthesestepstoconnecttheXBeedevicestotheboardsincludedinthekit:
+1. PlugoneXBee3802.15.4RFModuleintoeachXBeeGroveDevelopmentBoard.When
+youconnectthedevelopmentboardtoaPCforthefirsttime,thePCautomaticallyinstalls
+drivers,whichmaytakeafewminutestocomplete.
+CAUTION!NeverinsertorremovetheXBeewhilethepowerison(eitherfromthe
+microUSBorabattery)!
+ForXBeeSMTdevices,alignallXBeepinswiththespringheaderandcarefullypushthe
+deviceuntilitclicksfirmlyintotheboard.
+DigiXBee®3802.15.4RFModuleUserGuide 36
+
+Getstarted ConfigurethedeviceusingXCTU
+2. OncetheXBee3802.15.4RFModuleispluggedintotheboard,connecttheboardtoyour
+computerusingthemicroUSBcablesprovided.
+3. EnsuretheloopbackjumperisintheUARTposition.
+Unplug an XBee 3 802.15.4 RF Module
+TodisconnectadevicefromtheXBeeGroveDevelopmentBoard:
+1. DisconnectthemicroUSBcablefromtheboardsoitisnotpowered.
+2. Removethedevicefromtheboardsocket,takingcarenottobendanyofthepins.The
+surfacemountdeviceusesspringpinsratherthanasocketandhasarectangularboard
+cutoutdesignedtohelpinremovingtheXBee3802.15.4RFModule.
+CAUTION!MakesuretheboardisnotpoweredwhenyouremovetheXBee3802.15.4
+RFModule.
+Configure the device using XCTU
+XBeeConfigurationandTestUtility(XCTU)isamulti-platformprogramthatenablesusersto
+interactwithDigiradiofrequency(RF)devicesthroughagraphicalinterface.Theapplication
+includesbuilt-intoolsthatmakeiteasytosetup,configure,andtestDigiRFdevices.
+ForinstructionsondownloadingandusingXCTU,seetheXCTUUserGuide.
+OnceyouinstallXCTU,clicktheXCTUicontoopentheprogram.
+Configure remote devices
+Youcancommunicatewithremotedevicesovertheairthroughacorrespondinglocaldevice.
+NoteUsingAPImodeonthelocaldeviceallowsyoutosendremoteAPIcommands.
+TheseinstructionsshowyouhowtoconfiguretheLT(AssociateLEDBlinkTime)parameterona
+remotedevice.
+DigiXBee®3802.15.4RFModuleUserGuide 37
+
+Getstarted Configureremotedevices
+1. AddtwoXBeedevicestoXCTU.
+2. LoadXBee3802.15.4firmwareontoeachdeviceifitisnotalreadyloaded.SeeHowto
+updatethefirmwareofyourmodulesintheXCTUUserGuideformoreinformation.
+3. ConfigurethefirstdeviceinAPImodeandnameitXBEE_Abyconfiguringthefollowing
+parameters:
+n ID:2018
+n NI:XBEE_A
+n AP:APIenabled[1]
+4. ConfiguretheseconddeviceineitherAPIorTransparentmode,andnameitXBEE_Bby
+configuringthefollowingparameters:
+n ID:2018
+n NI: XBEE_B
+n AP:0or1
+5. DisconnectXBEE_BfromyourcomputerandremoveitfromXCTU.
+6. ConnectXBEE_Btoapowersupply(orlaptoporportablebattery).
+TheRadioModulesareashouldlooksomethinglikethis.
+7. SelectXBEE_AandclicktheDiscoverradionodesinthesamenetworkbutton .
+8. ClickAddselecteddevicesintheDiscoveringremotedevicesdialog.Thediscovered
+remotedeviceappearsbelowXBEE_A.
+DigiXBee®3802.15.4RFModuleUserGuide 38
+
+Getstarted Configurethedevicesforarangetest
+9. SelecttheremotedeviceXBEE_B,andconfigurethefollowingparameter:
+LT:FF(hexadecimalrepresentationfor2550ms)
+10. ClicktheWriteradiosettingsbutton .
+TheremoteXBeedevicenowhasadifferentLEDblinktime.
+11. ToreturntothedefaultLEDblinktimes,changetheLTparameterbackto0forXBEE_B.
+Configure the devices for a range test
+1. AddtwodevicestoXCTU.
+2. SelectthefirstmoduleandclicktheLoaddefaultfirmwaresettingsbutton.
+3. Configurethefollowingparameters:
+ID:2018
+NI:LOCAL_DEVICE
+AP:APIModeEnabled[1]
+4. ClicktheWriteradiosettingsbutton.
+5. SelecttheothermoduleandclicktheDefaultfirmwaresettingsbutton.
+6. Configurethefollowingparameters:
+ID:2018
+NI:REMOTE_DEVICE
+AP: Transparentmode[0](Theremotenodemustbeintransparentmodetoloopback
+packets)
+7. ClicktheWriteradiosettingsbutton.
+Afteryouwritetheradiosettingsforeachdevice,theirnamesappearintheRadioModules
+area.ThePortindicatesthattheLOCAL_DEVICEisinAPImode.
+8. DisconnectREMOTE_DEVICEfromthecomputer,removeitfromXCTU,andconnectittoa
+powersupply,laptop,orportablebattery.
+9. LeaveLOCAL_DEVICEconnectedtothecomputer.
+DigiXBee®3802.15.4RFModuleUserGuide 39
+
+Getstarted Performarangetest
+Perform a range test
+1. GototheXCTUdisplayforradio1.
+2. Click todiscoverremotedeviceswithinthesamenetwork.TheDiscoverremote
+devicesdialogappears.
+3. ClickAddselecteddevices.
+DigiXBee®3802.15.4RFModuleUserGuide 40
+
+Getstarted Performarangetest
+4. Click andselectRangetest.TheRadioRangeTestdialogappears.
+5. ChangetheRangeTesttypetoLoopback.
+6. IntheSelectthelocalradiodevicearea,selectradio1.XCTUautomaticallyselectsthe
+Discovereddeviceoption,andtheStartRangeTestbuttonisactive.
+7. Click tobegintherangetest.XCTUpromptsyoutoenabletheloopback
+jumper.
+DigiXBee®3802.15.4RFModuleUserGuide 41
+
+Getstarted Performarangetest
+PlugintheXBee3802.15.4RFModulehaspicturesthatshowthejumperintheUART
+position—movethejumpertotheleftonthesurface-mountdeviceordownonthethrough-
+holedeviceputsitinloopbackmode
+Ifthetestisrunningproperly,thepacketssentshouldmatchthepacketsreceived.Youwill
+alsoseethereceivedsignalstrengthindicator(RSSI)updateforeachradioaftereach
+reception.
+DigiXBee®3802.15.4RFModuleUserGuide 42
+
+Getstarted Performarangetest
+8. MoveRadio1aroundtoseetheresultingsignalstrengthatdifferentdistances.Whenthe
+testiscomplete,clickStopRangeTest.XCTU displaysanotherloopbackjumperwarning
+screenremindingyoutoputtheloopbackjumperbackinitsoriginalposition.
+DigiXBee®3802.15.4RFModuleUserGuide 43
+
+Getstarted XBIB-CMicroMountreference
+XBIB-C Micro Mount reference
+ThispictureshowstheXBee-CMicroMountdevelopmentboardandthetablethatfollowsexplains
+thecalloutsinthepicture.
+NoteThisboardissoldseparately.
+WARNING!Connectingonepinoffwilldestroytheunitundertest!Alwaysdisconnect
+USBandpowerbeforechangingoneunitforanother.Seethefollowingimagesfor
+examples.
+DigiXBee®3802.15.4RFModuleUserGuide 44
+
+Getstarted XBIB-CMicroMountreference
+Incorrect
+DigiXBee®3802.15.4RFModuleUserGuide 45
+
+Getstarted XBIB-CMicroMountreference
+Correct
+DigiXBee®3802.15.4RFModuleUserGuide 46
+
+Getstarted XBIB-CMicroMountreference
+DigiXBee®3802.15.4RFModuleUserGuide 47
+
+Getstarted XBIB-CMicroMountreference
+Number Item Description
+1 SecondaryUSB SecondaryUSBConnectorforpossiblefutureuse.Notused.
+(USBMICROB)
+2 CurrentMeasure Largeswitchcontrolswhethercurrentmeasuremodeisactiveor
+inactive.Wheninactive,currentcanfreelyflowtotheVCCpinof
+theXBee.Whenactive,theVCCpinoftheXBeeisdisconnected
+fromthe3.3Vlineonthedevelopmentboard.Thisallowscurrent
+measurementtobeconductedbyattachingacurrentmeter
+acrossthejumperP10.
+3 Battery Ifdesired,youcanattachabatterytoprovidepowertothe
+Connector developmentboard.Thevoltagecanrangefrom2Vto5V.The
+positiveterminalisontheleft.
+4 USB-C Connectstoyourcomputer.ThisisconnectedtoaUSBtoUART
+Connector conversionchipthathasthefiveUARTlinespassedtotheXBee
+device.TheUARTDipSwitchcanbeusedtodisconnectthese
+UARTlinesfromtheXBee.
+5 LEDindicator Red:UARTDOUT(modemsendingserial/UARTdatatohost)
+Green:UARTDIN(modemreceivingserial/UARTdatafromhost)
+White:ON/SLP/DIO9
+Blue:ConnectionStatus/DIO5
+Yellow:RSSI/PWM0/DIO10
+6 UserButtons CommDIO0ButtonconnectstheCommissioning/DIO0pinonthe
+XBeeConnectorthroughtoa10ΩresistortoGNDwhen
+pressed.
+RESETButtonConnectstotheRESETpinontheXBee
+ConnectortoGNDwhenpressed.
+7 Breakout This40-pinconnectorcanbeusedtoconnecttovariousXBee
+Connector pinsasshownonthesilkscreenonthebottomoftheboard.
+8 UARTDip Thisdipswitchallowstheusertodisconnectanyoftheprimary
+Switch UARTlinesontheXBeefromtheUSBtoUARTconversionchip.
+ThisallowsfortestingontheprimaryUARTlineswithouttheUSB
+toUARTconversionchipinterfering.PushDipswitchestothe
+righttodisconnecttheUSBtoUARTconversionchipfromthe
+XBee.
+9 Grove ThisconnectorcanbeusedtoattachI2Cenableddevicestothe
+Connector developmentboard.NotethatI2Cneedstobeavailableonthe
+XBeeintheboardtousethisfunctionality.
+Pin1:I2C_CLK/XBeeDIO1
+Pin2:I2C_SDA/XBeeDIO11
+Pin3:VCC
+Pin4:GND
+10 Temp/Humidity ThisasaTexasInstrumentsHDC1080temperatureandhumidity
+Sensor sensor.ThispartisaccessiblethroughI2C.BesurethattheXBee
+DigiXBee®3802.15.4RFModuleUserGuide 48
+
+Getstarted XBIB-CSMTreference
+| Number | Item | Description |
+| ------ | ---- | ----------- |
+thatisinsertedintothedevelopmentboardhasI2Cifaccessto
+thissensorisdesired.
+| 11         | XBeeSocket | ThisisthesocketfortheXBee(Microformfactor). |
+| ---------- | ---------- | ------------------------------------------- |
+| XBIB-C SMT | reference  |                                             |
+ThispictureshowstheXBee-CSMTdevelopmentboardandthetablethatfollowsexplainsthe
+calloutsinthepicture.
+NoteThisboardissoldseparately.
+DigiXBee®3802.15.4RFModuleUserGuide 49
+
+Getstarted XBIB-CSMTreference
+Number Item Description
+1 SecondaryUSB SecondaryUSBConnectorforpossiblefutureuse.Notused.
+(USBMICROB)
+2 CurrentMeasure Largeswitchcontrolswhethercurrentmeasuremodeisactiveor
+inactive.Wheninactive,currentcanfreelyflowtotheVCCpinof
+theXBee.Whenactive,theVCCpinoftheXBeeisdisconnected
+fromthe3.3Vlineonthedevboard.Thisallowscurrent
+measurementtobeconductedbyattachingacurrentmeter
+acrossthejumperP10.
+3 Battery Ifdesired,youcanattachabatterytoprovidepowertothe
+Connector developmentboard.Thevoltagecanrangefrom2Vto5V.The
+positiveterminalisontheleft.
+4 USB-C Connectstoyourcomputer.ThisisconnectedtoaUSBtoUART
+Connector conversionchipthathasthefiveUARTlinespassedtotheXBee.
+TheUARTDipSwitchcanbeusedtodisconnecttheseUART
+linesfromtheXBee.
+5 LEDindicator Red:UARTDOUT(modemsendingserial/UARTdatatohost)
+Green:UARTDIN(modemreceivingserial/UARTdatafromhost)
+White:ON/SLP/DIO9
+Blue:ConnectionStatus/DIO5
+Yellow:RSSI/PWM0/DIO10
+6 UserButtons CommDIO0ButtonconnectstheCommissioning/DIO0pinonthe
+XBeeConnectorthroughtoa10ΩresistortoGNDwhen
+pressed.
+RESETButtonConnectstotheRESETpinontheXBee
+ConnectortoGNDwhenpressed.
+7 Breakout This40-pinconnectorcanbeusedtoconnecttovariousXBee
+Connector pinsasshownonthesilkscreenonthebottomoftheboard.
+8 UARTDip Thisdipswitchallowstheusertodisconnectanyoftheprimary
+Switch UARTlinesontheXBeefromtheUSBtoUARTconversionchip.
+ThisallowsfortestingontheprimaryUARTlineswithouttheUSB
+toUARTconversionchipinterfering.PushDipswitchestothe
+righttodisconnecttheUSBtoUARTconversionchipfromthe
+XBee.
+9 Grove ThisconnectorcanbeusedtoattachI2Cenableddevicestothe
+Connector developmentboard.NotethatI2Cneedstobeavailableonthe
+XBeeintheboardtousethisfunctionality.
+Pin1:I2C_CLK/XBeeDIO1
+Pin2:I2C_SDA/XBeeDIO11
+Pin3:VCC
+Pin4:GND
+10 Temp/Humidity ThisasaTexasInstrumentsHDC1080temperatureandhumidity
+Sensor sensor.ThispartisaccessiblethroughI2C.BesurethattheXBee
+DigiXBee®3802.15.4RFModuleUserGuide 50
+
+Getstarted XBIB-CUTHreference
+| Number | Item | Description |
+| ------ | ---- | ----------- |
+thatisinsertedintotheDevBoardhasI2Cifaccesstothissensor
+isdesired.
+| 11         | XBeeSocket | ThisisthesocketfortheXBee(SMTformfactor) |
+| ---------- | ---------- | ---------------------------------------- |
+| XBIB-CU TH | reference  |                                          |
+ThispictureshowstheXBee-CUTHdevelopmentboardandthetablethatfollowsexplainsthe
+calloutsinthepicture.
+NoteThisboardissoldseparately.
+DigiXBee®3802.15.4RFModuleUserGuide 51
+
+Getstarted XBIB-CUTHreference
+Number Item Description
+1 SecondaryUSB SecondaryUSBConnectorfordirectprogrammingofmoduleson
+(USBMICROB) someXBeeunits.FliptheDipswitchestotherightforI2Caccess
+andDIPSwitch totheboard;flipDipswitchestothelefttodisableI2Caccessto
+theboard.TheUSB_PandUSB_Nlinesarealwaysconnectedto
+theXBee,regardlessofDipswitchsetting.
+ThisUSBportisnotdesignedtopowerthemoduleortheboard.
+DonotpluginaUSBcablehereunlesstheboardisalreadybeing
+poweredthroughthemainUSB-Cconnector.Donotattacha
+USBcablehereiftheDipswitchesarepushedtotheright.
+WARNING!DirectinputofUSBlinesintoXBeeunitsor
+I2Clinesnotdesignedtohandle5Vcanresultinthe
+destructionoftheXBeeorI2Ccomponents.Could
+causefireorseriousinjury.DonotpluginaUSBcable
+hereiftheXBeedeviceisnotdesignedforitanddonot
+pluginaUSBcablehereiftheDipswitchesarepushed
+totheright.
+2 CurrentMeasure Largeswitchcontrolswhethercurrentmeasuremodeisactiveor
+inactive.Wheninactive,currentcanfreelyflowtotheVCCpinof
+theXBee.Whenactive,theVCCpinoftheXBeeisdisconnected
+fromthe3.3Vlineonthedevelopmentboard.Thisallowscurrent
+measurementtobeconductedbyattachingacurrentmeter
+acrossthejumperP10.
+3 Battery Ifdesired,abatterycanbeattachedtoprovidepowertothe
+Connector developmentboard.Thevoltagecanrangefrom2Vto5V.The
+positiveterminalisontheleft.
+IftheUSB-Cconnectorisconnectedtoacomputer,thepowerwill
+beprovidedthroughtheUSB-Cconnectorandnotthebattery
+connector.
+4 USB-C Connectstoyourcomputerandprovidesthepowerforthe
+Connector developmentboard.ThisisconnectedtoaUSBtoUART
+conversionchipthathasthefiveUARTlinespassedtotheXBee.
+TheUARTDipSwitchcanbeusedtodisconnecttheseUART
+linesfromtheXBee.
+5 LEDindicator Red:UARTDOUT(modemsendingserial/UARTdatatohost)
+Green:UARTDIN(modemreceivingserial/UARTdatafromhost)
+White:ON/SLP/DIO9
+Blue:ConnectionStatus/DIO5
+Yellow:RSSI/PWM0/DIO10
+6 UserButtons CommDIO0ButtonconnectstheCommissioning/DIO0pinonthe
+XBeeConnectorthroughtoa10ΩresistortoGNDwhen
+pressed.
+RESETButtonConnectstotheRESETpinontheXBee
+DigiXBee®3802.15.4RFModuleUserGuide 52
+
+Getstarted XBIB-C-GPSreference
+| Number | Item | Description |
+| ------ | ---- | ----------- |
+ConnectortoGNDwhenpressed.
+| 7   | Breakout  | This40pinconnectorcanbeusedtoconnecttovariousXBee |
+| --- | --------- | ------------------------------------------------- |
+|     | Connector | pinsasshownonthesilkscreenonthebottomoftheboard.  |
+8 UARTDip Thisdipswitchallowstheusertodisconnectanyoftheprimary
+|     | Switch | UARTlinesontheXBeefromtheUSBtoUARTconversionchip. |
+| --- | ------ | ------------------------------------------------- |
+ThisallowsfortestingontheprimaryUARTlineswithouttheUSB
+toUARTconversionchipinterfering.PushDipswitchestothe
+righttodisconnecttheUSBtoUARTconversionchipfromthe
+XBee.
+| 9   | Grove | ThisconnectorcanbeusedtoattachI2Cenableddevicestothe |
+| --- | ----- | ---------------------------------------------------- |
+Connector developmentboard.NotethatI2Cneedstobeavailableonthe
+XBeeintheboardforthisfunctionalitytobeused.
+Pin1:I2C_CLK/XBeeDIO1
+Pin2:I2C_SDA/XBeeDIO11
+Pin3:VCC
+Pin4:GND
+10 Temp/Humidity ThisasaTexasInstrumentsHDC1080temperatureandhumidity
+Sensor sensor.ThispartisaccessiblethroughI2C.BesurethattheXBee
+thatisinsertedintothedevelopmentboardhasI2Cifaccessto
+thissensorisdesired.
+| 11  | XBeeSocket | ThisisthesocketfortheXBee(THformfactor). |
+| --- | ---------- | ---------------------------------------- |
+12 XBeeTestPoint Allowseasyaccessforprobesforall20XBeeTHpins.Pin1is
+|     | Pins | shortedtoPin1ontheXBeeandsoon. |
+| --- | ---- | ------------------------------ |
+XBIB-C-GPS reference
+ThispictureshowstheXBIB-C-GPSmoduleandthetablethatfollowsexplainsthecalloutsinthe
+picture.
+NoteThisboardissoldseparately.YoumustalsohavepurchasedanXBIB-Cthrough-hole,
+surface-mount,ormicro-mountdevelopmentboard.
+NoteForademonstrationofhowtouseMicroPythontoparsesomeoftheGPSNMEAsentences
+fromtheUART,printthemandreportthemtoDigiRemoteManager,seeRuntheMicroPython
+GPSdemo.
+DigiXBee®3802.15.4RFModuleUserGuide 53
+
+Getstarted XBIB-C-GPSreference
+DigiXBee®3802.15.4RFModuleUserGuide 54
+
+Getstarted InterfacewiththeXBIB-C-GPSmodule
+Number Item Description
+1 40-pin ThisheaderisusedtoconnecttheXBIB-C-GPSboardtoacompatible
+header XBIBdevelopmentboard.InserttheXBIB-C-GPSmoduleslowlywith
+alternatingpressureontheupperandlowerpartsoftheconnector.If
+addedorremovedimproperly,thepinsontheattachedboardcouldbend
+outofshape.
+2 GPS ThisistheCAM-M8Q-0-10modulemadebyu-blox.Thisiswhatmakes
+unit theGPSmeasurements.Properorientationiswiththeboardlaying
+completelyflat,withthemodulefacingtowardsthesky.
+Interface with the XBIB-C-GPS module
+TheXBee3802.15.4RFModulecaninterfacewiththeXBIB-C-GPSboardthroughthelarge40-
+pinheader.ThisheaderisdesignedtofitintoXBIB-Cdevelopmentboard.ThisallowstheXBee3
+802.15.4RFModuleintheXBIB-CboardtocommunicatewiththeXBIB-C-GPSboard—provided
+theXBeedeviceusedhasMicroPythoncapabilities(seethislinktodeterminewhichdeviceshave
+MicroPythoncapabilities).TherearetwowaystointerfacewiththeXBIB-C-GPSboard:through
+thehostboard’sSecondaryUARTorthroughtheI2Ccompliantlines.
+Thefollowingpictureshowsatypicalsetup:
+DigiXBee®3802.15.4RFModuleUserGuide 55
+
+Getstarted InterfacewiththeXBIB-C-GPSmodule
+I2C communication
+TherearetwoI2Clinesconnectedtothehostboardthroughthe40-pinheader,SCLandSDA.I2C
+communicationisperformedoveranI2C-compliantDisplayDataChannel.TheXBIB-C-GPS
+moduleoperatesinslavemode.ThemaximumfrequencyoftheSCLlineis400kHz.Toaccess
+datathroughtheI2Clines,thedatamustbequeriedbytheconnectedXBee3802.15.4RF
+Module.
+FormoreinformationaboutI2COperationseetheI2CsectionoftheDigiMicroPython
+ProgrammingGuide.
+FormoreinformationontheoperationoftheXBIB-C-GPSboardseetheCAM-M8datasheet.
+OtherCAM-M8documentationislocatedhere.
+UART communication
+TherearetwoUARTpinsconnectedfromtheXBIB-C-GPStothehostboardbythe40-pinheader:
+RXandTX.Bydefault,theUARTontheXBIB-C-GPSboardisactiveandsendsGPSreadingsto
+theconnecteddevice’ssecondaryUARTpins.Readingsaretransmittedonceeverysecond.The
+baudrateoftheUARTis9600baud.
+Run the MicroPython GPS demo
+TheDigiMicroPythongithubrepositorycontainsaGPSdemoprogramthatparsessomeofthe
+GPSNMEAsentencesfromtheUART,printsthemandalsoreportsthemtoDigiRemoteManager.
+NoteIfyouareunfamiliarwithMicroPythononXBeeyoushouldfirstrunsomeofthetutorials
+earlierinthismanualtofamiliarizeyourselfwiththeenvironment.SeeGetstartedwith
+MicroPython.Formoredetailedinformation,refertotheDigiMicroPythonProgrammingGuide.
+Step1:CreateaRemoteManagerdeveloperaccount
+YoumusthaveaRemoteManagerdeveloperaccounttobeabletousethisprogram.Makesure
+youknowtheusernameandpasswordforthisaccount.
+Ifyoudon'tcurrentlyhaveaRemoteManagerdeveloperaccount,youcancreateafreedeveloper
+account.
+Step2:DownloadorclonetheXBeeMicroPythonrepository
+1. Navigateto:https://github.com/digidotcom/xbee-micropython/
+2. ClickCloneordownload.
+3. Youmusteithercloneordownloadazipfileoftherepository.Youcanuseeithermethod.
+n Clone:IfyouarefamiliarwithGIT,followthestandardGIT processtoclonethe
+repository.
+n Download
+a. ClickDownloadziptodownloadazipfileoftherepositorytothedownloadfolder
+ofyourchoosing.
+b. Extracttherepositorytoalocationofyourchoosingonyourharddrive.
+DigiXBee®3802.15.4RFModuleUserGuide 56
+
+Getstarted InterfacewiththeXBIB-C-GPSmodule
+Step3:EdittheMicroPythonfile
+1. NavigatetothelocationoftherepositoryzipfilethatyoucreatedinStep2.
+2. Navigateto:samples/gps
+3. OpentheMicroPythonfile:gpsdemo1.py
+4. Usingtheeditorofyourchoice,edittheMicroPythonfile.Atthetopofthefile,entertheuser
+nameandpasswordforyourRemoteManagerdeveloperaccount.Thecorrectlocationis
+indicatedinthecommentsinthefile.
+Step4:Runtheprogram
+1. RenamethefileyoueditedinStep3fromgpsdemo1.pytomain.py.
+2. Copytherenamedfileontoyourdevice'srootfilesystemdirectory.
+3. Copythefollowingthreemodulesfromthelocationsspecifiedbelowintoyourdevice's/lib
+directory:
+n Fromthe/libdirectoryoftheDigixbee-micropythonrepository:urequest.pyand
+remotemanager.py
+n Fromthe/lib/sensordirectoryoftheDigixbee-micropythonrepository:hdc1080.py
+NoteThesemodulesarerequiredtobeabletorunthegpsdemo1.py.
+4. OpenXCTUandusetheMicroPythonTerminaltorunthedemo.
+5. Type<CTRL>-RfromtheMicroPythonprompttorunthecode.
+DigiXBee®3802.15.4RFModuleUserGuide 57
+
+Get started with MicroPython
+ThisuserguideprovidesanoverviewofhowtouseMicroPythonwiththeXBee3802.15.4RF
+Module.Forin-depthinformationandmorecomplexcodeexamples,refertotheDigiMicroPython
+ProgrammingGuide.Continuewiththisuserguideforsimpleexamplestogetstartedusing
+MicroPythonontheXBee3802.15.4RFModule.
+AboutMicroPython 59
+MicroPythonontheXBee3802.15.4RFModule 59
+UseXCTUtoentertheMicroPythonenvironment 59
+UsetheMicroPythonTerminalinXCTU 60
+MicroPythonexamples 60
+ExitMicroPythonmode 69
+Otherterminalprograms 69
+UsepicocominLinux 70
+Micropythonhelp() 71
+DigiXBee®3802.15.4RFModuleUserGuide 58
+
+GetstartedwithMicroPython AboutMicroPython
+About MicroPython
+MicroPythonisanopen-sourceprogramminglanguagebasedonPython3.0,withmuchofthe
+samesyntaxandfunctionality,butmodifiedtofitonsmalldeviceswithlimitedhardwareresources,
+suchasanXBee3802.15.4RFModule.
+FormoreinformationaboutMicroPython,seewww.micropython.org.
+FormoreinformationaboutPython,seewww.python.org.
+MicroPython on the XBee 3 802.15.4 RF Module
+TheXBee3802.15.4RFModulehasMicroPythonrunningonthedeviceitself.Youcanaccessa
+MicroPythonpromptfromtheXBee3802.15.4RFModulewhenyouinstallitinanappropriate
+developmentboard(XBDBorXBIB),andconnectittoacomputerviaaUSBcable.
+NoteMicroPythonisonlyavailablethroughtheUARTinterfaceanddoesnotworkwithSPI.
+NoteMicroPythonprogrammingonthedevicerequiresfirmwareversion2003ornewer.
+Theexamplesinthisuserguideassume:
+n YouhaveXCTUonyourcomputer.SeeConfigurethedeviceusingXCTU.
+n Youhaveaserialterminalprograminstalledonyourcomputer.Formoreinformation,see
+UsetheMicroPythonTerminalinXCTU.ThisrequiresXCTU6.3.10orhigher.
+n YouhaveanXBee3802.15.4RFModuleinstalledonanappropriatedevelopmentboard
+suchasanXBIB-U-DEVoranXBDB-U-ZB.
+n TheXBee3802.15.4RFModuleisconnectedtothecomputerviaaUSBcableandXCTU
+recognizesit.
+Use XCTU to enter the MicroPython environment
+TousetheXBee3802.15.4RFModuleintheMicroPythonenvironment:
+1. UseXCTUtoaddthedevice(s);seeConfigurethedeviceusingXCTUandAdddevicesto
+XCTU.
+2. TheXBee3802.15.4RFModuleappearsasaboxintheRadioModulesinformationpanel.
+Eachmoduledisplaysidentifyinginformationaboutitself.
+3. Clickthisboxtoselectthedeviceandloaditscurrentsettings.
+NoteToensurethatMicroPythonisresponsivetoinput,DigirecommendssettingtheXBee
+UARTbaudrateto115200baud.TosettheUARTbaudrate,select115200[7]intheBD
+fieldandclicktheWritebutton.Westronglyrecommendusinghardwareflowcontrolto
+avoiddataloss,especiallywhenpastinglargeamountsofcodeortext.Formore
+information,seeUARTflowcontrol.
+4. ToputtheXBee3802.15.4RFModuleintoMicroPythonmode,intheAP fieldselect
+MicroPythonREPL[4]andclicktheWritebutton .
+5. NotewhichCOMporttheXBee3802.15.4RFModuleisusing,becauseyouwillneedthis
+informationwhenyouusetheMicroPythonterminal.
+DigiXBee®3802.15.4RFModuleUserGuide 59
+
+GetstartedwithMicroPython UsetheMicroPythonTerminalinXCTU
+Use the MicroPython Terminal in XCTU
+YoucanusetheMicroPythonTerminaltocommunicatewiththeXBee3802.15.4RFModulewhen
+itisinMicroPythonmode.1ThisrequiresXCTU6.3.10orhigher.ToenterMicroPythonmode,
+followthestepsinUseXCTUtoentertheMicroPythonenvironment.TousetheMicroPython
+Terminal:
+1. ClicktheToolsdrop-downmenu andselectMicroPythonTerminal.Theterminal
+windowopens.
+2. ClickOpentoopentheSerialPortConfigurationwindow.
+3. IntheSelecttheSerial/USBportarea,clicktheCOMportthatthedeviceuses.
+4. Verifythatthebaudrateandothersettingsarecorrect.
+5. ClickOK.TheOpeniconchangestoClose ,indicatingthatthedeviceisproperly
+connected.
+Ifthe>>>promptappears,youareconnectedproperly.YoucannowtypeorpasteMicroPython
+codeintheterminal.
+MicroPython examples
+ThissectionprovidesexamplesofhowtousesomeofthebasicfunctionalityofMicroPythonwith
+theXBee3802.15.4RFModule.
+Example: hello world
+1. AttheMicroPython>>>prompt,typethePythoncommand:print("Hello,World!")
+2. PressEntertoexecutethecommand.TheterminalechosbackHello,World!
+Example: enter MicroPython paste mode
+InthefollowingexamplesitishelpfultoknowthatMicroPythonsupportspastemode,whereyou
+cancopyalargeblockofcodefromthisuserguideandpasteitinsteadoftypingitcharacterby
+character.Tousepastemode:
+1. Copythecodeyouwanttorun.Forexample,copythefollowingcodethatisthecodefrom
+the"Helloworld"example:
+print("HelloWorld")
+NoteYoucaneasilycopyandpastecodefromtheonlineversionofthisguide.Usecautionwith
+thePDFversion,asitmaynotmaintainessentialindentations.
+2. Intheterminal,attheMicroPython>>>prompttypeCtrl-+Etoenterpastemode.The
+terminaldisplayspastemode;Ctrl-Ctocancel,Ctrl-Dtofinish.
+3. Right-clickintheMicroPythonterminalwindowandclickPasteorpressCtrl+Shift+Vto
+paste.
+1SeeOtherterminalprogramsifyoudonotusetheMicroPythonTerminalinXCTU.
+DigiXBee®3802.15.4RFModuleUserGuide 60
+
+GetstartedwithMicroPython MicroPythonexamples
+4. Thecodeappearsintheterminaloccupyingoneline.Eachlinestartswithitslinenumber
+andthree"="symbols.Forexample,line1startswith1===.
+5. Ifthecodeiscorrect,pressCtrl+Dtorunthecode;“HelloWorld”shouldprint.
+NoteIfyouwanttoexitpastemodewithoutrunningthecode,orifthecodedidnotcopy
+correctly,pressCtrl+CtocancelandreturntothenormalMicroPython>>>prompt).
+Example: use the time module
+Thetimemoduleisusedfortime-sensitiveoperationssuchasintroducingadelayinyourroutineor
+atimer.
+ThefollowingtimefunctionsaresupportedbytheXBee3802.15.4RFModule:
+n ticks_ms()returnsthecurrentmillisecondcountervalue.Thiscounterrollsoverat
+0x40000000.
+n ticks_diff()comparesthedifferencebetweentwotimestampsinmilliseconds.
+n sleep()delaysoperationforasetnumberofseconds.
+n sleep_ms()delaysoperationforasetnumberofmilliseconds.
+n sleep_us()delaysoperationforasetnumberofmicroseconds.
+NoteThestandardtime.time()functioncannotbeused,becausethisfunctionproducesthe
+numberofsecondssincetheepoch.TheXBeemodulelacksarealtimeclockandcannotprovide
+anydateortimedata.
+Thefollowingexampleexercisesthevarioussleepfunctionsandusesticks_diff()tomeasure
+duration:
+importtime
+start=time.ticks_ms() #Getthevaluefromthemillisecondcounter
+time.sleep(1) #sleepfor1second
+time.sleep_ms(500) #sleepfor500milliseconds
+time.sleep_us(1000) #sleepfor1000microseconds
+delta=time.ticks_diff(time.ticks_ms(),start)
+print("Operationtook{}mstoexecute".format(delta))
+Example: AT commands using MicroPython
+ATcommandscontroltheXBee3802.15.4RFModule.The"AT"isanabbreviationfor"attention",
+andtheprefix"AT"notifiesthemoduleaboutthestartofacommandline.ForalistofAT
+commandsthatcanbeusedontheXBee3802.15.4RFModule,seeATcommands.
+MicroPythonprovidesanatcmd()methodtoprocessATcommands,similartohowyoucanuse
+CommandmodeorAPIframes.
+Theatcmd()methodacceptstwoparameters:
+1. ThetwocharacterATcommand,enteredasastring.
+2. AnoptionalsecondparameterusedtosettheATcommandvalue.Ifthisparameterisnot
+DigiXBee®3802.15.4RFModuleUserGuide 61
+
+GetstartedwithMicroPython MicroPythonexamples
+provided,theATcommandisqueriedinsteadofbeingset.Thisvalueisaninteger,bytes
+object,orstring,dependingontheATcommand.
+NoteThexbee.atcmd()methoddoesnotsupportthefollowingATcommands:IS,AS,ED,ND,or
+DN.
+ThefollowingisexamplecodethatqueriesandsetsavarietyofATcommandsusingxbee.atcmd
+():
+importxbee
+#SettheNIstringoftheradio
+xbee.atcmd("NI","XBee3module")
+#Configureadestinationaddressusingtwodifferentdatatypes
+xbee.atcmd("DH",0x0013A200) #Hex
+xbee.atcmd("DL",b'\x12\x25\x89\xF5') #Bytes
+#ReadsomeATcommandsanddisplaythevalueanddatatype:
+print("\nATcommandparametervalues:")
+commands=["DH","DL","NI","CK"]
+forcmdincommands:
+val=xbee.atcmd(cmd)
+print("{}:{:20}oftype{}".format(cmd,repr(val),type(val)))
+Thisexamplecodeoutputsthefollowing:
+ATcommandparametervalues:
+DH:b'\x00\x13\xa2\x00' oftype<class'bytes'>
+DL:b'\x12%\x89\xf5' oftype<class'bytes'>
+NI:'XBee3module' oftype<class'str'>
+CK:65535 oftype<class'int'>
+NoteParametersthatstorevalueslargerthan16-bitsinlengtharerepresentedasbytes.Python
+attemptstoprintoutASCIIcharacterswheneverpossible,whichcanresultinsomeunexpected
+output(suchasthe"%"intheaboveoutput).IfyouwanttheoutputfromMicroPythontomatch
+XCTU,youcanusethefollowingexampletoconvertbytestohex:
+dl_value=xbee.atcmd("DL")
+hex_dl_value=hex(int.from_bytes(dl_value,'big'))
+MicroPython networking and communication examples
+ThissectionprovidesnetworkingandcommunicationexamplesforusingMicroPythonwiththe
+XBee3802.15.4RFModule.
+802.15.4networkswithMicroPython
+Forsmallnetworks,itissuitabletouseMicroPythononeverynode.However,therearesome
+inheritlimitationsthatmaypreventyoufromusingMicroPythononsomeheavilytraffickednodes:
+n WhenrunningMicroPython,anyreceivedmessageswillbestoredinasmallreceivequeue.
+Thisqueueonlyhasroomfor4packetsandmustberegularlyreadtopreventdataloss.For
+networksthatwillbegeneratingalotoftraffic,thedataaggregatormayneedtooperatein
+APImodeinordertocaptureallincomingdata.
+DigiXBee®3802.15.4RFModuleUserGuide 62
+
+GetstartedwithMicroPython MicroPythonexamples
+Fortheexamplesinthissection,thedevicesshouldbepre-configuredwithidenticalnetwork
+settingssothatRFcommunicationispossible.Tofollowtheupcomingexamples,weneedto
+configureasecondXBee3802.15.4RFModuletouseMicroPython.
+XCTUonlyallowsasingleMicroPythonterminal.Wewillberunningexamplecodeonboth
+modules,whichrequiresasecondterminalwindow.
+OpenasecondinstanceofXCTU,andconfigureadifferentXBee3deviceforMicroPython
+followingthestepsinUseXCTUtoentertheMicroPythonenvironment.
+Example:networkDiscoveryusingMicroPython
+Thexbee.discover()methodreturnsaniteratorthatblockswhilewaitingforresults,similarto
+executinganNDrequest.Formoreinformation,seeND(NetworkDiscover).
+EachresultisadictionarywithfieldsbasedonanNDresponse:
+n sender_nwk:16-bitnetworkaddress.
+n sender_eui64:8-bytebytesobjectwithEUI-64address.
+n parent_nwk:Setto0xFFFEonthecoordinatorandrouters;otherwise,thisissettothe
+networkaddressoftheenddevice'sparent.
+n node_id:Thedevice'sNIvalue(astringofupto20characters,alsoreferredtoasNode
+Identification).
+n node_type:Valueof0,1or2forcoordinator,router,orenddevice.
+n device_type:Thedevice's32-bitDDvalue,alsoreferredtoasDigiDeviceType;thisisused
+toidentifydifferenttypesofdevicesorhardware.
+n rssi:Relativesignalstrengthindicator(indBm)ofthenodediscoveryrequestpacket
+receivedbythesendingnode.
+NoteWhenprintingthedictionary,fieldsfordevice_type,sender_nwkandparent_nwkappearin
+decimalform.YoucanusetheMicroPythonhex()methodtoprintanintegerinhexadecimal.
+Checkthefunctioncodeforformat_eui64fromtheExample:communicationbetweentwoXBee3
+802.15.4modulestopicforcodetoconvertthesender_eui64fieldintoahexadecimalstringwitha
+colonbetweeneachbytevalue.
+Usethefollowingexamplecodetoperformanetworkdiscovery:
+importxbee,time
+#Setthenetworkdiscoveryoptionstoincludeself
+xbee.atcmd("NO",2)
+xbee.atcmd("AC")
+time.sleep(.5)
+#PerformNetworkDiscoveryandprintouttheresults
+print("NetworkDiscoveryinprocess...")
+nodes=list(xbee.discover())
+ifnodes:
+fornodeinnodes:
+print("\nRadiodiscovered:")
+forkey,valueinnode.items():
+print("\t{:<12}:{}".format(key,value))
+#SetNObacktothedefaultvalue
+xbee.atcmd("NO",0)
+xbee.atcmd("AC")
+DigiXBee®3802.15.4RFModuleUserGuide 63
+
+GetstartedwithMicroPython MicroPythonexamples
+Thisproducesthefollowingoutputfromtwodiscoverednodes:
+Radiodiscovered:
+rssi :-63
+node_id :Coordinator
+device_type :1179648
+parent_nwk :65534
+sender_nwk :0
+sender_eui64 :b'\x00\x13\xa2\xffh\x98T'
+node_type :0
+Radiodiscovered:
+rssi :-75
+node_id :Router
+device_type :1179648
+parent_nwk :65534
+sender_nwk :23125
+sender_eui64 :b'\x00\x13\xa2\xffh\x98c&'
+node_type :1
+Examples:transmittingdata
+ThissectionprovidesexamplesfortransmittingdatausingMicroPython.Theseexamplesassume
+youhavefollowedtheaboveexamplesandthetworadiosareonthesamenetwork.
+Example:transmitmessage
+UsethexbeemoduletotransmitamessagefromtheXBee3Zigbeedevice.Thetransmit()
+functioncallconsistsofthefollowingparameters:
+1. TheDestinationAddress,whichcanbeanyofthefollowing:
+n Integerfor16-bitaddressing
+n 8-bytebytesobjectfor64-bitaddressing
+n Constantxbee.ADDR_BROADCASTtoindicateabroadcastdestination
+n Constantxbee.ADDR_COORDINATORtoindicatethecoordinator
+2. TheMessageasacharacterstring.
+Ifthemessageissentsuccessfully,transmit()returnsNone.Ifthetransmissionfailsduetoan
+ACKfailureorlackoffreebufferspaceonthereceiver,thesentpacketwillbesilentlydiscarded.
+Example:transmitamessagetothenetworkcoordinator
+1. Fromtherouter,accesstheMicroPythonenvironment.
+2. AttheMicroPython>>>prompt,typeimportxbeeandpressEnter.
+3. AttheMicroPython>>>prompt,typexbee.transmit(xbee.ADDR_COORDINATOR,"Hello
+World!")andpressEnter.
+4. Onthecoordinator,youcanissueanxbee.receive()calltooutputthereceivedpacket.
+Example:transmitcustommessagestoallnodesinanetwork
+Thisprogramperformsanetworkdiscoveryandsendsthemessage'Hello<DestinationNode
+Identifier>!'toindividualnodesinthenetwork.Formoreinformation,seeExample:network
+DiscoveryusingMicroPython.
+DigiXBee®3802.15.4RFModuleUserGuide 64
+
+GetstartedwithMicroPython MicroPythonexamples
+importxbee
+#Performanetworkdiscoverytogatherdestinationaddress:
+print("Discoveringremotenodes,pleasewait...")
+node_list=list(xbee.discover())
+ifnotnode_list:
+raiseException("Networkdiscoverydidnotfindanyremotedevices")
+fornodeinnode_list:
+dest_addr=node['sender_nwk'] #'sender_eui64'canalsobeused
+dest_node_id=node['node_id']
+payload_data="Hello,"+dest_node_id+"!"
+try:
+print("Sending\"{}\"to{}".format(payload_data,hex(dest_addr)))
+xbee.transmit(dest_addr,payload_data)
+exceptExceptionaserr:
+print(err)
+print("complete")
+Receivingdata
+Usethereceive()functionfromthexbeemoduletoreceivemessages.WhenMicroPythonis
+activeonadevice(APissetto4),allincomingmessagesaresavedtoareceivequeuewithin
+MicroPython.Thisreceivequeueislimitedinsizeandonlyhasroomfor4messages.Toensure
+thatdataisnotlost,itisimportanttocontinuouslyiteratethroughthereceivequeueandprocess
+anyofthepacketswithin.
+Ifthereceivequeueisfullandanothermessageissenttothedevice,itwillnotacknowledgethe
+packetandthesendergeneratesafailurestatusof0x24(Addressnotfound).
+Thereceive()functionreturnsoneofthefollowing:
+n None:Nomessage(thereceivequeueisempty).
+n Messagedictionaryconsistingof:
+l sender_eui64:64-bitaddress(asa"bytesobject")ofthesendingnode.
+l source_ep:sourceendpointasaninteger.
+l dest_ep:destinationendpointasaninteger.
+l cluster:clusteridasaninteger.
+l profile:profileidasaninteger.
+l broadcast:TrueorFalsedependingonwhethertheframewasbroadcastorunicast.
+l payload:"Bytesobject"ofthepayload.Thisisabytesobjectinsteadofastring,
+becausethepayloadcancontainbinarydata.
+Example:continuouslyreceivedata
+Inthisexample,theformat_packet()helperformatsthecontentsofthedictionaryandformat_
+eui64()formatsthebytesobjectholdingtheEUI-64.Thewhileloopshowshowtopollforpackets
+continuallytoensurethatthereceivebufferdoesnotbecomefull.
+defformat_eui64(addr):
+return':'.join('%02x'%bforbinaddr)
+defformat_packet(p):
+DigiXBee®3802.15.4RFModuleUserGuide 65
+
+GetstartedwithMicroPython MicroPythonexamples
+type='Broadcast'ifp['broadcast']else'Unicast'
+print("%smessagefromEUI-64%s(network0x%04X)"%(type,
+format_eui64(p['sender_eui64']),p['sender_nwk']))
+print(" fromEP0x%02XtoEP0x%02X,Cluster0x%04X,Profile0x%04X:"%
+(p['source_ep'],p['dest_ep'],p['cluster'],p['profile']))
+print(p['payload'])
+importxbee,time
+whileTrue:
+print("Receivingdata...")
+print("PressCTRL+Ctocancel.")
+p=xbee.receive()
+ifp:
+format_packet(p)
+else:
+time.sleep(0.25) #wait0.25secondsbeforecheckingagain
+Ifthisnodehadpreviouslyreceivedapacket,itoutputsasfollows:
+UnicastmessagefromEUI-6400:13:a2:00:41:74:ca:70(network0x6D81)
+fromEP0xE8toEP0xE8,Cluster0x0011,Profile0xC105:
+b'HelloWorld!'
+NoteDigirecommendscallingthereceive()functioninaloopsonodataislost.Onmoduleswhere
+thereisahighvolumeofnetworktraffic,therecouldbedatalostifthemessagesarenotpulled
+fromthequeuefastenough.
+Example:communicationbetweentwoXBee3802.15.4modules
+Thisexamplecombinesallofthepreviousexamplesandrepresentsafullapplicationthat
+configuresanetwork,discoversremotenodes,andsendsandreceivesmessages.
+First,wewilluploadsomeutilityfunctionsintotheflashspaceofMicroPythonsothatthefollowing
+exampleswillbeeasiertoread.
+Completethefollowingstepstocompileandexecuteutilityfunctionsusingflashmodeonboth
+devices:
+1. AccesstheMicroPythonenvironment.
+2. PressCtrl+F.
+3. Copythefollowingcode:
+importxbee,time
+#UtilityfunctionstoperformXBee3802.15.4operations
+defformat_eui64(addr):
+return':'.join('%02x'%bforbinaddr)
+defformat_packet(p):
+type='Broadcast'ifp['broadcast']else'Unicast'
+print("%smessagefromEUI-64%s(network0x%04X)"%
+(type,format_eui64(p['sender_eui64']),p['sender_nwk']))
+print("fromEP0x%02XtoEP0x%02X,Cluster0x%04X,Profile0x%04X:"%
+(p['source_ep'],p['dest_ep'],p['cluster'],p['profile']))
+print(p['payload'],"\n")
+defnetwork_status():
+#IfthevalueofAIisnonzero,themoduleisnotconnectedtoanetwork
+returnxbee.atcmd("AI")
+DigiXBee®3802.15.4RFModuleUserGuide 66
+
+GetstartedwithMicroPython MicroPythonexamples
+4. AttheMicroPython1^^^prompt,right-clickandselectthePasteoption.
+5. PressCtrl+Dtofinish.Thecodeisuploadedtotheflashmemoryandthencompiled.Atthe
+"Automaticallyrunthiscodeatstartup"[Y/N]?"prompt,selectY.
+6. PressCtrl+Rtorunthecompiledcode;thisprovidesaccesstotheseutilityfunctionsforthe
+nextexamples.
+WARNING!MicroPythoncodestoredinflashissavedinthefilesystemasmain.py.If
+thefilesystemhasnotbeenformatted,thenthefollowingerrorisgenerated:
+OSError:[Errno7019]ENODEV
+Thefilesystemcanbeformattedinoneofthreeways:
+InXCTUbyusingtheFileSystemManager.
+InCommandmodeusingtheATFSFORMATconfirmcommand—seeFS(FileSystem).
+InMicroPythonbyissuingthefollowingcode:
+importos
+os.format()
+Examplecodeonthecoordinatormodule
+Thefollowingexamplecodeformsan802.15.4networkasacoordinator,performsanetwork
+discoverytofindtheremotenode,andcontinuouslyprintsoutanyincomingdata.
+1. AccesstheMicroPythonenvironment.
+2. Copythefollowingsamplecode:
+print("Forminganew802.15.4networkasacoordinator...")
+xbee.atcmd("NI","Coordinator")
+network_settings={"CE":1,"A2":4,"CH":0x13,"MY":0xFFFF,"ID":0x3332,"EE":0}
+forcommand,valueinnetwork_settings.items():
+xbee.atcmd(command,value)
+xbee.atcmd("AC") #Applychanges
+time.sleep(1)
+whilenetwork_status()!=0:
+time.sleep(0.1)
+print("NetworkEstablished\n")
+print("Waitingforaremotenodetojoin...")
+node_list=[]
+whilelen(node_list)==0:
+#Performanetworkdiscoveryuntiltheremotejoins
+node_list=list(xbee.discover())
+print("Remotenodefound,transmittingdata")
+fornodeinnode_list:
+dest_addr=node['sender_eui64']#using64-bitaddressing
+dest_node_id=node['node_id']
+payload_data="Hello,"+dest_node_id+"!"
+print("Sending\"{}\"to{}".format(payload_data,hex(dest_addr)))
+xbee.transmit(dest_addr,payload_data)
+#Startthereceiveloop
+print("Receivingdata...")
+DigiXBee®3802.15.4RFModuleUserGuide 67
+
+GetstartedwithMicroPython MicroPythonexamples
+print("HitCTRL+Ctocancel")
+whileTrue:
+p=xbee.receive()
+ifp:
+format_packet(p)
+else:
+time.sleep(0.25)
+3. PressCtrl+Etoenterpastemode.
+4. AttheMicroPython>>>prompt,right-clickandselectthePasteoption.Onceyoupastethe
+code,itexecutesimmediately.
+Examplecodeontheremotemodule
+Thefollowingexamplecodejoinsthe802.15.4networkfromthepreviousexample,and
+continuouslyprintsoutanyincomingdata.Thisdevicealsosendsitstemperaturedataevery5
+secondstothecoordinatoraddress.
+1. AccesstheMicroPythonenvironment.
+2. Copythefollowingsamplecode:
+print("Joiningnetworkasanenddevice...")
+xbee.atcmd("NI","EndDevice")
+network_settings={"CE":0,"A1":4,"CH":0x13,"ID":0x3332,"EE":0}
+forcommand,valueinnetwork_settings.items():
+xbee.atcmd(command,value)
+xbee.atcmd("AC") #Applychanges
+time.sleep(1)
+whilenetwork_status()!=0:
+time.sleep(0.1)
+print("ConnectedtoNetwork\n")
+last_sent=time.ticks_ms()
+interval=5000 #Howoftentosendamessage
+#Startthetransmit/receiveloop
+print("Sendingtempdataevery{}seconds".format(interval/1000))
+whileTrue:
+p=xbee.receive()
+ifp:
+format_packet(p)
+else:
+#Transmittemperatureifready
+iftime.ticks_diff(time.ticks_ms(),last_sent)>interval:
+temp="Temperature:{}C".format(xbee.atcmd("TP"))
+print("\tsending"+temp)
+try:
+xbee.transmit(xbee.ADDR_COORDINATOR,temp)
+exceptExceptionaserr:
+print(err)
+last_sent=time.ticks_ms()
+time.sleep(0.25)
+3. PressCtrl+Etoenterpastemode.
+4. AttheMicroPython>>>prompt,right-clickandselectthePasteoption.Onceyoupastethe
+code,itexecutesimmediately.
+DigiXBee®3802.15.4RFModuleUserGuide 68
+
+GetstartedwithMicroPython ExitMicroPythonmode
+Exit MicroPython mode
+ToexitMicroPythonmode:
+1. IntheXCTUMicroPythonterminal,clickthegreenClosebutton .
+2. ClickCloseatthebottomoftheterminaltoexittheterminal.
+3. InXCTU'sConfigurationworkingmode ,changeAPAPIEnabletoanothermodeand
+clicktheWritebutton .WerecommendchangingtoTransparentmode[0],asmostofthe
+examplesusethismode.
+Other terminal programs
+IfyoudonotusetheMicroPythonterminalinXCTU,youcanuseotherterminalprogramsto
+communicatewiththeXBee3802.15.4RFModule.IfyouuseMicrosoftWindows,followthe
+instructionsforTeraTerm;ifyouuseLinux,followtheinstructionsforpicocom.Todownloadthese
+programs:
+n TeraTermforWindows,seettssh2.osdn.jp/index.html.en.
+n PicocomforLinux,seedeveloper.ridgerun.com/wiki/index.php/Setting_up_Picocom_-_
+Ubuntu
+n Sourcecodeandin-depthinformation,seegithub.com/npat-efault/picocom.
+Tera Term for Windows
+WiththeXBee3802.15.4RFModuleinMicroPythonmode(AP=4),youcanaccessthe
+MicroPythonpromptusingaterminal.
+1. OpenTeraTerm.TheTeraTerm:Newconnectionwindowappears.
+2. ClicktheSerialradiobuttontoselectaserialconnection.
+3. FromthePort:drop-downmenu,selecttheCOMportthattheXBee3802.15.4RFModule
+isconnectedto.
+4. ClickOK.TheCOMxx-TeraTermVTterminalwindowappearsandTeraTermattemptsto
+connecttothedeviceatabaudrateof9600bps.Theterminalwillnotallowcommunication
+withthedevicesincethebaudratesettingisincorrect.Youmustchangethisrateasitwas
+previouslysetto115200bps.
+5. ClickSetupandSerialPort.TheTeraTerm:Serialportsetupwindowappears.
+DigiXBee®3802.15.4RFModuleUserGuide 69
+
+GetstartedwithMicroPython UsepicocominLinux
+6. IntheTeraTerm:Serialportsetupwindow,settheparameterstothefollowingvalues:
+n Port:ShowstheportthattheXBee3802.15.4RFModuleisconnectedon.
+n Baudrate: 115200
+n Data:8bit
+n Parity:none
+n Stop:1bit
+n Flowcontrol:hardware
+n Transmitdelay:N/A
+7. ClickOKtoapplythechangestotheserialportsettings.Thesettingsshouldgointoeffect
+rightaway.
+8. Toverifythatlocalechoisnotenabledandthatextraline-feedsarenotenabled:
+a. InTeraTerm,clickSetupandselectTerminal.
+b. IntheNew-lineareaoftheTeraTerm:Serialportsetupwindow,clicktheReceive
+drop-downmenuandselectAUTOifitdoesnotalreadyshowthatvalue.
+c. MakesuretheLocalechoboxisnotchecked.
+9. ClickOK.
+10. PressCtrl+BtogettheMicroPythonversionbannerandprompt.
+MicroPythonv1.9.3-716-g507d0512on2018-02-20;XBee3802.15.4withEFR32MG
+Type"help()"formoreinformation.
+>>>
+NowyoucantypeMicroPythoncommandsatthe>>>prompt.
+Use picocom in Linux
+WiththeXBee3802.15.4RFModuleinMicroPythonmode(AP=4),youcanaccessthe
+MicroPythonpromptusingaterminal.
+NoteTheusermusthavereadandwritepermissionfortheserialporttheXBee3802.15.4RF
+Moduleisconnectedtoinordertocommunicatewiththedevice.
+1. OpenaterminalinLinuxandtypepicocom-b115200/dev/ttyUSB0.Thisassumesyou
+havenootherUSB-to-serialdevicesattachedtothesystem.
+2. PressCtrl+BtogettheMicroPythonversionbannerandprompt.YoucanalsopressEnter
+tobringuptheprompt.
+IfyoudohaveotherUSB-to-serialdevicesattached:
+1. BeforeattachingtheXBee3802.15.4RFModule,checkthedirectory/dev/foranydevices
+namedttyUSBx,wherexisanumber.Aneasywaytolisttheseistotype:ls/dev/ttyUSB*.
+ThisproducesalistofanydevicewithanamethatstartswithttyUSB.
+2. Takenoteofthedevicespresentwiththatname,andthenconnecttheXBee3802.15.4RF
+Module.
+3. Checkthedirectoryagainandyoushouldseeoneadditionaldevice,whichistheXBee3
+802.15.4RFModule.
+DigiXBee®3802.15.4RFModuleUserGuide 70
+
+GetstartedwithMicroPython Micropythonhelp()
+4. Inthiscase,replace/dev/ttyUSB0atthetopwith/dev/ttyUSB<number>,where<number>
+isthenewnumberthatappeared.
+Itconnectsandshows"Terminalready".
+YoucannowtypeMicroPythoncommandsatthe>>>prompt.
+Micropython help ()
+Whenyoutypethehelp()commandattheprompt,itprovidesalinktoonlinehelp,control
+commandsandalsousageexamples.
+>>>help()
+WelcometoMicroPython!
+Foronlinedocspleasevisithttp://docs.micropython.org/.
+Controlcommands:
+CTRL-A --onablankline,enterrawREPLmode
+CTRL-B --onablankline,enternormalREPLmode
+CTRL-C --interruptarunningprogram
+CTRL-D --onablankline,resettheREPL
+CTRL-E --onablankline,enterpastemode
+CTRL-F --onablankline,enterflashuploadmode
+Forfurtherhelponaspecificobject,typehelp(obj)
+Foralistofavailablemodules,typehelp('modules')
+-------------------------------------------------------
+------------------------------------------------------
+Whenyoutypehelp('modules')attheprompt,itdisplaysallavailableMicropythonmodules.
+DigiXBee®3802.15.4RFModuleUserGuide 71
+
+GetstartedwithMicroPython Micropythonhelp()
+------------------------------------------------------
+>>>help("modules")
+__main__ micropython uhashlib ustruct
+ble uarray uio usys
+builtins ubinascii ujson utime
+digi ucryptolib umachine xbee
+gc uerrno uos
+Plusanymodulesonthefilesystem
+------------------------------------------------------
+Whenyouimportamoduleandtypehelp()withthemoduleastheobject,youcanqueryallthe
+functionsthattheobjectsupports.
+>>>importsys
+>>>help(sys)
+object<module'sys'>isoftypemodule
+__name__--sys
+path--['.frozen','','/flash','/flash/lib']
+argv--['']
+version--3.4.0;MicroPythonv1.20.0-1829-gcf5c2e9fbon2023-07-20
+version_info--(3,4,0)
+implementation--('micropython',(1,20,0),'XBeeBLEwithEFR32MG',262)
+platform--xbee-blu
+byteorder--little
+maxsize--2147483647
+exit--<function>
+stdin--<io.FileIO0>
+stdout--<io.FileIO1>
+stderr--<io.FileIO2>
+modules--{}
+print_exception--<function>
+DigiXBee®3802.15.4RFModuleUserGuide 72
+
+Secure access
+Bydefault,theXBee3802.15.4RFModuleiseasytoconfigureandallowsforrapidprototyping.
+Fordeployment,youcanencryptnetworkstopreventunauthorizedaccess.Thiscanprevent
+entitiesoutsideofthenetworkfromaccessingdataonthatnetwork.Somecustomersmayalso
+desireawaytorestrictcommunicationbetweennodesfrominsidethesamenetwork.
+Therearetwowaystosecureyourdeviceagainstunauthorizedaccess:
+n Secureremotesession
+n Disablefunctionality
+Securesessionprotectsagainstexternalman-in-themiddleattacksbyrequiringremotedevicesto
+authenticatebeforetheyareallowedtomakeconfigurationchanges.
+Youcanalsodisabledevicefunctionalityinordertopreventunexpectedmalicioususeofthe
+product.ForexampledisableMicroPythonsothatremotecodecannotbeuploadedandexecuted.
+SecureSessions 74
+SecuredremoteATcommands 75
+Senddatatoasecuredremotenode 77
+Endasessionfromaserver 78
+SecureSessionAPIframes 78
+Securetransmissionfailures 79
+DigiXBee®3802.15.4RFModuleUserGuide 73
+
+Secureaccess SecureSessions
+Secure Sessions
+SecureSessionsprovideawaytopassword-protectcommunicationbetweentwonodesona
+networkaboveandbeyondthesecurityofthenetworkitself.Withsecuresessions,adevicecan
+'login',orcreateasessionwithanotherdevicethatisencryptedandonlyreadablebythetwo
+nodesinvolved.Byrestrictingcertainactions—suchasremoteATcommandsorFOTAupdates—to
+onlybeallowedoveroneofthesesecuresessions,youcanmakeitsoaccesstothenetworkdoes
+notallownetworkconfiguration.ApasswordmustbesetandtheproperbitsofSA(SecureAccess)
+mustbesettoenablethisfeature.
+ThefollowingdefinitionsrelatetosecureSessions:
+Term Definition
+Client Thedevicethatisattemptingtologinandsendsecureddataorcommands
+iscalledtheclient.
+Server Thedevicethatisbeingloggedintoandwillreceivesecureddataor
+commandsiscalledtheserver.
+SecureSession Asecureconnectionbetweenaserverandaclientwherethepaircansend
+andreceiveencrypteddatathatonlytheycandecrypt.
+SecureRemote Nameoftheauthenticationprotocolusedtocreatethesecureconnection
+Password(SRP) betweenthenodes.
+Salt Arandomvaluegeneratedaspartoftheauthenticationprocess.
+Verifier Avaluederivedfromagivensaltandpassword.
+Configure the secure session password for a device
+Foradevicetoactasasecuresessionserveritneedstohaveapasswordconfigured.The
+passwordisconfiguredontheserverintheformofasaltandverifierusedfortheSRP
+authenticationprocess.ThesaltandverifiercanbeconfiguredinXCTUbyselectingtheSecure
+SessionAuthenticationoption.
+WerecommendusingXCTUtosetapasswordwhichwillthengeneratethesaltandverifier
+parameters,althoughthesaltandverifiervaluescanalsobesetmanually.See*S(SecureSession
+Salt)and*V,*W,*X,*Y(SecureSessionVerifier)formoreinformation.
+NoteThereisnotanenforcedpasswordlength.Werecommendaminimumlengthofatleasteight
+characters.Thepasswordshouldnotexceed64characters,asitwillexceedthemaximumlength
+ofanAPIframe.
+Start a secure session
+AsecuresessioncanonlybestartedinAPImode.Onceyouhavebeenauthenticatedyoumay
+senddatainAPImodeorTransparentmode,butAPImodeistherecommendedwayto
+communicate.
+Tostartasecuresession:
+1. SendatypeSecureSessionControl-0x2Etoyourlocalclientdevicewiththeaddressof
+theserverdevice(notabroadcastaddress),theoptionsbitfieldsetto0x00,thetimeoutfor
+thesession,andthepasswordthatwaspreviouslysetontheserver.
+DigiXBee®3802.15.4RFModuleUserGuide 74
+
+Secureaccess SecuredremoteATcommands
+2. Theclientandserverdeviceswillsend/exchangeseveralpacketstoauthenticatethe
+session.
+3. Whenauthenticationiscomplete,theclientdevicewilloutputaSecureSessionResponse-
+0xAEtoindicatewhethertheloginwasasuccessorfailure.
+Atthispointifauthenticationwassuccessful,thesecuresessionisestablishedandtheclientcan
+sendsecureddatatotheserveruntilthesessiontimesout.
+NoteAdevicecanhaveoneoutgoingsession—asessioninwhichthenodeisaclient—atatime.
+Attemptingtostartanewsessionwhileasessionisalreadyinprogressautomaticallyendsthe
+previoussession.
+NoteAdevicecanhaveuptofourincomingsessions—sessionsinwhichthedeviceisaserver—ata
+time.Oncethatnumberhasbeenreached,additionalauthenticationrequestsarerejecteduntilone
+oftheactivesessionsends.
+End a secure session
+Aclientcanendasessionbyeitherwaitingforthetimeouttoexpireorbyendingitmanually.To
+endasession,sendaSecureSessionControl-0x2Etothelocalclientdevicewithbit0ofthe
+optionsfieldsetandwithnopassword.
+Thedeviceendstheoutgoingsecuresessionwiththenodewhoseaddressisspecifiedinthetype
+0x2Eframe.Thisframecanbesentevenifthenodedoesnothaveasessionwiththespecified
+address—thedevicewillsendamessagetothespecifiedserverpromptingittoclearoutany
+incomingsessiondatarelatedtotheclient(thiscanbeusediftheserverandclientfalloutofsync.
+Forexample,iftheclientdeviceunexpectedlylosespowerduringasession.
+Sendingatype0x2Eframewiththelogoutoptionbitset,andtheaddressfieldsettothebroadcast
+addresswillendwhateveroutgoingsessioniscurrentlyactiveontheclientandbroadcasta
+requesttoallserverstoclearanyincomingsessiondatarelatedtothatclient.
+Secured remote AT commands
+Secure a node against unauthorized remote configuration
+SecuredAccessisenabledbysettingbitsofSA(SecureAccess).Additionally,anSRPSalt(*S)
+andverifier(*V,*W,*X,*Y)mustbeset.YoucanuseXCTUtogeneratethesaltandverifierbased
+onapassword.
+Configureanodewithasaltandverifier
+Inthisexample,thepasswordispickle.
+1. Thesaltisrandomlygeneratedandtheverifierisderivedfromthesaltandpasswordas
+follows:
+*S=0x1938438E
+*V=
+0x0771F57C397AE4019347D36FD1B9D91FA05B2E5D7365A161318E46F72942A45D
+*W=
+0xD4E44C664B5609C6D2BE3258211A7A20374FA65FC7C82895C6FD0B3399E7377
+0
+DigiXBee®3802.15.4RFModuleUserGuide 75
+
+Secureaccess SecuredremoteATcommands
+*X=
+0x63018D3FEA59439A9EFAE3CD658873F475EAC94ADF7DC6C2C005b930042A0B
+74
+*Y=
+0xAEE84E7A00B74DD2E19E257192EDE6B1D4ED993947DF2996CAE0D644C28E83
+07
+NoteThesaltandverifierwillnotalwaysbethesameevenifthesamepasswordisusedto
+generatethem.
+2. EnforcesecureaccessforRemoteATCommandsbysettingBit1oftheSAcommand:
+SA=0x02
+3. WritetheconfigurationtoflashusingWR(Write).
+WARNING!Makesurethatthisstepiscompleted.Ifyourdeviceresetsforanyreason
+and*S,*V,*W,*X,*YandSAarenotwrittentoflashtheywillreverttodefaults,
+renderingthenodeopentoinsecureaccess.
+4. Fromnowon,anyattempttoissueaRemoteATCommandRequest-0x17tothisdevice
+willberejectedwitha0x0Bstatusunlessasecuresessionisestablishedfirst.
+Remotely configure a node that has been secured
+Intheexampleaboveanodeissecuredagainstunauthorizedremoteconfiguration.Inthis
+instance,thesecurednodeactsasaSecureSessionServer(remote).Thesequencebelow
+describeshowaSecureSessionClient(local)canauthenticateandsecurelyconfiguretheserver
+remotely.
+Establishasecuresessionusingthepasswordthatwassetontheservernode
+1. GenerateaSecureSessionControl-0x2E.
+n Thedestinationaddressmustmatchthe64-bitaddress(SH+SL)oftheremoteserver.
+n Sinceyouareloggingin,leavetheoptionsfieldas0x00.
+n Setafiveminutetimeout,whichshouldgivesufficienttimeforadhocconfiguration.The
+unitsareintenthsofasecond,so0x0BB8givesyoufiveminutes.
+n Theoptionsaresetforafixedduration,soafterthefiveminutesexpire,boththeserverand
+clientemitamodemstatusindicatingthesessionended.
+n Entertheoriginalpasswordusedtogeneratetheverifierfromtherandomsaltabove.
+2. Passthetype0x2EControlframeintotheserialinterfaceofthelocalclient:
+n Forexample,tologintoaSecureSessionserverataddress0013A200417B2162forafive
+minutedurationusingthepasswordpickle,usethefollowingframe:
+7E00122E0013A200417B2162000BB87069636B6C65A2
+3. WaitforaSecureSessionResponse-0xAEtoindicatethesessionestablishment
+succeededorfailedwiththereason.
+DigiXBee®3802.15.4RFModuleUserGuide 76
+
+Secureaccess Senddatatoasecuredremotenode
+n Theaddressoftheremotethatisrespondingandthestatusisincludedintheresponse.
+n Forexample,theresponsetotherequestaboveisasfollows:
+7E000BAE000013A200417B2162005D.The0x00statusindicatessuccess.
+4. SendremoteATCommandstotheremoteserverusingtheRemoteATCommandRequest
+-0x17withbit4oftheCommandOptionsfieldset.Bit4indicatestheATcommandshould
+besentsecurely.
+NoteIfyouareusing802.15.4firmwareyoumustsendsecuredpacketsusingthedevice's64bit
+address.Todoso,setMY(16-bitSourceAddress)to0xFFFF.
+Send data to a secured remote node
+Theprocesstosendsecureddataisverysimilartoremotelyconfiguringanode.Thefollowing
+stepsshowhowaclientnodecanauthenticatewithaservernodeandsenddatasecurely.
+1. SendaSecureSessionControl-0x2Etotheclientnodewith:
+n Theserver's64-bitaddress.
+n Thedesiredtimeout.
+n Theoptionsfieldsetto0x00forfixedtimeoutloginorto0x04forinter-packettimeout
+refreshlogin.
+n Thepasswordoftheservernode.
+2. WaitfortheSecureSessionResponse-0xAEtodetermineifthetheauthenticationwas
+successful.
+3. DatacannowbesentsecurelywithTransmitRequest-0x10andExplicitAddressing
+CommandRequest-0x11providedthat:
+n Bit4inthetransmitoptionsfieldissettoindicatethatthedatashouldbesent
+encrypted.
+4. ThereturnedReceivePacket-0x90andExplicitReceiveIndicator-0x91receiveoptions
+fieldsshouldalsohavebit4set.
+NoteThemaximumpayloadpertransmissionsizeisreducedbyfourbytesduetotheadditional
+encryptionoverhead.NP(MaximumPacketPayloadBytes)willnotreflectthischangewhenthe
+sessionisgoingon.
+NoteIfyouuse802.15.4firmwareyoumustuse64-bitaddressingtosendsecuredpackets.Todo
+so,setMY(16-bitSourceAddress)to0xFFFF.
+Anodecanbesecuredagainstemittingdataouttheserialportthatwasreceivedinsecurelyviathe
+SAcommand.Thismeansthataremotenodewillnotemitanyserialdataifitwasreceived
+insecurely(TO(TransmitOptions)bit4wasnotset).ThisincludesanydatainTransparentmode,
+0x80,0x90and0x91frames.
+NoteWhenadevicerejectsadatatransmission(0x80,0x90,0x91,orTransparentdata)because
+ofitsSAconfiguration,itdoesnotsendanerrorbacktothesender.Thismeansthatdata
+transmissionstoadevicegiveasuccessstatuseveniftheyarerejected.
+DigiXBee®3802.15.4RFModuleUserGuide 77
+
+Secureaccess Endasessionfromaserver
+End a session from a server
+Ifbit3ofAZ(ExtendedAPIOptions)isset,theserveremitsanextendedmodemstatus(whenever
+aclientestablishesasessionwithit)thatincludesthe64-bitaddressoftheclient.Usingthese
+statusestheMCUconnectedtotheservercankeeptrackofsessionsestablishedwiththeserver.
+Toendasessionfromtheserverdothefollowing:
+1. SendaSecureSessionControl-0x2Etotheservernodewith:
+n Theclient's64-bitaddress.
+n Theoptionsfieldsetto0x02forserversidesessiontermination.
+n Setthetimeoutto0x0000.
+2. WaitfortheSecureSessionResponse-0xAEtodetermineiftheterminationwas
+successful.
+n Theclientwillemitamodemstatus0x3C(SessionEnded).
+n Theserverwillalsoemitamodemstatus(oranextendedmodemstatusdepending
+onAZ)of0x3C(SessionEnded).
+NoteThe64-bitaddresscanbesettothebroadcastaddresstoendallincomingsessions.
+NoteThisfunctionalitycanbeusedtoendorphanedclient-sidesessions—incasetheserver
+unexpectedlyresetforsomereason.
+Secure Session API frames
+SecureSessioncanonlybeestablishedfromanodethatisoperatinginAPImode.Theserver-side
+canbeinTransparentmode,buttheclientmustbeinAPImode.Onceasessionhasbeen
+establishedbetweenaclientandservernode,theclientcanbetransitionedtoTransparentmode;
+andifbit4ofTOisset,theclientwillencryptdatasentinTransparentmodeforthedurationof
+session.
+Therearefourframesthatareusedforcontrollingandobservingasecuresession.
+n SecureSessionControl-0x2E:Thisframeispassedtotheclientthatwishestologintoor
+outofaserver.AnyattempttousetheControlframewillgeneratearesponseframe.
+n SecureSessionResponse-0xAE:Thisframereturnsthestatusofthepreviouslysent0x2E
+frameindicatingwhetheritwassuccessfulornot.
+n ModemStatus-0x8A:Theserverwillalsoemitamodemstatuswheneveranattempt
+succeeds,fails,orwasterminated.Theclientwillalsoemitmodemstatusesifthesession
+timesout.
+n ExtendedModemStatus-0x98:Ifbit3ofAZissetthenmodemstatuseswillbereplaced
+withextendedmodemstatuses.Theseframeswillcontainthestatusthatcausedthemtobe
+emittedaswellastheaddressofthenodethatinitiatedthesession,thesessionoptions,
+andthetimeoutvalue.
+Frameexchanges:
+DigiXBee®3802.15.4RFModuleUserGuide 78
+
+Secureaccess Securetransmissionfailures
+| Secure | transmission | failures |     |
+| ------ | ------------ | -------- | --- |
+Thissectiondescribestheerrormessagesyoucanseewhentryingtosendasecurepacket.
+| Data | Frames | - 0x10 and | 0x11 frames |
+| ---- | ------ | ---------- | ----------- |
+n Responseframetype:ExtendedTransmitStatus-0x8B
+Possibleerrorstatuses:
+|     | Status Description | Reason |     |
+| --- | ------------------ | ------ | --- |
+0x34 NoSecure Thesendingnodedoesnothaveanactivesessionwiththe
+|     | Session | destinationnode. |     |
+| --- | ------- | ---------------- | --- |
+Connection
+0x35 Encryption Theencryptionprocessfailed.Onlylikelytobeseenwhenusing
+Failure manualSRPandwhenaninvalidencryptionparameterwaspassed
+in.
+| Remote | AT  | Commands- | 0x17 frames |
+| ------ | --- | --------- | ----------- |
+Responseframetype:RemoteATCommandResponse-0x97
+n
+Possibleerrorstatuses:
+|     | Status Description |     | Reason |
+| --- | ------------------ | --- | ------ |
+0x0B NoSecureSession Thesendingnodedoesnothaveanactivesessionwiththe
+|     | Connection |     | destinationnode. |
+| --- | ---------- | --- | ---------------- |
+0x0C EncryptionError Therewasaninternalencryptionerrorontheradio.
+DigiXBee®3802.15.4RFModuleUserGuide 79
+
+Secureaccess Securetransmissionfailures
+Status Description Reason
+0x0D TOBitNotSet Theclienthasasessionwiththeserverbutforgottosetthe
+TObit.
+DigiXBee®3802.15.4RFModuleUserGuide 80
+
+File system
+FordetailedinformationaboutusingMicroPythonontheXBee3802.15.4RFModulerefertothe
+DigiMicroPythonProgrammingGuide.
+Overviewofthefilesystem 82
+Directorystructure 82
+Paths 82
+Limitations 82
+XCTUinterface 83
+DigiXBee®3802.15.4RFModuleUserGuide 81
+
+Filesystem Overviewofthefilesystem
+Overview of the file system
+XBee3802.15.4RFModulefirmwareversions2003andlaterincludesupportforstoringfilesin
+internalflashmemory.
+CAUTION!Youneedtoformatthefilesystemifupgradingadevicethatoriginallyshipped
+witholderfirmware.YoucanuseXCTU,ATcommandsorMicroPythonforthatinitial
+formatortoeraseexistingcontentatanytime.
+NoteTouseXCTUwithfilesystem,youneedXCTU6.4.0ornewer.
+SeeFSFORMATconfirminFS(FileSystem)andensurethattheformatiscomplete.
+Directory structure
+TheXBee3802.15.4RFModule'sinternalflashappearsinthefilesystemas/flash,theonlyentry
+attherootlevelofthefilesystem.Filesanddirectoriesotherthan/flashcannotbecreatedwithin
+therootdirectory,onlywithin/flash.
+Bydefault/flashcontainsalibdirectoryintendedforMicroPythonmodules.
+Paths
+TheXBee3802.15.4RFModulestoresallofitsfilesinthetop-leveldirectory/flash.Onstartup,
+theATFScommandsandMicroPythoneachusethatdirectoryastheircurrentworkingdirectory.
+Whenspecifyingthepathtoafileordirectory,itisinterpretedasfollows:
+n Pathsstartingwithaforwardslashare"absolute"andmuststartwith/flashtobevalid.
+n Allotherpathsarerelativetothecurrentworkingdirectory.
+n Thedirectory..referstotheparentdirectory,soanoperationon../filename.txtthattakes
+placeinthedirectory/flash/testaccessesthefile/flash/filename.txt.
+n Thedirectory.referstothecurrentdirectory,soATFSls.isthesameasATFSls,which
+listsfilesinthecurrentdirectory.
+n Namesarecase-insensitive,soFILE.TXT,file.txtandFiLe.TxTallrefertothesamefile.
+n Fileanddirectorynamesarelimitedto64characters,andcanonlycontainletters,numbers,
+periods,dashesandunderscores.Aperiodattheendofthenameisignored.
+n Thefull,absolutepathtoafileordirectoryislimitedto255characters.
+Limitations
+ThefilesystemontheXBee3802.15.4RFModulehasafewlimitationswhencomparedto
+conventionalfilesystems:
+n Whenafileonthefilesystemisdeleted,thespaceitwasusingisonlyreclaimedifitisfound
+attheendofthefilesystem.Deleteddatathatiscontiguouswiththelastplaceddeletedfile
+isalsoreclaimed.
+n Thefilesystemcanonlyhaveonefileopenforwritingatatime.
+n Thefilesystemcannotcreatenewdirectorieswhileafileisopenforwriting.
+DigiXBee®3802.15.4RFModuleUserGuide 82
+
+Filesystem XCTUinterface
+n Filescannotberenamed.
+n Thecontentsofthefilesystemwillbelostwhenanyfirmwareupdateisperformed.See
+Updatethefirmwareover-the-airinGeneralPurposeFlashMemoryforinformationonhow
+toputfilesonadeviceafterafirmwareover-the-air(FOTA)update.
+XCTU interface
+XCTUreleasesstartingwith6.4.0includeaFileSystemManagerintheToolsmenu.Youcan
+uploadfilestoanddownloadfilesfromthedevice,inadditiontorenaminganddeletingexisting
+filesanddirectories.SeetheFileSystemmanagertoolsectionoftheXCTUUserGuidefordetails
+ofitsfunctionality.
+DigiXBee®3802.15.4RFModuleUserGuide 83
+
+Get started with Bluetooth® Low Energy
+BluetoothLowEnergy (LE) isaRFprotocolthatenablesyoutoconnectyourXBeedeviceto
+anotherdevice.BothdevicesmusthaveBluetoothLEenabled.
+Forexample,youcanuseyourcellphonetoconnecttoyourXBeedevice,andthenfromyour
+phone,configureandprogramthedevice.
+DigicreatedtheDigiXBeeMobileSDK,asetoflibraries,examplesanddocumentationthathelp
+youdevelopmobileapplicationstointeractwithXBeedevicesthroughtheirBluetoothLEinterface.
+Forthispurpose,weprovidetwoeasy-to-uselibrariesthatallowyoutocreateXBeemobilenative
+apps:
+n XBeeLibraryforXamarin,todevelopcross-platformmobileapplicationsusingC#language
+(iOSandAndroid).
+n XBeeLibraryforAndroid,todevelopAndroidapplicationsusingJava.
+TheXBeeistheserverandallowsclientdevices,suchasacellphone,toconfiguretheXBeeor
+datatransferwiththeUserDataRelayframe.TheXBeecannotcommunicatewithanotherXBee
+overBluetoothLE,astheXBeeisstrictlyaBluetoothLEserver.
+EnableBluetooth®LowEnergy(LE) ontheXBee3802.15.4RFModule 85
+EnableBluetooth®Low Energy(LE) andconfiguretheBluetoothLEpassword 85
+GettheDigiXBee Mobilephoneapplication 86
+ConnectwithBluetooth®LowEnergy (LE)andconfigureyourXBee3802.15.4RFModule 87
+DigiXBee®3802.15.4RFModuleUserGuide 84
+
+GetstartedwithBluetooth®Low EnableBluetooth®LowEnergy(LE) ontheXBee3802.15.4RF
+| Energy |            |            |         |          |            | Module |
+| ------ | ---------- | ---------- | ------- | -------- | ---------- | ------ |
+| Enable | Bluetooth® | Low Energy | (LE) on | the XBee | 3 802.15.4 | RF     |
+Module
+ToenableBluetoothLE onaXBee3802.15.4RFModuleandverifytheconnection:
+1. SetuptheXBee3802.15.4RFModuleandmakesuretoconnecttheantennatothedevice.
+2. EnableBluetooth®Low Energy(LE) andconfiguretheBluetoothLEpassword.
+3. GettheDigiXBee Mobilephoneapplication.
+4. ConnectwithBluetooth®LowEnergy (LE)andconfigureyourXBee3802.15.4RFModule.
+NoteTheBluetoothLEprotocolisdisabledontheXBee3802.15.4RFModulebydefault.Youcan
+createacustomfactorydefaultconfigurationthatensuresBluetoothLEisalwaysenabled.See
+Customconfiguration:Createanewfactorydefault.
+| Enable    | Bluetooth®  | Low Energy | (LE) and | configure | the |     |
+| --------- | ----------- | ---------- | -------- | --------- | --- | --- |
+| Bluetooth | LE password |            |          |           |     |     |
+SomeofthelatestXBeedevicessupportBluetoothLEasanextrainterfaceforconfiguration.Ifyou
+wanttousethisfeature,youhavetoenableBluetoothLE.Youmustalsoenablesecuritybysetting
+apasswordontheXBee3802.15.4RFModuleinordertoconnect,configure,orsenddataover
+BluetoothLE.
+UseXCTU toconfiguretheBluetoothLEpassword.Makesureyouhaveinstalledorupdated
+XCTUtoversion6.4.2ornewer.EarlierversionsofXCTUdonotincludetheBluetoothLE
+configurationfeatures.SeeDownloadandinstallXCTUforinstallationinstructions.
+Beforeyoubegin,youshoulddeterminethepasswordyouwanttouseforBluetoothLE onthe
+XBee3802.15.4RFModuleandstoreitinasecureplace.Werecommendasecurepasswordof
+atleasteightcharactersandarandomcombinationofletters,numbers,andspecialcharacters.
+WerecommendusingasecuritymanagementtoolsuchasLastPassorKeepassforgenerating
+andstoringpasswordsformanydevices.
+NoteWhenyouentertheBluetoothLEpasswordinXCTU,thesaltandverifiervaluesare
+calculatedasyousetyourpassword.Formoreinformationonhowthesevaluesareusedinthe
+authenticationprocess,seeBluetooth®LowEnergy(LE) UnlockRequest-0x2C.
+|     | 1. LaunchXCTU                       | .   |     |     |     |     |
+| --- | ----------------------------------- | --- | --- | --- | --- | --- |
+|     | 2. SwitchtoConfigurationworkingmode |     | .   |     |     |     |
+3. SelectaBluetoothLEcompatibleradiomodulefromthedevicelist.
+4. SelectEnabled[1]fromtheBTBluetoothEnablecommanddrop-down.
+5. ClicktheWritesettingbutton .TheBluetoothauthenticationnotsetdialogappears.
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |     |     | 85  |
+| ----------------------------------- | --- | --- | --- | --- | --- | --- |
+
+GetstartedwithBluetooth®LowEnergy GettheDigiXBee Mobilephoneapplication
+NoteIfBluetoothLEhasbeenpreviouslyconfigured,theBluetoothauthenticationnotsetdialog
+doesnotappear.Ifthishappens,clickConfigureintheBluetoothOptionssectiontodisplaythe
+ConfigureBluetoothAuthenticationdialog.
+6. ClickConfigureinthedialog.TheConfigureBluetoothAuthenticationdialogappears.
+7. InthePasswordfield,typethepasswordforthedevice.Asyoutype,theSaltandVerifier
+fieldsareautomaticallycalculatedandpopulatedinthedialogasshownabove.This
+passwordisusedwhenyouconnecttothisXBeedeviceviaBluetoothLE usingtheDigi
+XBeeMobileapp.
+8. ClickOKtosavetheconfiguration.
+Get the Digi XBee Mobile phone application
+ToseethenearbydevicesthathaveBluetooth®LowEnergy(LE) enabled,youmustgetthefree
+DigiXBeeMobileapplicationfromtheiOSAppStoreorGooglePlayanddownloadedtoyour
+phone.
+DigiXBee®3802.15.4RFModuleUserGuide 86
+
+GetstartedwithBluetooth® ConnectwithBluetooth®LowEnergy (LE)andconfigureyourXBee3
+LowEnergy 802.15.4RFModule
+1. Onyourphone,gototheAppstore.
+2. Searchfor:DigiXBeeMobile.
+3. Downloadandinstalltheapp.
+TheDigiXBeeMobileapplicationiscompatiblewiththefollowingoperatingsystemsandversions:
+n Android5.0orhigher
+n iOS11orhigher
+Connect with Bluetooth® Low Energy (LE) and configure your
+XBee 3 802.15.4 RF Module
+YoucanusetheDigiXBeeMobile applicationtoverifythatBluetoothLEisenabledonyourXBee3
+802.15.4RFModule.
+1. GettheDigiXBee Mobilephoneapplication.
+2. OpentheDigiXBeeMobile application.TheFindXBeedevicesscreenappearsandthe
+appautomaticallybeginsscanningfordevices.AllnearbydeviceswithBluetoothLE
+enabledaredisplayedinalist.
+3. ScrollthroughthelisttofindyourXBeedevice.
+Thefirsttimeyouopentheapponaphoneandscanfordevices,thedevicelistcontains
+onlythenameofthedeviceandtheBluetoothLEsignalstrength.Noidentifyinginformation
+forthedevicedisplays.Afteryouhaveauthenticatedthedevice,thedeviceinformationis
+cachedonthephone.ThenexttimetheapponthisphoneconnectstotheXBeedevice,the
+IMEIforthedevicedisplaysintheappdevicelist.
+NoteTheIMEIisderivedfromtheSHandSLvalues.
+4. TaptheXBeedevicenameinthelist.Apassworddialogappears.
+5. EnterthepasswordyoupreviouslyconfiguredforthedeviceinXCTU.
+6. TapOK.TheDeviceInformationscreendisplays.Youcannowscrollthroughthesettings
+forthedeviceandchangethedevice'sconfigurationasneeded.
+DigiXBee®3802.15.4RFModuleUserGuide 87
+
+Bluetooth® Low Energy reference
+Bluetooth®LowEnergyadvertisingbehaviorandservices 89
+DeviceInformationService 89
+XBeeAPIBluetooth®LowEnergy Service 89
+APIRequestcharacteristic 89
+APIResponsecharacteristic 90
+DigiXBee®3802.15.4RFModuleUserGuide 88
+
+Bluetooth®LowEnergyreference Bluetooth®LowEnergyadvertisingbehaviorandservices
+Bluetooth® Low Energy advertising behavior and services
+WhentheBluetoothradioisenabled,periodicBluetoothLowEnergy(LE)advertisementsare
+transmitted.TheadvertisementdataincludestheproductnameintheCompleteLocalNamefield.
+WhenanXBeedeviceconnectstotheBluetoothradio,theBluetoothLEservicesarelisted:
+n DeviceInformationService
+n XBeeAPIBluetooth®LowEnergy Service
+Device Information Service
+ThestandardDeviceInformationServiceisused.TheManufacturer,Model,andFirmware
+Revisioncharactersareprovidedinsidetheservice.
+XBee API Bluetooth® Low Energy Service
+YoucanconfiguretheXBee3802.15.4RFModulethroughtheBluetoothLowEnergy
+(LE) interfaceusingAPIframerequestsandresponses.TheAPIframeformatthroughBluetoothis
+equivalenttosettingAP=1andtransmittingtheframesovertheUARTorSPIinterface.API
+framescanbeexecutedoverBluetoothregardlessoftheAPsetting.
+TheBluetoothLEinterfaceallowstheseframes:
+n Bluetooth®LowEnergy(LE) UnlockRequest-0x2C
+n UserDataRelayInput -0x2D
+n Bluetooth®LowEnergy(LE) UnlockResponse-0xAC
+n LocalATCommandRequest-0x08
+n QueueLocalATCommandRequest-0x09
+ThisAPIreferenceassumesthatyouarefamiliarwithBluetoothandGATTservices.The
+specificationsforBluetoothareanopenstandardandcanbefoundatthefollowinglinks:
+n BluetoothCoreSpecifications:bluetooth.com/specifications/bluetooth-core-specification
+n BluetoothGATT:bluetooth.com/specifications/gatt/generic-attributes-overview
+TheXBeeAPIBluetoothLEServicecontainstwocharacteristics:theAPIRequestcharacteristic
+andtheAPIResponsecharacteristic.TheUUIDsfortheserviceanditscharacteristicsarelistedin
+thetablebelow.
+Characteristic UUID
+API ServiceUUID 53da53b9-0447-425a-b9ea-
+9837505eb59a
+API RequestCharacteristicUUID 7dddca00-3e05-4651-9254-
+44074792c590
+APIResponseCharacteristicUUID f9279ee9-2cd0-410c-81cc-
+adf11e4e5aea
+API Request characteristic
+UUID:7dddca00-3e05-4651-9254-44074792c590
+DigiXBee®3802.15.4RFModuleUserGuide 89
+
+Bluetooth®LowEnergyreference APIResponsecharacteristic
+Permissions:Writeable
+XBeeAPIframesarebrokenintochunksandtransmittedsequentiallytotherequestcharacteristic
+usingwriteoperations.Validframesarethenprocessedandtheresultisreturnedthrough
+indicationsontheresponsecharacteristic.
+APIframesdonotneedtobewrittencompletelyinasinglewriteoperationtotherequest
+characteristic.Infact,Bluetooth®limitsthesizeofawrittenvalueto3bytessmallerthanthe
+configuredMaximumTransmissionUnit(MTU),whichdefaultsto23,meaningthatbydefault,you
+canonlywrite20bytesatatime.
+AfterconnectingyoumustsendavalidBluetoothUnlockAPIFrameinordertoauthenticatethe
+connection.IftheBluetoothLowEnergy(LE) UnlockAPI-0x2Cframehasnotbeenexecuted,all
+otherAPIframesaresilentlyignoredandarenotprocessed.
+API Response characteristic
+UUID:f9279ee9-2cd0-410c-81cc-adf11e4e5aea
+Permissions:Readable,Indicate
+ResponsestoAPIrequestsmadetotherequestcharacteristicarereturnedthroughtheresponse
+characteristics.Thischaracteristiccannotbereaddirectly.
+Responsedataispresentedthroughindicationsonthischaracteristic.Indicationsare
+acknowledgedandre-transmittedattheBluetooth®LowEnergy(LE) linklayerandapplication
+layerandprovidearobusttransportforthisdata.
+DigiXBee®3802.15.4RFModuleUserGuide 90
+
+Configure the XBee 3 802.15.4 RF Module
+Softwarelibraries 92
+Firmwareover-the-air(FOTA)update 92
+Customdefaults 92
+Customconfiguration:Createanewfactorydefault 93
+XBeebootloader 93
+Sendafirmwareimage 94
+XBeeNetworkAssistant 94
+XBeeMultiProgrammer 95
+DigiXBee®3802.15.4RFModuleUserGuide 91
+
+ConfiguretheXBee3802.15.4RFModule Softwarelibraries
+Software libraries
+OnewaytocommunicatewiththeXBee3802.15.4RFModuleisbyusingasoftwarelibrary.The
+librariesavailableforusewiththeXBee3802.15.4RFModuleinclude:
+n XBeeJavalibrary
+n XBeePythonlibrary
+TheXBeeJavaLibraryisaJavaAPI.ThepackageincludestheXBeelibrary,itssourcecodeanda
+collectionofsamplesthathelpyoudevelopJavaapplicationstocommunicatewithyourXBee
+devices.
+TheXBeePythonLibraryisaPythonAPIthatdramaticallyreducesthetimetomarketofXBee
+projectsdevelopedinPythonandfacilitatesthedevelopmentofthesetypesofapplications,
+makingitaneasyprocess.
+Firmware over-the-air (FOTA) update
+TheXBee3802.15.4RFModulesupportsFOTAupdatesusingXCTUversion6.3.0orhigher.For
+instructionsonperformingaFOTA firmwareupdatewithXCTU,seeHowtoupdatethefirmwareof
+yourmodulesintheXCTUUserGuide.
+FOTAcapabilityisonlyavailablewhenMM(MacMode) =0or3.
+Custom defaults
+Customdefaultsallowyoutopreserveasubsetofthedeviceconfigurationparametersevenafter
+returningtodefaultsettingsusingRE(RestoreDefaults).Thiscanbeusefulforsettingsthat
+identifythedevice—suchasNI(NodeIdentifier)—orsettingsthatcouldmakeremotelyrecovering
+thedevicedifficultiftheywerereset—suchasID(ExtendedPANID)orKY(AESEncryptionKey).
+NoteYoumustsendthesecustomdefaultcommandsaslocalATcommands,theycannotbeset
+usingRemoteATCommandRequest-0x17.
+Set custom defaults
+Use%F(SetCustomDefault)tosetcustomdefaults.WhentheXBee3802.15.4RFModule
+receives%Fittakesthenextcommanditreceivesandappliesittoboththecurrentconfiguration
+andthecustomdefaults.
+Tosetcustomdefaultsformultiplecommands,senda%Fbeforeeachcommand.
+Restore factory defaults
+!C(ClearCustomDefaults)clearsallcustomdefaults,sothatRE(RestoreDefaults)willrestorethe
+devicetofactorydefaults.Alternatively,R1(RestoreFactoryDefaults)restoresallparametersto
+factorydefaultswithouterasingtheircustomdefaultvalues.
+Limitations
+Thereisalimitationonthenumberofcustomdefaultsthatcanbesetonadevice.Thenumberof
+defaultsthatcanbesetdependsonthesizeofthesavedparametersandthedevices'firmware
+version.Whenthereisnomoreroomforcustomdefaultstobesaved,anycommandsent
+immediatelyaftera%Freturnsanerror.
+DigiXBee®3802.15.4RFModuleUserGuide 92
+
+ConfiguretheXBee3802.15.4RFModule Customconfiguration:Createanewfactorydefault
+Custom configuration: Create a new factory default
+Youcancreateacustomconfigurationthatisusedasanewfactorydefault.Thisfeatureisuseful
+if,forexample,youneedtomaintaincertainsettingsformanufacturingorwanttoensureafeature
+isalwaysenabled.WhenyouuseRE(RestoreDefaults)toperformafactoryresetonthedevice,
+thecustomconfigurationissetonthedeviceafterapplyingtheoriginalfactorydefaultsettings.
+Forexample,bydefaultBluetooth®isdisabledondevices.Youcancreateacustomconfiguration
+inwhichBluetoothisenabledbydefault.WhenyouuseREtoresetthedevicetothefactory
+defaults,theBluetooth®configurationissettothecustomconfiguration(enabled)ratherthanthe
+originalfactorydefault(disabled).
+Thecustomconfigurationisstoredinnon-volatilememoryusingawear-levelingtechnology.This
+meansthatthecustomconfigurationmaybewrittenmultipletimestothesamepageofflash
+memorybeforedoinganeraseonthatpage,whichreducesthenumberoferasuresandthetimeto
+writethecustomconfiguration.
+Youcanuse!C(ClearCustomDefaults)toclearallvaluesinthecustomconfigurationatanytime.
+Set a custom configuration
+1. OpenXCTUandloadyourdevice.
+2. EnterCommandmode,ordothefollowingprocessin API mode,accordingtoyour
+preference.
+3. Performthefollowingprocessforeachconfigurationthatyouwanttosetasafactory
+default.
+a. SendtheSetCustomDefaultcommand,AT%F.Thiscommandenablesyoutoentera
+customconfiguration.
+b. Sendthecustomconfigurationcommand.Forexample:ATBT1. Thiscommandsets
+thedefaultforBluetooth®toenabled.
+Clear all custom configuration on a device
+Afteryouhavesetconfigurationsusing%F(SetCustomDefault),youcanreturnallconfigurations
+totheoriginalfactorydefaults.
+1. OpenXCTUandloadthedevice.
+2. EnterCommandmode.
+3. SendAT!C.
+XBee bootloader
+YoucanupdatefirmwareontheXBee3802.15.4RFModuleserially.Thisisdonebyinvokingthe
+XBeebootloaderandtransferringthefirmwareimageusingXMODEM.
+Thisprocessisalsousedforupdatingalocaldevice'sfirmwareusingXCTU.
+XBeedevicesuseamodifiedversionofSiliconLabs'Geckobootloader.Thisbootloaderversion
+supportsacustomentrymechanismthatusesmodulepinsDIN,DTR/SLEEP_RQ,andRTS.
+Toinvokethebootloaderusinghardwareflowcontrollines,dothefollowing:
+1. SetDTR/SLEEP_RQlow(CMOS0V)andRTShigh.
+2. SendaserialbreaktotheDINpinandpowercycleorresetthemodule.
+DigiXBee®3802.15.4RFModuleUserGuide 93
+
+ConfiguretheXBee3802.15.4RFModule Sendafirmwareimage
+3. Whenthedevicepowersup,setDTR/SLEEP_RQandDINtolow(CMOS0V)andRTS
+shouldbehigh.
+4. Terminatetheserialbreakandsendacarriagereturnat115200baudtothedevice.
+5. Ifsuccessful,thedevicesendstheSiliconLabs'GeckobootloadermenuouttheDOUTpin
+at115200baud.
+6. Youcansendcommandstothebootloaderat115200baud.
+NoteDisablehardwareflowcontrolwhenenteringandcommunicatingwiththebootloader.
+Allserialcommunicationswiththemoduleuse8databits,noparitybit,and1stopbit.
+YoucanalsoinvokethebootloaderfromtheXBeeapplicationbysending%P(InvokeBootloader).
+Send a firmware image
+Afterinvokingthebootloader,amenuissentouttheUARTat115200baud.Touploadafirmware
+imagethroughtheUARTinterface:
+1. LookforthebootloaderpromptBL>toensurethebootloaderisactive.
+2. SendanASCII1charactertoinitiateafirmwareupdate.
+3. Aftersendinga1,thedevicewaitsforanXModemCRCuploadofa.gblimageoverthe
+seriallineat115200baud.Sendthe.gblfiletothedeviceusingstandardXMODEM-CRC.
+Ifthefirmwareimageissuccessfullyloaded,thebootloaderoutputsa“complete”string.Invokethe
+newlyloadedfirmwarebysendinga2tothedevice.
+Ifthefirmwareimageisnotsuccessfullyloaded,thebootloaderoutputsan"abortedstring".It
+returnstothemainbootloadermenu.Somecausesforfailureare:
+n Over1minutepassesafterthecommandtosendthefirmwareimageandthefirstblockof
+theimagehasnotyetbeensent.
+n Apowercycleorreseteventoccursduringthefirmwareload.
+n Afileerrororaflasherroroccursduringthefirmwareload.Thefollowingtablecontains
+errorsthatcouldoccurduringtheXMODEMtransfer.
+Error Cause Workaround
+0x18 Thiserrorisobservedwhenaserialupload Press2onthebootloadermenu.
+attempthasbeenabruptlydiscontinuedby Thebootloaderperformsareboot
+invokingCtrl+Candsubsequentlyanother andthemenugetsdisplayedagain.
+attemptismadetouploada.gblbypressing1on Nowpress1andbeginuploading
+thebootloadermenu. the.gbl.
+XBee Network Assistant
+TheXBeeNetworkAssistantisanapplicationdesignedtoinspectandmanageRFnetworks
+createdbyDigiXBeedevices.Featuresinclude:
+n JoinandinspectanynearbyXBeenetworktogetdetailedinformationaboutallthenodesit
+contains.
+DigiXBee®3802.15.4RFModuleUserGuide 94
+
+ConfiguretheXBee3802.15.4RFModule XBeeMultiProgrammer
+n Updatetheconfigurationofallthenodesofthenetwork,specificgroups,orsingledevices
+basedonconfigurationprofiles.
+n Geo-locateyournetworkdevicesorplacethemincustommapsandgetinformationabout
+theconnectionsbetweenthem.
+n Exportthenetworkyouareinspectingandimportitlatertocontinueworkingorworkoffline.
+n Useautomaticapplicationupdatestokeepyouuptodatewiththelatestversionofthetool.
+SeetheXBeeNetworkAssistantUserGuideformoreinformation.
+ToinstalltheXBeeNetworkAssistant:
+1. Navigatetodigi.com/xbeenetworkassistant.
+2. ClickGeneralDiagnostics,UtilitiesandMIBs.
+3. ClicktheXBeeNetworkAssistant-Windowsx86link.
+4. Whenthefilefinishesdownloading,runtheexecutablefileandfollowthestepsintheXBee
+NetworkAssistantSetupWizard.
+XBee Multi Programmer
+TheXBeeMultiProgrammerisacombinationofhardwareandsoftwarethatenablespartnersand
+distributorstoprogrammultipleDigiRadiofrequency(RF)devicessimultaneously.Itprovidesa
+fastandeasywaytopreparedevicesfordistributionorlargenetworksdeployment.
+TheXBeeMultiProgrammerboardisanenclosedhardwarecomponentthatallowsyoutoprogram
+uptosixRFmodulesthankstoitssixexternalXBeesockets.TheXBeeMultiProgrammer
+applicationcommunicateswiththeboardsandallowsyoutosetupandexecuteprogramming
+sessions.Someofthefeaturesinclude:
+n EachXBeeMultiProgrammerboardallowsyoutoprogramuptosixdevices
+simultaneously.Connectmoreboardstoincreasetheprogrammingconcurrency.
+n DifferentboardvariantscoveralltheXBeeformfactorstoprogramalmostanyDigiRF
+device.
+DownloadtheXBeeMultiProgrammerapplicationfrom: digi.com/support/productdetail?pid=5641
+SeetheXBeeMultiProgrammerUserGuideformoreinformation.
+DigiXBee®3802.15.4RFModuleUserGuide 95
+
+Modes
+Transparentoperatingmode 97
+APIoperatingmode 97
+Commandmode 97
+Idlemode 100
+Transmitmode 100
+Receivemode 100
+DigiXBee®3802.15.4RFModuleUserGuide 96
+
+Modes Transparentoperatingmode
+Transparent operating mode
+Devicesoperateinthismodebydefault.Thedeviceactsasaseriallinereplacementwhenitisin
+Transparentoperatingmode.ThedevicequeuesallUARTdataitreceivesthroughtheDINpinfor
+RFtransmission.WhenadevicereceivesRFdata,itsendsthedataoutthroughtheDOUTpin.
+YoucansettheconfigurationparametersusingCommandmode.
+TransparentoperatingmodeisnotavailablewhenusingtheSPIinterface;seeSPIoperation.
+Serial-to-RF packetization
+Dataisbufferedintheincomingserialbufferuntiloneofthefollowingcausesthedatatobe
+packetizedandtransmitted:
+1. NoserialcharactersarereceivedfortheamountoftimedeterminedbytheRO
+(PacketizationTimeout)parameter.IfRO=0,packetizationbeginswhenacharacteris
+received.
+2. ThemaximumnumberofcharactersthatwillfitinanRFpacketisreceived.Therearea
+numberoffactorsthatdeterminepayloadsize.YoucanquerytheNP(MaximumPacket
+PayloadBytes)todeterminethemaximumpayloadsizebasedoncurrentconfiguration.For
+moreinformation,seeMaximumpayload.
+3. TheCommandmodeSequence—GT+CC+GT—isreceived;thisisanydataintheserial
+receivebufferreceivedbeforethesequenceistransmitted.Formoreinformation,seeEnter
+Commandmode.
+Ifthedevicecannotimmediatelytransmit(forinstance,ifitisalreadyreceivingRFdata),theserial
+dataisstoredintheserialreceivebuffer.ThedataispacketizedandsentatanyROtimeoutor
+whenNPbytesarereceived.
+Iftheserialreceivebufferbecomesfull,hardwareflowcontrolmustbeimplementedinorderto
+preventoverflow—lossofdatabetweenthehostanddevice.
+API operating mode
+Applicationprogramminginterface(API)operatingmodeisanalternativetoTransparentmode.It
+ishelpfulinmanaginglargernetworksandismoreappropriateforperformingtaskssuchas
+collectingdatafrommultiplelocationsorcontrollingmultipledevicesremotely.APImodeisa
+frame-basedprotocolthatallowsyoutodirectdataonapacketbasis.Itcanbeparticularlyusefulin
+largenetworkswhereyouneedcontrolovertheoperationoftheradionetworkorwhenyouneedto
+knowwhichnodeadatapacketisfrom.ThedevicecommunicatesUARTorSPIdatainpackets,
+alsoknownasAPIframes.Thismodeallowsforstructuredcommunicationswithserialdevices.
+Formoreinformation,seeAPImodeoverview.
+Command mode
+Commandmodeisastateinwhichthefirmwareinterpretsincomingcharactersascommands.It
+allowsyoutomodifythedevice’sconfigurationusingparametersyoucansetusingATcommands.
+WhenyouwanttoreadorsetanyparameteroftheXBee3RFModuleusingthismode,youhave
+tosendanATcommand.EveryATcommandstartswiththelettersATfollowedbythetwo
+charactersthatidentifythecommandandthenbysomeoptionalconfigurationvalues.
+TheoperatingmodesoftheXBee3RFModulearecontrolledbytheAP(APIEnable)setting,but
+Commandmodeisalwaysavailableasamodethedevicecanenterwhileconfiguredforanyofthe
+operatingmodes.
+DigiXBee®3802.15.4RFModuleUserGuide 97
+
+Modes Commandmode
+CommandmodeisavailableontheUARTinterfaceforalloperatingmodes.
+YoucannotusetheSPIinterfacetoenterCommandmode.
+Enter Command mode
+WhenusingthedefaultconfigurationvaluesforGT(GuardTimes)andCT(CommandMode
+Timeout),youmustenter+++precededandfollowedbyonesecondofsilence—noinput—toenter
+Commandmode.However,bothGTandCCareconfigurable.Thismeansthatthesilencebefore
+andaftertheescapesequence—GT—andtheescapecharactersthemselves—CC—canbechanged.
+Forexample,ifGTis5DCandCCis31,thenCommandmodecanbeenteredbytyping111
+precededandfollowedby1.5secondsofsilence.Whentheentrancecriteriaaremetthedevice
+respondswithOK\ronUARTsignifyingthatithasenteredCommandmodesuccessfullyandis
+readytostartprocessingATcommands.
+IfconfiguredtooperateinTransparentoperatingmode,whenenteringCommandmodetheXBee
+3802.15.4RFModuleknowstostopsendingdataandstartacceptingcommandslocally.
+NoteDonotpressReturnorEnteraftertyping +++ becauseitinterruptstheguardtimesilence
+andpreventsyoufromenteringCommandmode.
+WhenthedeviceisinCommandmode,itlistensforuserinputandisabletoreceiveATcommands
+ontheUART.If CT time(defaultis10seconds)passeswithoutanyuserinput,thedevicedropsout
+ofCommandmodeandreturnstothepreviousoperatingmode.Youcanforcethedevicetoleave
+CommandmodebysendingCN(ExitCommandmode).
+Youcancustomizethecommandcharacter,theguardtimesandthetimeoutinthedevice’s
+configurationsettings.Formoreinformation,see CC(CommandCharacter), CT(CommandMode
+Timeout) and GT(GuardTimes).
+Troubleshooting
+FailuretoenterCommandmodeisoftenduetobaudratemismatch.Ensurethatthebaudrateof
+theconnectionmatchesthebaudrateofthedevice.Bydefault,BD(UARTBaudRate)=3(9600
+b/s).
+TherearetwoalternativewaystoenterCommandmode:
+n AserialbreakforsixsecondsentersCommandmode.Youcanissuethe"break"command
+fromaserialconsole,itisoftenabuttonormenuitem.
+n AssertingDIN(serialbreak)uponpoweruporresetentersCommandmode.XCTUguides
+youthrougharesetandautomaticallyissuesthebreakwhenneeded.
+NoteYoumustassertRTSforbothofthesemethods,otherwisethedeviceentersthebootloader.
+Bothofthesemethodstemporarilysetthedevice'sbaudrateto9600andreturnan OK onthe
+UARTtoindicatethatCommandmodeisactive.WhenCommandmodeexits,thedevicereturnsto
+normaloperationatthebaudratethatBD issetto.
+Send AT commands
+OncethedeviceentersCommandmode,usethesyntaxinthefollowingfiguretosendAT
+commands.EveryATcommandstartswiththeletters AT,whichstandsfor"attention."The AT is
+followedbytwocharactersthatindicatewhichcommandisbeingissued,thenbysomeoptional
+configurationvalues.
+Toreadaparametervaluestoredinthedevice’sregister,omittheparameterfield.
+DigiXBee®3802.15.4RFModuleUserGuide 98
+
+Modes Commandmode
+TheprecedingexamplechangesNI(NodeIdentifier)to2.
+MultipleATcommands
+YoucansendmultipleATcommandsatatimewhentheyareseparatedbyacommainCommand
+mode;forexample, ATNIMyXBee,AC<cr>.
+NoteThebehaviorofthecommaisthesameasthebehaviorofthe<CR>inthepreviousexample
+exceptthatthenextcommandfollowingthecommaisnotprecededbyAT.Theonlyrealpurpose
+ofthecommaistoreducekeystrokes.
+Theprecedingexamplechangesthe NI(NodeIdentifier)toMyXBee andmakesthesettingactive
+throughAC(ApplyChanges).
+Parameterformat
+RefertothelistofATcommandsfortheformatofindividualATcommandparameters.Valid
+formatsforhexidecimalvaluesincludewithorwithoutaleading 0x forexample FFFF or 0xFFFF.
+Response to AT commands
+WhenusingATcommandstosetparameterstheXBee3802.15.4RFModulerespondswith
+OK<cr>ifsuccessfulandERROR<cr>ifnot.
+Apply command changes
+AnychangesyoumaketotheconfigurationcommandregistersusingATcommandsdonottake
+effectuntilyouapplythechanges.Forexample,ifyousendthe BD commandtochangethebaud
+rate,theactualbaudratedoesnotchangeuntilyouapplythechanges.Toapplychanges:
+1. SendAC(ApplyChanges).
+2. SendWR(Write).Inthiscase,changesareonlyappliedfollowingareset.TheWR
+commandbyitselfdoesnotapplychanges.
+or:
+3. ExitCommandmode.YoucanexitCommandmodeintwoways:EitherentertheCN
+commandorwaitforCommandmodetotimeoutasspecifiedbytheCTparameter.
+Make command changes permanent
+SendaWR(Write)commandtosavethechanges.WRwritesparametervaluestonon-volatile
+memorysothatparametermodificationspersistthroughsubsequentresets.
+SendanRE(RestoreDefaults)followedbyWRtorestoreparametersbacktotheirfactorydefaults.
+Thenexttimethedeviceisresetthedefaultsettingsareapplied.
+DigiXBee®3802.15.4RFModuleUserGuide 99
+
+Modes Idlemode
+Exit Command mode
+1. SendCN(ExitCommandmode)followedbyacarriagereturn.
+or:
+2. IfthedevicedoesnotreceiveanyvalidATcommandswithinthetimespecifiedby CT
+(CommandModeTimeout),itreturnstoTransparentorAPImode.ThedefaultCommand
+modetimeoutis 10 seconds.
+ForanexampleofprogrammingthedeviceusingATCommandsanddescriptionsofeach
+configurableparameter,seeATcommands.
+Idle mode
+Whennotreceivingortransmittingdata,theXBee3802.15.4RFModuleisinIdlemode.During
+Idlemode,thedevicelistensforvaliddataonboththeRFandserialports.
+IfconfiguredforSleepsupport,theXBee3802.15.4RFModuleonlytransitionstoalowpower
+statewheninIdlemode.
+Transmit mode
+Transmitmodeisthemodeinwhichthedeviceistransmittingdata.Thistypicallyhappensafter
+dataisreceivedfromtheserialport.
+Receive mode
+ThisisthedefaultmodefortheXBee3802.15.4RFModule.ThedeviceisinReceivemodewhen
+itisnottransmittingdata.IfadestinationnodereceivesavalidRFpacket,thedestinationnode
+transfersthedatatoitsserialtransmitbuffer.
+DigiXBee®3802.15.4RFModuleUserGuide 100
+
+Serial communication
+Serialinterface 102
+Serialreceivebuffer 102
+Serialtransmitbuffer 102
+UARTdataflow 102
+Flowcontrol 103
+DigiXBee®3802.15.4RFModuleUserGuide 101
+
+Serialcommunication Serialinterface
+Serial interface
+TheXBee3802.15.4RFModuleinterfacestoahostdevicethroughaserialport.Thedevicecan
+communicatethroughitsserialport:
+n Throughlogicandvoltagecompatibleuniversalasynchronousreceiver/transmitter(UART).
+n Throughaleveltranslatortoanyserialdevice,forexamplethroughanRS-232orUSB
+interfaceboard.
+n ThroughSPI,asdescribedinSPIcommunications.
+Serial receive buffer
+WhenserialdataentersthedevicethroughtheDINpinortheSPI_MOSIpin,itstoresthedatain
+theserialreceivebufferuntilthedevicecanprocessit.Undercertainconditions,thedevicemay
+notbeabletoprocessdataintheserialreceivebufferimmediately.Iflargeamountsofserialdata
+aresenttothedevicesuchthattheserialreceivebufferoverflows,thenthedevicediscardsall
+incomingdatauntilitisabletoprocessthedatainthebuffer.IftheUARTisinuse,youcanavoid
+thisonthehostsidebyhonoringclear-to-send(CTS)flowcontrol.
+Serial transmit buffer
+WhenthedevicereceivesRFdata,itmovesthedataintotheserialtransmitbufferandsendsitout
+theserialport.Iftheserialtransmitbufferbecomesfullandthesystembuffersarealsofull,thenit
+dropstheentireRFdatapacket.Wheneverthedevicereceivesdatafasterthanitcanprocessand
+transmitthedataouttheserialport,thereisapotentialofdroppingdata.
+UART data flow
+DevicesthathaveaUARTinterfaceconnectdirectlytothepinsoftheXBee3802.15.4RFModule
+asshowninthefollowingfigure.ThefigureshowssystemdataflowinaUART-interfaced
+environment.Low-assertedsignalshaveahorizontallineoverthesignalname.
+FormoreinformationabouthardwarespecificationsfortheUART,seetheXBee3Hardware
+ReferenceManual.
+Serial data
+AdevicesendsdatatotheXBee3802.15.4RFModule'sUARTasanasynchronousserialsignal.
+Whenthedeviceisnottransmittingdata,thesignalsshouldidlehigh.
+DigiXBee®3802.15.4RFModuleUserGuide 102
+
+Serialcommunication Flowcontrol
+Forserialcommunicationtooccur,youmustconfiguretheUARTofbothdevices(the
+microcontrollerandtheXBee3802.15.4RFModule)withcompatiblesettingsforthebaudrate,
+parity,startbits,stopbits,anddatabits.
+Eachdatabyteconsistsofastartbit(low),8databits(leastsignificantbitfirst)andastopbit(high).
+Thefollowingdiagramillustratestheserialbitpatternofdatapassingthroughthedevice.The
+diagramshowsUARTdatapacket0x1F(decimalnumber31)astransmittedthroughthedevice.
+YoucanconfiguretheUARTbaudrate,parity,andstopbitssettingsonthedevicewiththeBD,
+NB,andSBcommandsrespectively.Formoreinformation,seeUARTinterfacecommands.
+Flow control
+TheXBee3802.15.4RFModulemaintainsbufferstocollectserialandRFdatathatitreceives.
+Theserialreceivebuffercollectsincomingserialcharactersandholdsthemuntilthedevicecan
+processthem.TheserialtransmitbuffercollectsthedataitreceivesviatheRFlinkuntilittransmits
+thatdataouttheserialport.Thefollowingfigureshowstheprocessofdevicebufferscollecting
+receivedserialdata.
+UseD6(DIO6/RTSConfiguration)andD7(DIO7/CTSConfiguration)tosetflowcontrol.
+Clear-to-send (CTS) flow control
+IfyouenableCTSflowcontrol(D7(DIO7/CTSConfiguration)),whentheserialreceivebufferis
+morethanFTbytesfull,thedevicede-assertsCTS(setsithigh)tosignaltothehostdevicetostop
+sendingserialdata.ThedevicereassertsCTSaftertheserialreceivebufferhaslessthanFTbytes
+init.SeeFT(FlowControlThreshold)toconfigureandreadthisthreshold.
+DigiXBee®3802.15.4RFModuleUserGuide 103
+
+Serialcommunication Flowcontrol
+RTS flow control
+IfyousetD6(DIO6/RTSConfiguration)toenableRTSflowcontrol,thedevicedoesnotsenddata
+intheserialtransmitbufferouttheDOUTpinaslongasRTSisde-asserted(sethigh).Donotde-
+assertRTSforlongperiodsoftimeortheserialtransmitbufferwillfill.IfthedevicereceivesanRF
+datapacketandtheserialtransmitbufferdoesnothaveenoughspaceforallofthedatabytes,it
+discardstheentireRFdatapacket.
+IfthedevicesendsdataouttheUARTwhenRTSisde-asserted(sethigh)thedevicecouldsend
+uptofivecharactersouttheUARTportafterRTSisde-asserted.
+CasesinwhichtheDObuffermaybecomefull,resultingindroppedRFpackets:
+1. IftheRFdatarateissethigherthantheinterfacedatarateofthedevice,thedevicemay
+receivedatafasterthanitcansendthedatatothehost.Evenoccasionaltransmissionsfrom
+alargenumberofdevicescanquicklyaccumulateandoverflowthetransmitbuffer.
+2. Ifthehostdoesnotallowthedevicetotransmitdataoutfromtheserialtransmitbufferdueto
+beingheldoffbyhardwareflowcontrol.
+DigiXBee®3802.15.4RFModuleUserGuide 104
+
+SPI operation
+ThissectionspecifieshowSPIisimplementedonthedevice,whattheSPIsignalsare,andhowfull
+duplexoperationswork.
+SPI communications
+TheXBee3802.15.4RFModulesupportsSPIcommunicationsinslavemode.Slavemode
+receivestheclocksignalanddatafromthemasterandreturnsdatatothemaster.Thefollowing
+tableshowsthesignalsthattheSPIportusesonthedevice.
+RefertotheXBee3HardwareReferenceGuideforthepinoutofyourdevice.
+Signal Direction Function
+SPI_MOSI Input Inputsserialdatafromthemaster
+(Master Out, Slave In)
+SPI_MISO (Master Output Outputsserialdatatothemaster
+In, SlaveOut)
+SPI_SCLK Input ClocksdatatransfersonMOSIandMISO
+(Serial Clock)
+SPI_SSEL Input Enablesserialcommunicationwiththeslave
+(Slave Select)
+SPI_ATTN(Attention) Output Alertsthemasterthatslavehasdataqueuedtosend.The
+XBee3802.15.4RFModuleassertsthispinassoonas
+dataisavailabletosendtotheSPImasteranditremains
+asserteduntiltheSPImasterhasclockedoutallavailable
+data.
+Inthismode:
+n SPIclockratesupto5MHz(burst) arepossible.
+n Datatransmissionformatismostsignificantbit(MSB)first;bit7isthefirstbitofabytesent
+overtheinterface.
+n FrameFormatmode0isused.ThismeansCPOL=0(idleclockislow)andCPHA=0(data
+issampledontheclock’sleadingedge).
+n TheSPIportonlysupportsAPIMode(AP=1).
+Thefollowingdiagramshowsframeformatmode0forSPIcommunications.
+DigiXBee®3802.15.4RFModuleUserGuide 105
+
+SPIoperation Fullduplexoperation
+SPImodeischiptochipcommunication.WedonotsupplyaSPIcommunicationinterfaceonthe
+XBeedevelopmentevaluationboardsincludedinthedevelopmentkit.
+Full duplex operation
+WhenusingSPIontheXBee3802.15.4RFModulethedeviceusesAPIoperationwithout
+escapedcharacterstopacketizedata.ThedeviceignoresAPconfigurationbecauseSPIdoesnot
+operateinanyothermode.SPIisafullduplexprotocol,evenwhendataisonlyavailableinone
+direction.Thismeansthatwheneveradevicereceivesdata,italsotransmits,andthatdatais
+normallyinvalid.Likewise,wheneveradevicetransmitsdata,invaliddataisprobablyreceived.To
+determinewhetherornotreceiveddataisinvalid,thefirmwareplacesthedatainAPIpackets.
+SPIallowsforvaliddatafromtheslavetobeginbefore,atthesametime,oraftervaliddatabegins
+fromthemaster.Whenthemastersendsdatatotheslaveandtheslavehasvaliddatatosendin
+themiddleofreceivingdatafromthemaster,afullduplexoperationoccurs,wheredataisvalidin
+bothdirectionsforaperiodoftime.Notonlymustthemasterandtheslavebothbeabletokeepup
+withthefullduplexoperation,butbothsidesmusthonortheprotocol.
+ThefollowingfigureillustratestheSPIinterfacewhilevaliddataisbeingsentinbothdirections.
+Low power operation
+SleepmodesgenerallyworkthesameonSPIastheydoonUART.However,theadditionofSPI
+modeprovidesanoptiontoconfigureanotherpinasasleeppin.
+Bydefault,DigiconfiguresDIO8(SLEEP_REQUEST)asaperipheralandduringpinsleepitwakes
+thedeviceandputsittosleep.ThisappliestoboththeUARTandSPIserialinterfaces.
+DigiXBee®3802.15.4RFModuleUserGuide 106
+
+| SPIoperation |     |     | SelecttheSPIport |     |
+| ------------ | --- | --- | ---------------- | --- |
+IfSLEEP_REQUESTisnotconfiguredasaperipheralandSPI_SSELisconfiguredasa
+peripheral,thenpinsleepiscontrolledbySPI_SSELratherthanbySLEEP_REQUEST.Asserting
+SPI_SSELbydrivingitloweitherwakesthedeviceorkeepsitawake.NegatingSPI_SSELby
+drivingithighputsthedevicetosleep.
+SPI_SSELcanbeconfiguredtobothcontrolsleepandtoindicatethattheSPImasterhasselected
+aparticularslavedevice.Thisconfigurationprovidesanadvantagewherethepinsleep
+implementationonSPImoderequiresonelessphysicalpin.Itdoeshavethedisadvantagethatit
+putsthedevicetosleepwhenevertheSPImasterunintentionallynegatesSPI_SSEL.
+Toeffectivelyusethepinsharingconfiguration,theuser/designmusthavecontroloftheSPI_
+SSELpintotheextentthatitcancontrolpinsleep.ThismakestheSLEEP_REQUESTpinavailable
+foradifferentpurpose.WithoutcontrolofSPI_SSELwhileusingitforsleeprequest,thedevice
+maygotosleepatinopportunetimes.
+IfthedeviceisoneofmultipleslavesontheSPI,thenthedevicesleepswhiletheSPImastertalks
+totheotherslave,butthisisacceptableinmostcases.
+Ifyoudonotconfigureeitherpinasaperipheral,thenthedevicestaysawake,beingunableto
+sleepinSM1mode.
+| Select | the SPI | port |     |     |
+| ------ | ------- | ---- | --- | --- |
+ToforceSPImodeonthrough-hole devices,holdDOUT/DIO13lowwhileresettingthedeviceuntil
+SPI_ATTNasserts.ThiscausesthedevicetodisabletheUARTandgostraightintoSPI
+communicationmode.Onceconfigurationiscomplete,thedevicequeuesamodemstatusframeto
+theSPIport,whichcausestheSPI_ATTNlinetoassert.Thehostcanusethistodeterminethatthe
+SPIportisconfiguredproperly.
+Onsurface-mountdevices,forcingDOUTlowatthetimeofresethasnoeffect.TouseSPImode
+ontheSMTmodules,asserttheSPI_SSELlowafterresetandbeforeanyUARTdataisinput.
+ForcingDOUTlowonTHdevicesforcesthedevicetoenableSPIsupportbysettingthefollowing
+configurationvaluesto1(peripheral):
+SPI
+|     | Through-hole             |     | MicroandSurface-mount | signal |
+| --- | ------------------------ | --- | --------------------- | ------ |
+|     | D1(DIO1/ADC1/TH_SPI_ATTN |     | P9(DIO19/SPI_ATTN     | ATTN   |
+|     | Configuration)           |     | Configuration)        |        |
+D2(DIO2/ADC2/TH_SPI_CLKConfiguration) P8(DIO18/SPI_CLKConfiguration) SCLK
+|     | D3(DIO3/ADC3/TH_SPI_SSEL          |     | P7(DIO17/SPI_SSEL | SSEL |
+| --- | --------------------------------- | --- | ----------------- | ---- |
+|     | Configuration)                    |     | Configuration)    |      |
+|     | D4(DIO4/TH_SPI_MOSIConfiguration) |     | P6(DIO16/SPI_MOSI |      |
+MOSI
+Configuration)
+|     | P2(DIO12/TH_SPI_MISOConfiguration) |     | P5(DIO15/SPI_MISO | MISO |
+| --- | ---------------------------------- | --- | ----------------- | ---- |
+Configuration)
+NoteTheATTNsignalisoptional—youcanstilluseSPImodeifyoudisabletheSPI_ATTNpin(D1
+onthrough-holeorP9onsurface-mountdevices).
+AslongasthehostdoesnotissueaWRcommand,theseconfigurationvaluesreverttoprevious
+valuesafterapower-onreset.IfthehostissuesaWRcommandwhileinSPImode,thesesame
+parametersarewrittentoflash,andafteraresetthedevicecontinuestooperateinSPImode.
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     | 107 |
+| ----------------------------------- | --- | --- | --- | --- |
+
+SPIoperation ForceUARToperation
+IftheUARTisdisabledandtheSPIisenabledinthewrittenconfiguration,thenthedevicecomes
+upinSPImodewithoutforcingitbyholdingDOUTlow.IfboththeUARTandtheSPIare
+configured(P3(DIO13/UART_DOUTConfiguration)throughP9(DIO19/SPI_ATTNConfiguration)
+aresetto1)atthetimeofreset,thenoutputgoestotheUARTuntilthehostsendsthefirstinputto
+theSPIinterface.AssoonasthefirstinputcomesontheSPIport,thenallsubsequentoutputgoes
+totheSPIportandtheUARTisdisabled.
+AfterthefirstinputarrivesontheSPI port,allsubsequentoutputgoestotheSPI portandtheUART
+isdisabled.
+Whenthemasterassertstheslaveselect(SPI_SSEL)signal,SPItransmitdataisdriventothe
+outputpinSPI_MISO,andSPIdataisreceivedfromtheinputpinSPI_MOSI.TheSPI_SSELpin
+hastobeassertedtoenablethetransmitserializertodrivedatatotheoutputsignalSPI_MISO.A
+risingedgeonSPI_SSELcausestheSPI_MISOlinetobetri-statedsuchthatanotherslavedevice
+candriveit,ifsodesired.
+Iftheoutputbufferisempty,theSPIserializertransmitsthelastvalidbitrepeatedly,whichmaybe
+eitherhighorlow.Otherwise,thedeviceformatsalloutputinAPImode1format,asdescribedin
+OperateinAPImode.Theattachedhostisexpectedtoignorealldatathatisnotpartofaformatted
+APIframe.
+Force UART operation
+IfyouconfigureadevicewithonlytheSPIenabledandnoSPImasterisavailabletoaccessthe
+SPIslaveport,youcanrecoverthedevicetoUARToperationbyholdingDIN/CONFIGlowat
+resettime.DIN/CONFIGforcesadefaultconfigurationontheUARTat9600baudandbringsup
+thedeviceinCommandmodeontheUARTport.Youcanthensendtheappropriatecommandsto
+thedevicetoconfigureitforUARToperation.Ifyouwritethoseparameters,thedevicecomesup
+withtheUARTenabledonthenextreset.
+DigiXBee®3802.15.4RFModuleUserGuide 108
+
+I/O support
+ThefollowingtopicsdescribeanaloganddigitalI/Olinesupport,linepassingandoutputcontrol.
+Legacysupport 110
+Mixednetworkconsiderations 111
+DigitalI/Osupport 111
+AnalogI/Osupport 112
+MonitorI/Olines 113
+I/Osampledataformat 114
+APIframesupport 116
+On-demandsampling 116
+PeriodicI/Osampling 119
+DigitalI/Ochangedetection 121
+I/Olinepassing 122
+Digitallinepassing 122
+Outputsampledata 124
+Outputcontrol 124
+I/Obehaviorduringsleep 124
+DigiXBee®3802.15.4RFModuleUserGuide 109
+
+I/Osupport Legacysupport
+Legacy support
+Bydefault,theXBee3802.15.4RFModuleisconfiguredtooperateinalegacyconfiguration.This
+providesnetworkandapplicationcompatibilitywith XBeeS1802.15.4 and XBeeS2C
+802.15.4 devices. AO(APIOutputOptions)isusedtodetermine:
+n WhichDigitalI/Olinesaresampled
+n Whatsampleframetypeisusedforoutgoingtransmissions
+AOhasnoaffectonreceivedI/Osampledata,butwilldeterminetheframetypeemittedfor
+receivedserialdata.
+Previous802.15.4firmwaresontheXBeeS1andXBeeS2ChardwarehadalimitedsetofI/Olines
+available.ValidDIOlinesonthesedevicesarefrom D0 through D8;I/Osamplesaretransmitted
+overtheairusingastandardI/OsamplepacketusingaLegacydataformat.Theseplatformsdo
+nothavean AO commandandalwaysoutputsampledatainalegacyformatifpossible.
+FortheXBee3platform,digitalI/OhasbeenenhancedtobeinparitywithDigiMeshandZigbee.
+Youcannowenableuptofourteendigitalinputsforsampling: D0 through P4 aslongas AO isnot
+setto2.InordertosupporttheseadditionalI/Olines,anenhancedI/Osamplepacketissentover
+theair,whichisnotcompatiblewiththeS1orS2C.
+Bydefault,theXBee3802.15.4RFModuleisconfiguredtooperateinalegacyconfiguration
+with AO setto2.Thisallowsyoutosample D0 through D8.If youconfigureD9 through P4as
+digitalI/O,theyarenotsampledunless yousetAO to0or1.
+Fornewdesigns,werecommendsetting AO to0or1(OperateinAPImode),whichallowsyouto
+useadditionalI/OlinesforsamplingandeasilyallowsyoutoswitchtoZigbeeorDigiMesh,asthe
+APIandI/Ofunctionalityareidentical.
+Thistableillustratesthevariousconfigurationcombinationsthatarepossibleandtheexpected
+output:
+Source
+| AO           |             | Destination | Data     |                          |
+| ------------ | ----------- | ----------- | -------- | ------------------------ |
+| Source value | Destination | AOvalue     | format   | APIframeonreceiver       |
+| XBee3 0or1   | XBee3       | 0or1        | Enhanced | I/OSampleIndicator -0x92 |
+| XBee3 0or1   | XBee3       | 2           | Enhanced | I/OSampleIndicator -0x92 |
+| XBee3 0or1   | S1orS2C     | N/A         | N/A      | Legacydevicesareunableto |
+interprettheadditional
+sampledataandwilldiscard
+thereceivedpacket.
+| XBee3 2 | XBee3 | 0or1 | Legacy | 64-bitI/OSampleIndicator- |
+| ------- | ----- | ---- | ------ | ------------------------- |
+0x82/16-bitI/OSample
+Indicator-0x83
+| XBee3 2 | S1orS2C | N/A | Legacy | 64-bitI/OSampleIndicator- |
+| ------- | ------- | --- | ------ | ------------------------- |
+0x82/16-bitI/OSample
+Indicator-0x83
+| S1or N/A | XBee3 | 0or1 | Legacy | 64-bitI/OSampleIndicator- |
+| -------- | ----- | ---- | ------ | ------------------------- |
+| S2C      |       |      |        | 0x82/16-bitI/OSample      |
+Indicator-0x83
+DigiXBee®3802.15.4RFModuleUserGuide 110
+
+| I/Osupport |     |     |     | Mixednetworkconsiderations |
+| ---------- | --- | --- | --- | -------------------------- |
+Source
+| AO           |             | Destination | Data   |                           |
+| ------------ | ----------- | ----------- | ------ | ------------------------- |
+| Source value | Destination | AOvalue     | format | APIframeonreceiver        |
+| S1or N/A     | XBee3       | 2           | Legacy | 64-bitI/OSampleIndicator- |
+| S2C          |             |             |        | 0x82/16-bitI/OSample      |
+Indicator-0x83
+RefertoI/OsampledataformatformoreinformationontheformatoftheincomingI/Osample
+data.
+| Mixed network | considerations |     |     |     |
+| ------------- | -------------- | --- | --- | --- |
+IfyouuseamixednetworkofXBee3andlegacyS1orS2Cdevices,youmustset AO to2inorder
+totransmitsampledatathatiscompatiblewiththesedevices.
+Regardlessofthe AO setting,ifanXBee3802.15.4RFModulereceivesanI/Osamplepacket
+fromanS1orS2Cdevice,italwaysoutputsthelegacydataformat.
+Digital I/O support
+AO(APIOutputOptions)determinestheI/Olinesavailableforsampling.Bydefault,AOis
+configuredtobecompatiblewithlegacydevices.
+Configure AO to0or1tomakedigitalI/OavailableonlinesDIO0throughDIO14(D0 -
+n
+D9 and P0 -P4).
+n Configure AO to2tomakedigitalI/OavailableonlinesDIO0throughDIO8(D0 -D8).This
+providescompatibilitywithS1andS2Cdevicesandisthedefaultconfiguration.
+SeeLegacysupportformoreinformation.
+Digitalsamplingisenabledonthesepinsifconfiguredas3,4,or5withthefollowingmeanings:
+n 3isdigitalinput.
+l UsePR(Pull-up/DownResistorEnable)toenableinternalpullup/downresistorsfor
+eachdigitalinput.UsePD(PullUp/DownDirection)todeterminethedirectionofthe
+internalpullup/downresistor. Alldisabledanddigitalinputpinsarepulledupbydefault.
+n 4isdigitaloutputlow.
+n 5isdigitaloutputhigh.
+| Function   | Legacy |           |     |     |
+| ---------- | ------ | --------- | --- | --- |
+| when AO =0 |        | Micro SMT | TH  |     |
+Function
+| or1  | when AO =2 | Pin Pin | Pin ATCommand                 |     |
+| ---- | ---------- | ------- | ----------------------------- | --- |
+| DIO0 | DIO0       | 31 33   | 20 D0(DIO0/ADC0/Commissioning |     |
+Configuration)
+| DIO1 | DIO1 | 30 32 | 19 D1(DIO1/ADC1/TH_SPI_ATTN |     |
+| ---- | ---- | ----- | --------------------------- | --- |
+Configuration)
+| DIO2 | DIO2 | 29 31 | 18 D2(DIO2/ADC2/TH_SPI_CLK |     |
+| ---- | ---- | ----- | -------------------------- | --- |
+Configuration)
+DigiXBee®3802.15.4RFModuleUserGuide 111
+
+I/Osupport AnalogI/Osupport
+| Function   | Legacy     |       |     |                             |
+| ---------- | ---------- | ----- | --- | --------------------------- |
+| when AO =0 | Function   | Micro | SMT | TH                          |
+| or1        | when AO =2 | Pin   | Pin | Pin ATCommand               |
+| DIO3       | DIO3       | 28    | 30  | 17 D3(DIO3/ADC3/TH_SPI_SSEL |
+Configuration)
+| DIO4 | DIO4 | 23  | 24  | 11 D4(DIO4/TH_SPI_MOSI |
+| ---- | ---- | --- | --- | ---------------------- |
+Configuration)
+| DIO5 | DIO5 | 26  | 28  | 15 D5(DIO5/AssociateConfiguration) |
+| ---- | ---- | --- | --- | ---------------------------------- |
+| DIO6 | DIO6 | 27  | 29  | 16 D6(DIO6/RTSConfiguration)       |
+| DIO7 | DIO7 | 24  | 25  | 12 D7(DIO7/CTSConfiguration)       |
+| DIO8 | DIO8 | 9   | 10  | 9 D8(DIO8/DTR/SLP_Request          |
+Configuration)
+| DIO9  | N/A | 25  | 26  | 13 D9(DIO9/ON_SLEEPConfiguration) |
+| ----- | --- | --- | --- | --------------------------------- |
+| DIO10 | N/A | 7   | 7   | 6 P0(DIO10/RSSI/PWM0              |
+Configuration)
+| DIO11 | N/A | 8   | 8   | 7 P1(DIO11/PWM1Configuration) |
+| ----- | --- | --- | --- | ----------------------------- |
+| DIO12 | N/A | 5   | 5   | 4 P2(DIO12/TH_SPI_MISO        |
+Configuration)
+| DIO13 | N/A | 3   | 3   | 2 P3(DIO13/UART_DOUT |
+| ----- | --- | --- | --- | -------------------- |
+Configuration)
+| DIO14 | N/A | 4   | 4   | 3 P4(DIO14/UART_DINConfiguration) |
+| ----- | --- | --- | --- | --------------------------------- |
+I/Osamplingisnotavailableforpins P5 through P9.SeetheXBee3HardwareReferenceManual
+forfullpinoutsandfunctionality.
+| Analog I/O | support |     |     |     |
+| ---------- | ------- | --- | --- | --- |
+Analoginputisavailableon D0 through D3.Configurethesepinsto2(ADC)toenableanalog
+sampling.
+PWMoutputisavailableon P0 and P1, whichcanbeusedforAnaloglinepassing. UseM0(PWM0
+DutyCycle) and M1(PWM1DutyCycle)tosetafixedPWMlevel.
+| Function | MicroPin | SMTPin | THPin | ATCommand                                |
+| -------- | -------- | ------ | ----- | ---------------------------------------- |
+| ADC0     | 31       | 33     | 20    | D0(DIO0/ADC0/CommissioningConfiguration) |
+| ADC1     | 30       | 32     | 19    | D1(DIO1/ADC1/TH_SPI_ATTNConfiguration)   |
+| ADC2     | 29       | 31     | 18    | D2(DIO2/ADC2/TH_SPI_CLKConfiguration)    |
+| ADC3     | 28       | 30     | 17    | D3(DIO3/ADC3/TH_SPI_SSELConfiguration)   |
+| PWM0     | 7        | 7      | 6     | P0(DIO10/RSSI/PWM0Configuration)         |
+| PWM1     | 8        | 8      | 7     | P1(DIO11/PWM1Configuration)              |
+DigiXBee®3802.15.4RFModuleUserGuide 112
+
+I/Osupport MonitorI/Olines
+AV(AnalogVoltageReference)specifiestheanalogreferencevoltageusedforthe10-bitADCs.
+Analogsampledataisrepresentedasa2-bytevalue.Fora10-bitADC,theacceptablerangeis
+from0x0000to0x03FF.Toconvertthisvaluetoausefulvoltagelevel,applythefollowingformula:
+ADC/1023(vREF)=Voltage
+NoteADCssampledthroughMicroPythonwillhave12-bitresolution.
+Example
+AnADCvaluereceivedis0x01AE;toconvertthisintoavoltagethehexadecimalvalueisfirst
+convertedtodecimal(0x01AE=430).UsingthedefaultAVreferenceof1.25V,applytheformula
+asfollows:
+430/1023(1.25V)=525mV
+Monitor I/O lines
+Youcanmonitorpinsyouconfigureasdigitalinput,digitaloutput,oranaloginputandgenerateI/O
+sampledata.Ifyoudonotdefineinputsoroutputs,nosampledataisgenerated.
+Typically,I/OsamplesaregeneratedbyconfiguringthedevicetosampleI/Opinsperiodically
+(basedonatimer)orwhenachangeisdetectedononeormoredigitalpins.Thesesamplesare
+alwayssentovertheairtothedestinationaddressspecifiedbyDH(DestinationAddress
+High) and DL(DestinationAddressLow).
+Youcanalsogathersampledatausingon-demandsampling,whichallowsyoutocollectthestate
+ofthedevice'sI/OpinsbyissuinganATcommand.Youcandothisoneitheralocalorremote
+device viaanATcommandrequest.
+Thethreemethodstogeneratesampledataare:
+n Periodicsample(IR(SampleRate))
+l Periodicsamplingbasedonatimer
+l Samplesaretakenimmediatelyuponwake(excludingpinsleep)
+l Sampledataissentto DH+DL destinationaddress
+l Canbeusedwithlinepassing
+l RequiresAPImodeonreceiver
+n Changedetect(IC(DIOChangeDetect))
+l Samplesaregeneratedwhenthestateofspecifieddigitalinputpin(s)change
+l Sampledataissentto DH+DL destinationaddress
+l Canbeusedwithlinepassing
+l RequiresAPImodeonreceiver
+n On-demandsample(IS(I/OSample))
+l Immediatelyquerythedevice’sI/Olines
+l CanbeissuedlocallyinCommandMode
+l CanbeissuedlocallyorremotelyinAPImode
+Thesemethodsarenotmutuallyexclusiveandyoucanusethemincombinationwitheachother.
+DigiXBee®3802.15.4RFModuleUserGuide 113
+
+I/Osupport I/Osampledataformat
+I/O sample data format
+AOdeterminestheformatofoutgoingsampledata.
+Bydefault, AO isconfiguredtobecompatiblewithlegacydevicesandgeneratessamplesusinga
+legacydataformat.
+Legacy data format
+IfsampledataisgeneratedfromanS1orS2C802.15.4XBeeoranXBee3802.15.4thathasAO
+setto2,theformatofthesampledatawillberepresentedasaseriesofbytesinthefollowing
+formatwhichiscompatiblewiththeS1802.15.4andS2C802.15.4devices:
+Bytes Name Description
+1 Sample Numberofsamplesets.ThisisdeterminedbyIT(SamplesbeforeTX)on
+sets thesourcenode.
+2 Digitaland IndicateswhichdigitalI/O andADClineshavesamplingenabled.Eachbit
+analog correspondstoonedigitalI/OorADClineonthedevice.
+channel bit0=DIO0
+mask bit1=DIO1
+bit2=DIO2
+bit3=DIO3
+bit4=DIO4
+bit5=DIO5
+bit6=DIO6
+bit7=DIO7
+bit8=DIO8
+bit9=ADC0
+bit10=ADC1
+bit11=ADC2
+bit12=ADC3
+bit13=Reserved
+bit14=Reserved
+bit15=Reserved
+Example:achannelmaskof0x063CmeansADC0,ADC1,DIO2,DIO3,
+andDIO5areconfiguredasdigitalinputsoroutputs.
+2 Digital Eachbitinthedigitaldatasetcorrespondstoadigitalbitinthechannel
+dataset maskandindicatesthestateofthedigitalpin,whetherhigh(1)orlow(0).
+Ifthedigitalportionofthechannelmaskis0,thenthesetwobytesare
+omittedasnodigitalI/Olinesareenabled.
+bit0=DIO0
+bit1=DIO1
+bit2=DIO2
+bit3=DIO3
+bit4=DIO4
+bit5=DIO5
+bit6=DIO6
+bit7=DIO7
+bit8=DIO8
+bit9=N/A
+DigiXBee®3802.15.4RFModuleUserGuide 114
+
+I/Osupport I/Osampledataformat
+Bytes Name Description
+bit10=N/A
+bit11=N/A
+bit12=N/A
+bit13=N/A
+bit14=N/A
+bit15=N/A
+2 Analog EachenabledADClineintheanalogportionofthechannelmaskhasa
+dataset separate2-bytevaluebasedonthenumberofADCinputsonthe
+(multiple) originatingdevice.ThedatastartswithAD0andcontinuessequentiallyfor
+eachenabledanaloginputchanneluptoAD3.
+Iftheanalogportionofthechannelmaskis0,thennoanalogsample
+bytesareincluded.
+Enhanced data format
+If yousetAO to0or1onthesourcenode,thenthedataformatisrepresentedasaseriesofbytes
+inthefollowingformatwhichmatchestheDigiMeshandZigbeefirmwares:
+Bytes Name Description
+1 Sample Numberofsamplesets.Thereisalwaysonesamplesetperframe.
+sets
+2 Digital IndicateswhichdigitalI/Olineshavesamplingenabled.Eachbit
+channel correspondstoonedigitalI/Olineonthedevice.
+mask bit0=DIO0
+bit1=DIO1
+bit2=DIO2
+bit3=DIO3
+bit4=DIO4
+bit5=DIO5
+bit6=DIO6
+bit7=DIO7
+bit8=DIO8
+bit9=DIO9
+bit10=DIO10
+bit11=DIO11
+bit12=DIO12
+bit13=DIO13
+bit14=DIO14
+bit15=N/A
+Example:adigitalchannelmaskof0x002FmeansDIO0,1,2,3and5are
+configuredasdigitalinputsoroutputs.
+1 Analog Indicateswhichlineshaveanaloginputsenabledforsampling.Eachbitin
+channel theanalogchannelmaskcorrespondstooneanaloginputchannel.Ifabit
+mask isset,thenacorresponding2-byteanalogdatasetisincluded.
+bit0=AD0/DIO0
+bit1=AD1/DIO1
+DigiXBee®3802.15.4RFModuleUserGuide 115
+
+I/Osupport APIframesupport
+Bytes Name Description
+bit2=AD2/DIO2
+bit3=AD3/DIO3
+2 Digital Eachbitinthedigitaldatasetcorrespondstoabitinthedigitalchannel
+dataset maskandindicatesthedigitalstateofthepin,whetherhigh(1)orlow(0).
+Ifthedigitalchannelmaskis0x0000,thenthesetwobytesareomittedas
+nodigitalI/Olinesareenabled.
+2 Analog EachenabledADClineintheanalogchannelmaskwillhaveaseparate
+dataset 2-bytevaluebasedonthenumberofADCinputsontheoriginating
+(multiple) device.ThedatastartswithAD0andcontinuessequentiallyforeach
+enabledanaloginputchanneluptoAD3.
+Iftheanalogchannelmaskis0x00,thennoanalogsamplebytesis
+included.
+API frame support
+I/Osamplesgeneratedusing PeriodicI/Osampling(IR)andDigitalI/Ochangedetection(IC)are
+transmittedtothedestinationaddressspecifiedby DH and DL.Inordertodisplaythesampledata,
+thereceivermustoperateinAPImode(AP=1or2).ThesampledataisrepresentedasanI/O
+sampleAPIframe.
+TherearethreetypesofI/OsampleframesthataresupportedbytheXBee3802.15.4RFModule:
+n 0x92-EnhancedI/Osampleframe
+n 0x82-Legacy64-bitI/Osampleframe
+n 0x83-Legacy16-bitI/Osampleframe
+If AO =0or1onthesourcenode,additionalI/Olinescanbesampledbythesourceanda0x92
+frameisgeneratedonthedestination.Inthisconfiguration,thereceivermustbeanXBee3,asthe
+XBeeS1andS2C802.15.4deviceswillbeunabletointerprettheadditionalsampledata.
+See I/OSampleIndicator -0x92formoreinformationontheframe'sformatandanexample.
+IfthesourcenodeisanXBeeS1orS2CdeviceoranXBee3withAOsetto2,thedestinationnode
+generateseithera0x82or0x83framedependingonwhetherthesourcenodeisoperatingina16-
+bitor64-bitconfiguration.SeeAddressingmodesformoreinformation.
+SeeLegacysupportformoreinformationonwhatconfigurationoptionsgeneratethevariousI/O
+frames.
+On-demand sampling
+Youcanuse IS(I/OSample)toquerythecurrentstateofalldigitalI/OandADClinesonthe device
+andreturnthesampledataasanATcommandresponse. Ifnoinputsoroutputsaredefined,the
+commandreturnsanERROR.
+On-demandsamplingcanbeusefulwhenperforminginitialdeployment,asyoucansendISlocally
+toverifythatthedeviceandconnectedsensorsarecorrectlyconfigured.Theformatofthesample
+datamatcheswhatisperiodicallysentusingothersamplingmethods.YoucanalsosendIS
+remotelyusingaremoteATcommand.Whensentremotelyfromagatewayorservertoeach
+sensornodeonthenetwork,on-demandsamplingcanimprovebatterylifeandnetwork
+performanceastheremotenodetransmitssampledataonlywhenrequested.
+DigiXBee®3802.15.4RFModuleUserGuide 116
+
+I/Osupport On-demandsampling
+IfyousendISusing Commandmode,thenthedevicereturnsacarriagereturndelimited list
+containingtheI/Osampledata. IfISissenteitherlocallyorremotelyviaanAPIframe,theI/O
+sampledataispresentedastheparametervalueintheATcommandresponseframe(LocalAT
+CommandResponse-0x88orRemoteATCommandResponse-0x97).
+| Example: | Command | mode |     |
+| -------- | ------- | ---- | --- |
+AnIS commandsentinCommandmodereturnsthefollowingsampledata:
+ThisexampleusestheenhancedI/Odataformat,ifyouusethelegacyformat(AO =2ordatais
+receivedfromanS1orS2Cdevice)thenrefertotheLegacydataformatforinformationonhowthis
+dataisstructured.
+| Output | Description                                             |     |     |
+| ------ | ------------------------------------------------------- | --- | --- |
+| 01     | Onesampleset                                            |     |     |
+| 0C0C   | Digitalchannelmask,indicateswhichdigitallinesaresampled |     |     |
+(0x0C0C=0000 11000000 1100b=DIO2,3,10,11)
+| 03  | Analogchannelmask,indicateswhichanaloglinesaresampled |     |     |
+| --- | ----------------------------------------------------- | --- | --- |
+(0x03=00000011b=AD0,1)
+| 0408 | Digitalsampledatathatcorrespondswiththedigitalchannelmask |     |     |
+| ---- | --------------------------------------------------------- | --- | --- |
+0x0408=0000 01000000 1000b=DIO3andDIO10arehigh,DIO2andDIO11are
+low
+| 03D0     | AnalogsampledataforAD0 |         |             |
+| -------- | ---------------------- | ------- | ----------- |
+| 0124     | AnalogsampledataforAD1 |         |             |
+| Example: | Local AT               | command | in API mode |
+The IS commandsenttoalocaldeviceinAPImodewouldusea LocalATCommandRequest-
+0x08 or QueueLocalATCommandRequest-0x09frame:
+7E00040853495308
+Thedevicerespondswitha LocalATCommandResponse-0x88thatcontainsthesampledata:
+7E000F8853495300010C0C03040803D0012468
+ThisexampleusestheenhancedI/Odataformat,ifyouusethelegacyformat(AO =2ordatais
+receivedfromanS1orS2Cdevice)thenseetheLegacydataformatforinformationonhowthis
+dataisstructured.
+| Output | Field | Description                       |     |
+| ------ | ----- | --------------------------------- | --- |
+| 7E     | Start | IndicatesthebeginningofanAPIframe |     |
+Delimiter
+| 000F | Length    | Lengthofthepacket                                  |     |
+| ---- | --------- | -------------------------------------------------- | --- |
+| 88   | Frametype | ATCommandresponseframe                             |     |
+| 53   | FrameID   | ThisIDcorrespondstotheFrameIDofthe0x08request      |     |
+| 4953 | AT        | IndicatestheATcommandthatthisresponsecorrespondsto |     |
+DigiXBee®3802.15.4RFModuleUserGuide 117
+
+I/Osupport On-demandsampling
+| Output | Field   | Description                             |     |
+| ------ | ------- | --------------------------------------- | --- |
+|        | Command | 0x490x53=IS                             |     |
+| 00     | Status  | IndicatessuccessorfailureoftheATcommand |     |
+00=OK
+ifnoI/Olinesareenabled,thiswillreturn01(ERROR)
+| 01   |     | Onesampleset                                            |     |
+| ---- | --- | ------------------------------------------------------- | --- |
+| 0C0C |     | Digitalchannelmask,indicateswhichdigitallinesaresampled |     |
+(0x0C0C=0000 11000000 1100b=DIO2,3,10,11)
+| 03  |     | Analogchannelmask,indicateswhichanaloglinesaresampled |     |
+| --- | --- | ----------------------------------------------------- | --- |
+I/Osample
+(0x03=00000011b=AD0,1)
+data
+0408 Digitalsampledatathatcorrespondswiththedigitalchannelmask
+0x0408=0000 01000000 1000b=DIO3andDIO10arehigh,DIO2
+andDIO11arelow
+| 03D0     |          | AnalogsampledataforAD0               |             |
+| -------- | -------- | ------------------------------------ | ----------- |
+| 0124     |          | AnalogsampledataforAD1               |             |
+| 68       | Checksum | Cansafelybediscardedonreceivedframes |             |
+| Example: | Remote   | AT command                           | in API mode |
+The IS commandsenttoaremotedevicewithanaddressof0013A20012345678usesa Remote
+ATCommandRequest-0x17:
+7E000F17870013A20012345678FFFE004953FF
+Thesampledatafromthedeviceisreturnedina RemoteATCommandResponse-0x97frame
+withthesampledataastheparametervalue:
+7E001997870013A200123456780000495300010C0C03040803FF03FF50
+ThisexampleusestheenhancedI/Odataformat,ifyouusethelegacyformat(AO =2ordatais
+receivedfromanS1orS2Cdevice)thenseeLegacydataformatforinformationonhowthisdatais
+structured.
+| Output | Field | Description                       |     |
+| ------ | ----- | --------------------------------- | --- |
+| 7E     | Start | IndicatesthebeginningofanAPIframe |     |
+Delimiter
+| 0019 | Length    | Lengthofthepacket                             |     |
+| ---- | --------- | --------------------------------------------- | --- |
+| 97   | Frametype | RemoteATCommandresponseframe                  |     |
+| 87   | FrameID   | ThisIDcorrespondstotheFrameIDofthe0x17request |     |
+0013A200 64-bit The64-bitaddressofthenodethatrespondedtotherequest
+| 12345678 | source |     |     |
+| -------- | ------ | --- | --- |
+0000 16-bit The16-bitaddressofthenodethatrespondedtotherequest
+source
+DigiXBee®3802.15.4RFModuleUserGuide 118
+
+I/Osupport PeriodicI/Osampling
+| Output | Field   | Description                                        |
+| ------ | ------- | -------------------------------------------------- |
+| 4953   | AT      | IndicatestheATcommandthatthisresponsecorrespondsto |
+|        | Command | 0x490x53=IS                                        |
+| 00     | Status  | IndicatessuccessorfailureoftheATcommand            |
+00=OK
+ifnoI/Olinesareenabled,thiswillreturn01(ERROR)
+| 01   |     | Onesampleset                                            |
+| ---- | --- | ------------------------------------------------------- |
+| 0C0C |     | Digitalchannelmask,indicateswhichdigitallinesaresampled |
+(0x0C0C=0000 11000000 1100b=DIO2,3,10,11)
+| 03  |           | Analogchannelmask,indicateswhichanaloglinesaresampled |
+| --- | --------- | ----------------------------------------------------- |
+|     | I/Osample | (0x03=00000011b=AD0,1)                                |
+data
+| 0408 |     | Digitalsampledatathatcorrespondswiththedigitalchannel |
+| ---- | --- | ----------------------------------------------------- |
+mask
+0x0408=0000 01000000 1000b=DIO3andDIO10arehigh,
+DIO2andDIO11arelow
+| 03D0                  |          | AnalogsampledataforAD0               |
+| --------------------- | -------- | ------------------------------------ |
+| 0124                  |          | AnalogsampledataforAD1               |
+| 50                    | Checksum | Cansafelybediscardedonreceivedframes |
+| Periodic I/O sampling |          |                                      |
+PeriodicsamplingallowsadevicetotakeanI/Osampleandtransmitittoaremotedeviceata
+periodicrate.
+Source
+UseIR(SampleRate)tosettheperiodicsamplerateforenabledI/Olines.
+n Todisableperiodicsampling,set IR to 0.
+Forallother IR values,thedevicesamplesdatawhen IR millisecondselapseandtransmits
+n
+thesampleddatatothedestinationaddress.
+The DH(DestinationAddressHigh) and DL(DestinationAddressLow) commandsdeterminethe
+destinationaddressoftheI/Osamples. YoumustconfigureatleastonepinasadigitalI/OorADC
+inputonthesendingnodetogeneratesampledata.
+Destination
+IfthereceivingdeviceisoperatinginAPIoperatingmodetheI/Osampledataformatisemittedout
+oftheserialport.DevicesthatareinTransparentoperatingmodediscardtheI/Odatasamples
+theyreceiveunlessyouenablelinepassing.
+I/Osamplinguponwake
+Bydefault,adevicethatisconfiguredforsleep(SM >0)thathasatleastonedigitalI/OorADC
+enabledtransmitsanI/Osampleuponwakeregardlessofhow IR isconfigured. Samplingupon
+DigiXBee®3802.15.4RFModuleUserGuide 119
+
+I/Osupport PeriodicI/Osampling
+wakecanbedisabledbyclearingbit1ofthe SO.Formoreinformationaboutsettingsleepmodes,
+see Sleepmodes and SO(SleepOptions).
+| Multiple | samples | per packet |     |
+| -------- | ------- | ---------- | --- |
+IT(SamplesbeforeTX)specifieshowmanyI/OsamplescanbetransmittedinasingleOTA
+packet.Anysingle-bytevalue(0-0xFF)isacceptedforinput.However,thevalueisadjusted
+downwardbasedonhowmanyI/Osamplescanfitintoamaximumsizepacket;see Maximum
+payload.AqueryofITafterchangesareappliedtellshowmanyI/Osampleswillactuallybe
+gathered.
+Since MM(MACMode)mustbe0or3tosendI/Osamples,themaximumpayloadinthebestof
+conditions(shortsourceaddress,shortdestinationaddress,andnoencryption)is114bytes.
+SevenofthosebytesareusedbythecommandheaderandtheI/Oheader,leaving107bytesfor
+I/Osamples.TheminimumI/Osampleis2bytes.Thereforethemaximumpossibleusablevalue
+for IT is53(or0x35).
+OnlylegacyI/Oframesallowforgatheringmultiplesamples.If yousetAO to0or1,then IT isnot
+applicableandonlyonesamplecanbegatheredperframe.
+| Example: | Remote | AT command | in API mode |
+| -------- | ------ | ---------- | ----------- |
+Adeviceisconfiguredwiththefollowingsettings:
+n D0 and D1 aresettoADC(2)
+n D3 isconfiguredasadigitalinput(3)
+AO issetto2,solegacyframesaregenerated
+n
+n IT isconfiguredto3,sothatthreesamplesaregatheredpertransmission
+Onthedestinationnode,thefollowingframeisemitted:
+7E001A83123426020306040004012803120000015802FE0004012A03A0
+94
+| Output | Field | Description                       |     |
+| ------ | ----- | --------------------------------- | --- |
+| 7E     | Start | IndicatesthebeginningofanAPIframe |     |
+Delimiter
+| 001A | Length    | Lengthofthepacket                               |     |
+| ---- | --------- | ----------------------------------------------- | --- |
+| 83   | Frametype | Legacy16-bitI/OSample                           |     |
+| 1234 | 16-bit    | ThesourceaddressofthedevicethatsenttheI/Osample |     |
+Source
+Address
+| 26  | RSSI | The64-bitaddressofthenodethatrespondedtotherequest |     |
+| --- | ---- | -------------------------------------------------- | --- |
+02
+| 03  | Samplesets | Thenumberofsamplesthatareincludedinthisframe |     |
+| --- | ---------- | -------------------------------------------- | --- |
+0604 Channel Maskwhichindicateswhichdigitalandanaloglinesareenabled.Even
+mask thoughmultiplesamplesarebeinggathered,therewillonlyeverbeone
+channelmaskperframe.
+DigiXBee®3802.15.4RFModuleUserGuide 120
+
+I/Osupport DigitalI/Ochangedetection
+|     | Output Field | Description |
+| --- | ------------ | ----------- |
+(0x0604=0000011000000100b=ADC0,ADC1,DIO3)
+0004 Sampleset Thefirstsetofdigitalsampledatathatcorrespondswiththedigital
+|     | 1   | portionofthechannelmask |
+| --- | --- | ----------------------- |
+0x0004=0000000000000100b=DIO3ishigh
+|     | 0128           | AnalogsampledataforAD0             |
+| --- | -------------- | ---------------------------------- |
+|     | 0312           | AnalogsampledataforAD1             |
+|     | 0000 Sampleset | Thesecondsetofdigitalsampledata    |
+|     | 2              | 0x0004=0000000000000000b=DIO3islow |
+|     | 0158           | SecondsetofanalogsampledataforAD0  |
+|     | 02FE           | SecondsetofanalogsampledataforAD1  |
+|     | 0004 Sampleset | Thethirdsetofdigitalsampledata     |
+0x0004=0000000000000100b=DIO3ishigh
+1
+|         | 012A        | ThirdsetofanalogsampledataforAD0     |
+| ------- | ----------- | ------------------------------------ |
+|         | 03A0        | ThirdsetofanalogsampledataforAD1     |
+|         | 94 Checksum | Cansafelybediscardedonreceivedframes |
+| Digital | I/O change  | detection                            |
+YoucanconfiguredevicestotransmitadatasampleimmediatelywheneveramonitoreddigitalI/O
+pinchangesstate.IC(DIOChangeDetect)isabitmaskthatdetermineswhichdigitalI/Olinesto
+monitorforastatechange.Ifyousetoneormorebitsin IC,thedevicetransmitsanI/Osampleas
+soonasitobservesastatechangeonthemonitoreddigitalI/Oline(s)usingedgedetection.
+ChangedetectionisonlyapplicabletodigitalI/Opinsthatareconfiguredasdigitalinput(3)or
+digitaloutput(4or5).
+ThefigurebelowshowshowI/Ochangedetectioncanworkincombinationwith PeriodicI/O
+samplingtoimprovesamplingaccuracy. Inthefigure,thegraydashedlineswithadotontop
+representsamplestakenfromthemonitoredDIOline.Thetopgraphshowsonly
+periodic IR samples,thebottomgraphshowsacombinationof IR periodicsamples
+and IC detectedchanges.Inthetopgraph,thehumpsindicatethatthesamplewasnottakenat
+thatexactmomentandneededtowaitforthenext IR sampleperiod.
+DigiXBee®3802.15.4RFModuleUserGuide 121
+
+I/Osupport I/Olinepassing
+NoteUsecautionwhencombiningchangedetectsamplingwithsleepmodes. IConlycausesa
+sampletobegeneratedifastatechangeoccursduringawakeperiod.Ifthedeviceissleeping
+whenthedigitaltransitionoccurs,thennochangeisdetectedandanI/Osampleisnotgenerated.
+Useperiodicsamplingwith IR inconjunctionwith IC inthisinstance,since IR generatesanI/O
+sampleuponwakeupandensuresthatthechangeisproperlyobserved.
+Ifyouenablemultiplesamplesbysetting IT >1,anychangedetectthatoccurscausesallcollected
+periodicsamplestobesentimmediately,thenaseparate IC sampleissent.
+I/O line passing
+LinepassingallowsyoutoaffecttheoutputpinsofonedevicebysamplingtheI/Opinsofanother.
+Tosupportlinepassing,youmustconfigureadevicetogenerateI/Osampledatausingperiodic
+sampling(IR(SampleRate))and/orchangedetection(IC(DIOChangeDetect)).
+OnthedevicethatreceivesI/Osamples,enablelinepassingsettingIA(I/OInputAddress)withthe
+addressofthedevicethathastheappropriateinputsenabled.Thiseffectivelybindstheoutputsto
+aparticulardevice’sinput.ThisdoesnotaffecttheabilityofthedevicetoreceiveI/Olinedatafrom
+otherdevices—onlyitsabilitytoupdateenabledoutputs.SetIAto0xFFFF(broadcastaddress)to
+affecttheoutputusinginputdatafromanydeviceonthenetwork.
+Digital line passing
+DigitalI/Olinesaremappedinpairs;pinsconfiguredasdigitalinputonthetransmittingdevice
+affectthecorrespondingdigitaloutputpinonthereceivingdevice.Forexample,adevicethat
+samples D5 asaninput(3)onlyaffects D5 onthereceiverif D5 isconfiguredasanoutput(4or5).
+Eachdigitalpinhasanassociatedtimeoutvalue.WhenanI/Osampleisreceivedthataffectsa
+digitaloutputpin,thepinreturnstoitsconfiguredstateafterthetimeoutperiodexpires.For
+pins D0 through D9,theassociatedtimeoutcommandsare T0(D0TimeoutTimer) through T9(D9
+OutputTimer).Forpins P0 through P2,theassociatedtimeoutcommandsareQ0(P0Output
+Timer) through Q2(P2OutputTimer).
+Digitallinepassingisonlyavailableonpins D0 through P2.YoucannotuseUARTandSPIpinsfor
+linepassing.
+Example: Digital line passing
+AsamplingXBee3802.15.4RFModuleisconfiguredwiththefollowingsettings(whereDH/DL
+specifiestheaddressofthenodethatoutputsthetheinputsfromthesamplingnode):
+ATcommand Parametervalue
+D2(DIO2/ADC2/TH_SPI_CLKConfiguration) 3(digitalinput)
+IR(SampleRate) 0x7D0(2seconds)
+DH(DestinationAddressHigh) 0013A200
+DL(DestinationAddressLow) 12345678
+Everytwoseconds,anI/OsampleisgeneratedandsenttotheaddressspecifiedbyDHandDL.
+Thereceiverisconfiguredwiththefollowingsettings:
+DigiXBee®3802.15.4RFModuleUserGuide 122
+
+I/Osupport Digitallinepassing
+ATcommand Parametervalue
+D2(DIO2/ADC2/TH_SPI_CLKConfiguration) 4(digitaloutputlow)
+T2(D2OutputTimeoutTimer) 0x64(10seconds)
+IA(I/OInputAddress) 00103A20012345678
+WhenthisdevicereceivesanincomingI/Osample,ifthesourceaddressmatchestheoneset
+by IA,thedevicesetstheoutputof D2 tomatchtheinputof D2 ofthereceiver.Thisoutputlevel
+holdsfortensecondsbeforethepinreturnstoadigitaloutputlowstate.
+Analog line passing
+Similartodigitallinepassing,analoglinepassingpairstheAnalogI/Osupportofonedevicetoa
+PWMoutputofanother.TherearetwoPWMoutputpinsthatcansimulatethevoltagemeasuredby
+theADCinputs.BeawarethatADCinputsareondifferentpinsthanthecorrespondingPWM
+outputs:AD0correspondstoPWM0,andAD1correspondstoPWM1.SeeAnalogI/Osupportfor
+thepinouts.
+Youcansettheanaloglinepassingtimeoutvaluewith PT(PWMOutputTimeout),whichaffects
+bothPWMoutputpins.YoucanexplicitlysetaPWMoutputlevelusingthe M0(PWM0Duty
+Cycle) and M1(PWM1DutyCycle) commands,whenanI/OsampleisreceivedthataffectsaPWM
+outputpin,itreturnstoitsconfiguredstateafterthe PT timeoutperiodexpires.
+Example: Analog line passing
+Asamplingdeviceisconfiguredwiththefollowingsettings:
+ATcommand Parametervalue
+2(ADCinput)
+IR(SampleRate) 0x7D0(2seconds)
+DH(DestinationAddressHigh) 0013A200
+DL(DestinationAddressLow) 12345678
+Everytwoseconds,anI/OsampleframeisgeneratedandsenttotheaddressspecifiedbyDHand
+DL.Thereceiverisconfiguredwiththefollowingsettings:
+ATcommand Parametervalue
+P0 2(PWMoutput)
+M0 0
+PT 0x12C(30seconds)
+IA 0013A20087654321
+WhenthisdevicereceivesanincomingI/Osample,ifthesourceaddressmatchestheoneset
+by IA,thedevicesetsthePWMoutputof P0 tomatchtheADCinputof D0 ofthereceiver.This
+outputlevelholdsforthirtysecondsbeforethepinreturnstoadigitaloutputlowstate.
+DigiXBee®3802.15.4RFModuleUserGuide 123
+
+I/Osupport Outputsampledata
+Output sample data
+IfadevicereceivesanI/Osamplewhoseaddressmatchesthatsetby IA(I/OInputAddress),it
+triggerslinepassing.LinepassingoperateswhetherthereceivingdeviceisoperatinginAPIor
+Transparentmode.
+Bydefault,ifthereceiverisconfiguredforAPImode,itoutputstheI/Osampleframeinadditionto
+affectingoutputpins.YoucansuppresstheI/Osampleframeoutputbysetting IU(I/OOutput
+Enable) to0.ThisonlysuppressesI/Osamplesthattriggerlinepassing,asamplegeneratedfrom
+adevicewhoseaddressdoesnotmatchthe IA addressissentregardlessof IU.
+Output control
+IO(DigitalOutputLevel)controlstheoutputlevelsofD0(DIO0/ADC0/Commissioning
+Configuration)throughD7(DIO7/CTSConfiguration)thatareconfiguredasoutputpins(either4or
+5).Thesevaluesoverridetheconfiguredoutputlevelsofthepinsuntiltheyarechangedagain(the
+pinsdonotautomaticallyreverttotheirconfiguredvaluesafteratimeout.)
+YoucanuseIOtotriggerasampleonchangedetect.
+I/O behavior during sleep
+Whenthedevicesleeps(SM!=0)theI/Olinesareoptimizedforaminimalsleepcurrent.
+Digital I/O lines
+DigitalI/Olinessetasdigitaloutputhighorlowmaintainthosevaluesduringsleep.Disabledor
+inputpinscontinuetobecontrolledbythePR/PDsettings.Peripheralpins(withtheexceptionof
+CTS)aresetlowduringsleepandSPIpinsaresethigh.PeripheralandSPIpinsresumenormal
+operationuponwake.
+DigitalI/OlinesthathavebeensetusingI/Olinepassingholdtheirvaluesduringsleep,however
+thedigitaltimeouttimer(T0throughT9,andQ0throughQ2)aresuspendedduringsleepand
+resumeuponwake.
+Analog and PWM I/O lines
+LinesconfiguredasanaloginputsorPWMoutputarenotaffectedduringsleep.PWMlinesare
+shutdown(setlow)duringsleepandresumenormaloperationuponwake.
+PWMoutputpinssetbyanaloglinepassingareshutdownduringsleepandreverttotheirpreset
+values(M0andM1)onwake.Thishappensregardlessofwhetherthetimeouthasexpiredornot.
+DigiXBee®3802.15.4RFModuleUserGuide 124
+
+Networking
+Networkingterms 126
+MACModeconfiguration 126
+ClearChannelAssessment(CCA) 127
+Retriesconfiguration 127
+TransmitstatusbasedonMACmodeandXBeeretriesconfigurations 128
+Addressing 129
+Peer-to-peernetworks 130
+Master/slavenetworks 130
+Directandindirecttransmission 133
+Encryption 135
+Maximumpayload 136
+DigiXBee®3802.15.4RFModuleUserGuide 125
+
+Networking Networkingterms
+Networking terms
+Thefollowingtabledescribessomecommontermsweusewhendiscussingnetworks.
+Term Definition
+Association Establishingmembershipbetweenenddevicesandacoordinator.
+Coordinator Afull-functiondevice(FFD)thatallowsenddevicestoassociatetoitandcan
+queueanddeliverindirectmessages.
+Enddevice Wheninthesamenetworkasacoordinator.Devicesthatrelyonacoordinatorfor
+synchronizationandcanbeputintostatesofsleepforlow-powerapplications.
+PAN PersonalAreaNetwork.Adatacommunicationnetworkthatincludesoneor
+moreenddevicesandoptionallyacoordinator.
+MAC Mode configuration
+MediumAccessControl(MAC)Modeconfigurestwofunctions:
+1. EnablesordisablestheuseofaDigiheaderinthe802.15.4RFpacket.
+WhentheDigiheaderisenabled(MM=0or3),duplicatepacketdetectionisenabledas
+wellascertainATcommands.
+MACModes1and2donotincludeaDigiheader,whichdisablesmanyfeaturesofthe
+device.Alldataisstrictlypass-through.Thesemodesareintendedtoprovidesome
+compatibilitywiththird-party802.15.4devices.
+2. EnablesordisablesMACacknowledgmentrequestforunicastpackets.
+WhenMAC ACKisenabled(MM=0or2),transmittingdevicessendpacketswithanACK
+requestso receivingdevicessendanACKback(acknowledgmentofRFpacket
+reception) tothetransmitter.IfthetransmittingdevicedoesnotreceivetheACK,itre-sends
+thepacketup tofivetimesoruntiltheACKisreceived.
+MACModes1and3disableMACacknowledgment.Transmittingdevicessendpackets
+withoutanACKrequestso receivingdevicesdonotsendanACKbacktothetransmitter.
+BroadcastmessagesarealwayssentwiththeMAC ACKrequestdisabled.
+SendingaunicastmessagewithMAC ACKsdisabledisnotintendedtobeareliableformof
+communication,asnoACKsareproducedbyrecipients.
+Thefollowing tablesummarizes thefunctionality.
+Mode Digiheader MACACK
+0(default) X X
+1
+2 X
+3 X
+ThedefaultvaluefortheMMconfigurationparameteris0whichenablesboththeDigiheaderand
+MACacknowledgment.
+DigiXBee®3802.15.4RFModuleUserGuide 126
+
+Networking ClearChannelAssessment(CCA)
+Clear Channel Assessment (CCA)
+Priortotransmittingapacket,thedeviceperformsaCCA(ClearChannelAssessment)onthe
+channeltodetermineifthechannelisavailablefortransmission.Thedetectedenergyonthe
+channeliscomparedwiththeparametervalue.IfthedetectedenergyexceedstheCAparameter
+value,thedevicedoesnottransmitthepacket.
+Also,thedeviceinsertsadelaybeforeatransmissiontakesplace.Youcansetthisdelayusingthe
+RN(BackoffExponent)parameter.IfyousetRNto0,thereisnodelaybeforethefirstCCAis
+performed.TheRNparametervalueistheequivalentofthe“minBE”parameterinthe802.15.4
+specification.Thetransmitsequencefollowsthe802.15.4specification.
+OnaCCAfailure,thedeviceattemptstore-sendthepacketuptothreeadditionaltimes,meaninga
+totaloffourattempts.
+CCA operations
+CCAisamethodofcollisionavoidancethatisimplementedbydetectingtheenergylevelonthe
+transmissionchannelbeforestartingthetransmission.TheCCAthreshold(definedbytheCA
+parameter)definestheenergylevelthatittakestoblockatransmissionattempt.Forexample,if
+CCAissettothedefaultvalueof0x32(whichisinterpretedas-50dBm)thenenergydetected
+abovethe-50dBmlevel(forexample-45dBm)temporarilyblocksatransmissionattempt.Butif
+theenergylevelislessthanthat(forexample-70dBm),thetransmissionisnotblocked.Theintent
+ofthisfeatureistopreventsimultaneoustransmissionsonthesamechannel.
+YoucandisableCCAbysettingCAto0.DisablingCCAcanimprovelatencyinnoisy
+environments,butitcanalsointerferewithotherdevicesthatareoperatingonthesamechannel.
+SettingorchangingCAtoanon-zerovalueonlytakeseffectuponboot.IfyouadjusttheCAvalue,
+ensurethatyouwritethesettingtoflashwithWR(Write)andrestartwithanFR(SoftwareReset).
+Intheeventthattheenergylevelexceedsthethreshold,thetransmissionisblockedforarandom
+numberofbackoffperiods.Thenumberofbackoffperiodsisdefinedbythefollowingformula:
+random(2^n-1),wherenisdefinedbytheRNparameterandincrementsaftereachCCAfailure.
+WhenRNissettoitsdefaultvalueof0,then2^n-1is0,preventinganydelaybeforethefirst
+energydetectiononanewframe.However,nincrementsaftereachCCAfailure,givingagreater
+rangeforthenumberofbackoffperiodsbetweeneachenergydetectioncycle.
+Intheeventthatsixenergydetectioncyclesoccurandeachonedetectstoomuchenergy,the
+applicationtriesagain1to48mslater.Aftertheapplicationretriesareexhausted,thenthe
+transmissionfailswithaCCAerror.
+WhenevertheMACcodereportsaCCAfailure,meaningthatitperformedsixenergydetection
+cycleswithexponentialrandomback-offs,andeachonefailed,theECparameterisincremented.
+TheECparametercanbereadatanytimetofindouthownoisytheoperatingchannelis.It
+continuestoincrementuntilitreachesitsmaximumvalueof0xFFFF.Togetnewstatistics,youcan
+setECbackto0.
+Retries configuration
+IfyouareoperatinginaMACModethatenablesMACACK(MM=0orMM=2),eachRFpacketwill
+besentwithuptofive802.15.4MAC-Layerretries,meaningsixtransmissionattemptsare
+performed.Thisisenabledbydefaultandprovidesaminimalamountofreliabilitytounicast
+transmissions.
+IfyouareoperatinginaMACModethatenablestheDigiheader(MM=0orMM=3),thenyoucan
+optionallyincludeApplication-LayerretriesusingtheRR(XBeeRetries)command.Each
+Application-LayerretryattempttosendthepacketusingfiveMAC-Layerretries.Thiscangreatly
+increasethereliabilityofunicasttransmissionswithariskofreducedthroughput.
+DigiXBee®3802.15.4RFModuleUserGuide 127
+
+Networking TransmitstatusbasedonMACmodeandXBeeretriesconfigurations
+| Transmit | status | based | on  | MAC | mode | and | XBee | retries |     |     |
+| -------- | ------ | ----- | --- | --- | ---- | --- | ---- | ------- | --- | --- |
+configurations
+WhenworkinginAPImode,atransmitrequestframesentbytheuserisalwaysansweredwitha
+transmitstatusframesentbythedevice,iftheframeIDisnon-zero.AFrameIDof0specifiesthat
+notransmitstatusframewillbereceivedforthetransmission.
+Thefollowingtablesreporttheexpectedtransmitstatusforunicasttransmissionsandthe
+maximumnumberofMACandapplicationretriesthedeviceattempts.
+Thetablesalsoreportthetransmitstatusreportedwhenthe devicedetectsenergyabovetheCCA
+threshold (whenaCCAfailurehappens).
+Thefollowingtableappliesineitherofthesecases:
+l Digiheaderisdisabled.
+l DigiheaderisenabledandXBeeRetries(RRparameter)isequalto0(defaultconfiguration).
+CCAfailure
+|     |     | Destinationreachable |     |     | Destinationunreachable |     |     |     | happened |     |
+| --- | --- | -------------------- | --- | --- | ---------------------- | --- | --- | --- | -------- | --- |
+Mac
+|     |          |           | Retries |     |                |     | Retries |          | Retries |     |
+| --- | -------- | --------- | ------- | --- | -------------- | --- | ------- | -------- | ------- | --- |
+|     | ACK      |           |         |     |                |     |         | TX       |         |     |
+|     | Config   | TXstatus  | MAC     | App | TXstatus       |     | MAC App | status   | MAC     | App |
+|     | Enabled  | 00        | upto    | 0   | 01(No          |     | 5 0     | 02       | 5       | 0   |
+|     |          | (Success) | 5       |     | acknowledgment |     |         | (CCA     |         |     |
+|     |          |           |         |     | received)      |     |         | failure) |         |     |
+|     | Disabled | 00        | 0       | 0   | 00(Success)    |     | 0 0     | 02       | 5       | 0   |
+|     |          | (Success) |         |     |                |     |         | (CCA     |         |     |
+failure)
+Thefollowingtableapplieswhen:
+l DigiheaderisenabledandXBeeRetries(RRparameter)>0.
+Destinationreachable Destinationunreachable CCAfailurehappened
+|     |          |           | Retries |       |          | Retries |       |          | Retries |       |
+| --- | -------- | --------- | ------- | ----- | -------- | ------- | ----- | -------- | ------- | ----- |
+|     | MacACK   |           |         |       |          |         |       | TX       |         |       |
+|     | Config   | TXstatus  | MAC     | App   | TXstatus | MAC     | App   | status   | MAC     | App   |
+|     | Enabled  | 00        | upto    | upto  | 21       | 5*      | RR    | 02       | 5       | RR    |
+|     |          | (Success) | 5per    | RR    | (Network | (RR     | value | (CCA     |         | value |
+|     |          |           | app     | value | ACK      | value   |       | failure) |         |       |
+|     |          |           | retry   |       | Failure) | +1)     |       |          |         |       |
+|     | Disabled | 00        | 0       | upto  | 21       | 0       | RR    | 02       | 5       | RR    |
+|     |          | (Success) |         | RR    | (Network |         | value | (CCA     |         | value |
+|     |          |           |         | value | ACK      |         |       | failure) |         |       |
+Failure)
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |     |     |     |     |     |     | 128 |
+| ----------------------------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+Networking Addressing
+Addressing
+EveryRFdatapacketsentover-the-aircontainsaSourceAddressandDestinationAddressfieldin
+itsheader.TheXBee3802.15.4RFModuleconformstothe802.15.4specificationandsupports
+bothshort16-bitaddressesandlong64-bitaddresses.Aunique64-bitIEEEsourceaddressis
+assignedatthefactoryandcanbereadwiththeSL(SerialNumberLow)andSH(SerialNumber
+High)commands.Adeviceusesitsunique64-bitaddressasitsSourceAddressifitsMY(16-bit
+SourceAddress)valueis0xFFFFor0xFFFE.SincethedefaultvalueforMYis0,devicesuseshort
+sourceaddressingbydefault.
+Send packets to a specific device in Transparent API mode
+Tosendapackettoaspecificdeviceusing64-bitaddressing:
+n SettheDestinationAddress(DL+DH)ofthesendertomatchtheSourceAddress(SL+
+SH)oftheintendeddestinationdevice.
+Tosendapackettoaspecificdeviceusing16-bitaddressing:
+1. SettheDLparametertoequaltheMYparameteroftheintendeddestinationdevice.
+2. SettheDHparameterto0.
+Addressing modes
+802.15.4frameshaveasourceaddress,adestinationaddress,andadestinationPANIDinthe
+over-the-air(OTA)frame.Thesourceanddestinationaddressesmaybeeitherlongorshortand
+thedestinationaddressmaybeeitheraunicastorabroadcast.ThedestinationPANIDisshort
+anditmayalsobethebroadcastPANID(IDissetto0xFFFF).
+InTransparentmode,thedestinationaddressissetbytheDHandDLparameters,but,inAPI
+mode,itissetbythetypeofTXrequestused: 64-bitTransmitRequest-0x00or16-bitTransmit
+Request -0x01frames.IneitherTransparentmodeorAPImode,thedestinationPANIDissetwith
+theIDparameter,andthesourceaddressissetwiththeMYparameterifMYislessthan0xFFFE,
+otherwisethesourceaddressissetwiththedevice'sserialnumber(SHandSL).
+Broadcastsandunicasts
+Broadcastsareidentifiedbythe16-bitshortaddressof0xFFFF.Anyotherdestinationaddressis
+consideredaunicastandisacandidateforacknowledgments,ifenabled.
+BroadcastPANID
+TheBroadcastPANIDisalso0xFFFF.ItseffectistotraverseallPANsinthevicinityofalocal
+device.
+Shortandlongaddresses
+Ashortaddressis16bitsandalongaddressis64bits.TheshortaddressissetwiththeMY
+parameter.Iftheshortaddressis0xFFFE,thentheaddressofthedeviceislonganditistheserial
+numberofthedeviceasreadbytheSHandSLparameters.
+DigiXBee®3802.15.4RFModuleUserGuide 129
+
+Networking Peer-to-peernetworks
+Peer-to-peer networks
+Bydefault,XBee3802.15.4RFModulesareconfiguredtooperatewithinapeer-to-peernetwork
+topologyandthereforearenotdependentuponmaster/slaverelationships.Ourpeer-to-peer
+architecturefeaturesfastsynchronizationtimesandfastcoldstarttimes.Thisdefaultconfiguration
+accommodatesawiderangeofRFdataapplications.
+Toformapeer-to-peernetwork,seteachdevicetothesamechannelandPANIDandconfigure
+eitherauniqueshortaddress(MY)foreachdeviceorsetMYto0xFFFFtousetheuniquelong
+addresses.
+Master/slave networks
+InaMasterSlavenetwork,thereisacoordinatorandoneormoreenddevices.Whenenddevices
+associatetothecoordinator,theybecomemembersofthatPersonalAreaNetwork(PAN).As
+such,theysharethesamechannelandPANID.PANIDsmustbeuniquetoprevent
+miscommunicationbetweenPANs.DependingontheA1andA2parameters,associationmay
+assistinautomaticallyassigningthePANIDandthechannel.Theseparametersarespecified
+belowbasedonthenetworkrole(enddeviceorcoordinator).
+End device association
+EnddeviceassociationoccursifCEis0andA1hasbit2set.SeethefollowingtableandA1(End
+DeviceAssociation).
+Bit Hexvalue Meaning
+0 0x01 AllowPANIDreassignment
+1 0x02 Allowchannelreassignment
+2 0x04 Autoassociation
+3 0x08 Pollcoordinatoronpinwake
+Bydefault,A1is0,whichdisablesassociationandcausesadevicetooperateinpeer-to-peer
+mode.Whenbit2isset,themodulebecomesanenddeviceandassociatestoacoordinator.This
+isdonebysendingoutanactivescantodetectbeaconsfromnearbynetworks.Theactivescan
+iteratesthrougheachchanneldefinedbySC andtransmitsaBeaconRequestcommandtothe
+broadcastaddressandthebroadcastPANID.Itthenlistensonthatchannelforbeaconsfromany
+coordinatoroperatingonthatchannel.Oncethattimeexpires,theactivescanselectsthenext
+channel,repeatinguntilallthechannelsdefinedbySChavebeenscanned.
+IfA1is0x04(bit0clear,bit1clear,andbit2set),thentheactivescanwillrejectallbeaconsthat
+donotmatchboththeconfiguredPANIDandtheconfiguredchannel.Thisisthebestwaytojoina
+particularcoordinator.
+DigiXBee®3802.15.4RFModuleUserGuide 130
+
+Networking Master/slavenetworks
+IfA1is0x05(bit0set,bit1clear,andbit2set),thentheactivescanwillacceptabeaconfromany
+PANID,providingthechannelmatches.Thisisusefulifthechannelisknown,butnotthePANID.
+IfA1is0x06(bit0clear,bit1set,andbit2set),thentheactivescanwillacceptabeaconfromany
+channel,providingthePANIDmatches.ThisisusefulifthePANIDisknown,butnotthechannel.
+IfA1is0x07(bit0set,bit1set,andbit2set),thentheactivescanwillacceptabeaconfromany
+PANIDandfromanychannel.Thisisusefulwhenthenetworkdoesnotmatter,buttheonewith
+thebestsignalisdesired.
+Whenevermultiplebeaconsarereceivedthatmeetthecriteriaoftheactivescan,thenthebeacon
+withthebestlinkqualityisselected.ThisapplieswhetherA1is0x04,0x05,0x06,or0x07.
+BeforetheEndDevicejoinsanetwork,theAssociateLEDwillbeonsolid.Afteritjoinsanetwork,
+theAssociateLEDwillblinktwicepersecond.YoucanalsoquerytheassociationstatuswithAI
+(AssociationIndication)orbyobservingmodemstatusframeswhentheenddeviceisoperatingin
+APImode.
+Ifassociationparametersarechangedaftertheenddeviceisassociated,theenddevicewillleave
+thenetworkandre-joininaccordancewiththenewconfigurationparameters.
+Afteranenddevicesuccessfullyjoinsanetwork,theDHandDLparametersonthedeviceare
+updatedtopointtowardstheaddressofthecoordinatoritassociatedwith.Thisallows
+communicationtothecoordinatortooccurautomaticallyinTransparentmode,andensuresthat
+indirectmessagingpollrequestsaresenttothecorrectaddress—seeDirectandindirect
+transmission.
+Additionally,afterassociating,anenddevicehasMY(16-bitSourceAddress)setto0xFFFE,
+indicatingthatthenewlyassociatedenddeviceshoulduseits64-bitaddress.Afterassociating,if
+youwanta16-bitaddressfortheenddevice,setMYagain.
+NoteMYisresetto0xFFFEiftheenddeviceneedstoleaveandre-associatewiththecoordinator.
+IfacoordinatorchangeschannelorPANID,theenddeviceisnotinformedofthechangeand
+indicatesthatitisstillassociated.YoucansetDA(ForceDisassociation)ontheenddevicetoforce
+ittoleavethenetworkandattempttojoinagain,validatingthattheenddevicecanstill
+communicatewiththecoordinator.
+Coordinator association
+AdevicebecomesacoordinatorandallowsassociationifCEis1andA2hasbit2set.Seethe
+followingtableandA2(CoordinatorAssociation).
+Bit Hexvalue Meaning
+0 0x01 AllowPANIDreassignment
+1 0x02 Allowchannelreassignment
+2 0x04 Allowassociation
+Bydefault,A2is0,whichpreventsdevicesfromassociatingtothecoordinator.So,ifCEis1and
+A2bit2is0,thedevicestillcreatesanetwork,butenddevicesareunabletoassociatetoit.
+NoteInthisconfiguration,dependingonthevalueofSP(CyclicSleepPeriod)thedevicemight
+sendmessagesindirectly—seeDirectandindirecttransmission.
+IfA2bit2isset,thenjoiningisallowedafterthecoordinatorformsanetwork.
+DigiXBee®3802.15.4RFModuleUserGuide 131
+
+Networking Master/slavenetworks
+IfA2bit0isset,thecoordinatorperformsanactivescan.Theactivescanprocesssendsabeacon
+requesttothebroadcastaddress(0xFFFF)andthebroadcastPANID(0xFFFF)andlistensfor
+beaconsresponses.ThisprocessisrepeatedforeachchannelspecifiedinSC.
+IfnoneofthebeaconsreceivedduringtheactivescanprocessmatchtheIDparameterofthe
+coordinator,thenitsIDparameterwillbethePANIDofthenewnetworkitforms.However,ifa
+beaconresponsematchesthePANIDofthecoordinator,thecoordinatorformsaPANwitha
+uniquePANID.
+IfA2bit0 isclear,thenthecoordinatorformsanetworkonthePANIDidentifiedbytheID
+parameter,withoutregardtoanothernetworkthatmighthavethesamePANID.
+IfA2bit1 isset,thecoordinatorperformsanenergyscan,similartotheactivescan.Itwilllistenon
+eachchannelspecifiedintheSCparameter.Afterthescaniscomplete,thechannelwiththeleast
+energyisselectedtoformthenewnetwork.
+IfA2bit1isclear,thennoenergyscanisperformedandtheCHparameterisusedtoselectthe
+channelofthenewnetwork.
+Ifbits0and1ofA2arebothset,thenanactivescanisperformedfollowedbyanenergyscan.
+However,thechannelsonwhichtheactivescanfindsacoordinatorareeliminatedaspossible
+channelsfortheenergyscan,unlesssuchanactionwouldeliminateallchannels.Ifbeaconsare
+foundonallchannelsinthechannelmask,thenthentheenergyscanbehavesthesameasit
+wouldifbeaconsarenotfoundonanyofthosechannels.Therefore,theactivescanwillbe
+performedonallchannelsinthechannelmask.Then,anenergyscanwillbeperformedonthe
+channelsinthechannelmaskthatdidnotfindacoordinator.
+Dependingontheresultoftheactivescan,thesetofchannelsfortheenergyscanvaries.IfaPAN
+IDisfoundonallthechannelsinthechannelmask,thentheenergyscanoperatesonallthe
+channelsinthechannelmask.Ifatleastoneofthechannelsinthechannelmaskdidnotfinda
+PANID,thenthechannelswithPANIDsareeliminatedfromconsiderationfortheenergyscan.
+Aftertheenergyscancompletes,thechannelwiththeleastenergyisselectedforformingthenew
+network.
+WheneverCE,ID,A2,orMYchanges,thecoordinatorwillre-formthenetwork.Anyenddevices
+associatedtothecoordinatorpriortochangingoneoftheseparameterswillloseassociation.For
+thisreason,itisimportantnottochangetheseparametersonacoordinatorunlessneeded,or
+configureenddevicestobeflexibleaboutwhatnetworktheyassociatewiththeA1command.
+BeforetheCoordinatorformsanetwork,theAssociateLEDwillbeonsolid.Afteritformsa
+network,theAssociateLEDwillblinkoncepersecond.
+Association indicators
+Therearetwotypesofassociationindicators:Asynchronousdevicestatusmessages,andon
+demandqueries.AsynchronousdevicestatusmessagesoccurwheneverachangeoccursandAPI
+modeisenabled.OndemandqueriesoccurwhentheAIcommandisissued,whichcanoccurin
+Commandmode,inAPImode,orasaremotecommand.
+Modem status messages
+Notalldevicestatusmessagesarerelatedwithassociation,butforcompletenessalldevicestatus
+typesreportedbyXBee3802.15.4RFModulearelistedinthefollowingtable.
+Type Meaning
+0x00 Hardwarereset.
+DigiXBee®3802.15.4RFModuleUserGuide 132
+
+Networking Directandindirecttransmission
+Type Meaning
+0x01 Watchdogreset.
+0x02 Enddevicesuccessfullyassociatedwithacoordinator.
+0x03 Enddevicedisassociatedfromcoordinatororcoordinatorfailedtoformanewnetwork.
+0x06 Coordinatorformedanewnetwork.
+0x0D Inputvoltageistoohigh,whichlimitsRFpowertoPL=3.
+Association indicator status codes
+TheXBee3802.15.4RFModulecanpotentiallygiveanyofthestatuscodesinresponsetoAI
+(AssociationIndication)inthefollowingtable.
+Code Meaning
+0x00 Coordinatorsuccessfullystarted,Enddevicesuccessfullyassociated,oroperatingin
+peertopeermodewherenoassociationisneeded.
+0x03 ActiveScanfoundaPANcoordinator,butitisnotcurrentlyacceptingassociations.
+0x04 ActiveScanfoundaPANcoordinatorinabeacon-enablednetwork,whichisnota
+supportedfeature.
+0x05 ActiveScanfoundaPAN,butthePANIDdoesnotmatchtheconfiguredPANIDonthe
+requestingenddeviceandbit0ofA1isnotsettoallowreassignmentofPANID.
+0x06 ActiveScanfoundaPANonachanneldoesnotmatchtheconfiguredchannelonthe
+requestingenddeviceandbit1ofA1isnotsettoallowreassignmentofthechannel.
+0x0C Associationrequestfailedtogetaresponse.
+0x13 Enddeviceisdisassociatedorisintheprocessofdisassociating.
+0xFF Initializationtime;noassociationstatushasbeendeterminedyet.
+Direct and indirect transmission
+Therearetwomethodstotransmitdata:
+n Directtransmission:dataistransmittedimmediatelytotheDestinationAddress
+n Indirecttransmission:apacketisretainedforaperiodoftimeandisonlytransmittedafter
+thedestinationdevice(sourceaddress=destinationaddress)requeststhedata.
+Indirecttransmissionscanonlyoccuronadeviceconfiguredtobeanindirectmessaging
+coordinator.Indirecttransmissionsareusefultoensurepacketdeliverytoasleepingdevice.
+Indirectmessagingallowsmessagestoreliablybesentasynchronouslytosleepingenddevices,or
+operatelikeanincomingmailboxforaP2Pnetwork.ATXrequestcanbemadewhentheend
+deviceissleepingandunabletoreceiveRFdata,andinsteadofbeingimmediatelysendtoan
+inoperativedevice,thepacketisqueuedbytheindirectmessagingcoordinatoruntiltheenddevice
+wakesorpollsitfordata.
+Notethatindirectmessagingworksbestwithassociationandenddevicescyclicallysleeping,but
+canbeusedinaP2PconfigurationbysettingCE(DeviceRole)to1onthedevicethatyouwantto
+DigiXBee®3802.15.4RFModuleUserGuide 133
+
+Networking Directandindirecttransmission
+holdtheindirectmessagesandconfiguringtheotherdevicetopollcorrectly.Inthecontextof
+indirectmessaging,anenddevicerefersnotjusttoadevicewithA1(EndDeviceAssociation)set
+toassociatebutthetargetofanindirectmessage.Similarly,anindirectmessagingcoordinator
+doesnothavetoallowassociation(A2(CoordinatorAssociation))tosendmessagesindirectly.
+Configure an indirect messaging coordinator
+AdevicebecomesanindirectmessagingcoordinatoronceCE(DeviceRole)=1andSP(Cyclic
+SleepPeriod)isnot0.WerecommendensuringthatSPandSTaresettothesamevaluesonthe
+indirectmessagingcoordinatorandenddevice,eveniftheindirectmessagingcoordinatorisnot
+configuredtosleep.Thisistoallowtheindirectmessagingcoordinatortosendmessagesdirectlyif
+itknowstheenddeviceisawakeandsleepingcyclically.
+IfyouaregoingtouseaMaster/Slavenetworkwithindirectmessaging,ensurethattheindirect
+messagingcoordinatorisalsothenetworkcoordinatorbyallowingassociation(setbit2ofA2
+(CoordinatorAssociation)to1).
+Send indirect messages
+Tosendanindirectmessage,ensurethatthepreviousrequirementsaremetandtransmit
+normally.Theindirectmessagingcoordinatorqueuesthemessageuntiltheenddevicerequests
+dataorthemessageisintheindirectqueuefor2.5timesthevalueofSP.If2.5*SPislongerthan
+65seconds,then65secondsisthelimittheindirectmessagewaitsforapollbeforeitisdiscarded.
+Thismeansthatifthecoordinatorissendingdatatotheenddevice,theenddeviceshouldpollthe
+coordinatorevery65secondstoavoidlosingdata,regardlessofthevalueofSP.
+EnsurethatthemessageissenttotheaddressedspecifiedbyMY(16-bitSourceAddress)onthe
+enddevice.IfMYontheenddeviceis0xFFFFor0xFFFE,thenyoumustusethe64-bitaddress,
+otherwiseusethevalueofMY.Eventhoughanenddeviceconfiguredwithashortaddressalways
+receivesdirecttransmissionsdestinedtoits64-bitaddress,itwillnotreceiveanindirectmessage
+directedatits64-bitaddressifitisconfiguredtousea16-bitaddress.
+IftheindirectmessagingcoordinatorisoperatinginAPImode,thenaftertransmittinganindirect
+messagetheusualTXstatusframe(ExtendedTransmitStatus-0x8BorTransmitStatus-0x89)is
+notimmediatelygeneratedbythedevice.Iftheenddevicepollsforthedatawithinthetimeout(2.5
+*SPor65seconds),thenaTXstatusframewithstatus0x00(messagesent)issent.Ifthe
+messageisdiscardedduetothetimeoutexpiring,thestatusframeis0x03(messagepurged).
+Afterreceivingapollrequestandtransmittingdatatoanenddevice,theindirectmessaging
+coordinatorsendsallmessagesdirectlyuntilSTtimehaselapsed.Thisisbecauseafterreceiving
+RFdata,theenddevicestaysawakeforSTtimeifconfiguredinCyclicSleepmode(SM=4).After
+STtimehaselapsed,messagesaresentindirectlyagain.
+TheCoordinatorcurrentlyisabletoretainuptofiveindirectmessages.
+Receive indirect messages
+Enddevicesmustpolltheindirectmessagingcoordinatorinordertoreceiveindirectmessages.
+Therearethreewaystogenerateapollrequest:
+n Enddevicesusingcyclicsleepautomaticallysendapolltothecoordinatorwhentheywake
+upunlessSObit0isset.
+n Enddevicesusingpinsleepmaybeconfiguredtosendapollonapinwakeupbysettingbit
+3ofA1.
+DigiXBee®3802.15.4RFModuleUserGuide 134
+
+Networking Encryption
+n UseFP(ForcePoll)tomanuallysendapolltothecoordinator.InTransparentmode,thepoll
+requestisnotsentuntilthecommandisexited.
+ThepollissenttotheaddresslocatedinDHandDL,soensurethattheyaresettomatchthe
+coordinator'ssourceaddressingmode.Iftheenddevice(A1bit2set)hasassociatedwitha
+coordinator(A2bit2setandCE=1),thenDHandDLareautomaticallysettothecorrectvalues.If
+youuseindirectmessaginginaP2Pnetwork,DHandDLhavetobesetmanuallyontheend
+devicetopointtowardstheindirectmessagingcoordinator.
+Itismoredifficulttouseindirectmessagingwithpinsleepthanwithcyclicsleepbecausetheend
+devicemustwakeupperiodicallytopollforthedatafromthecoordinator.Otherwise,the
+coordinatordiscardsthedataafterSP*2.5time,or65seconds,whicheverissmaller.Itisalso
+importanttokeepthepinwokedeviceawakeforSTtimeafterreceivingindirectmessages,
+otherwisethecoordinatorcouldattempttotransmitdirectlywhiletheenddeviceisasleep,andthe
+transmissionwillfail.Forthisreasonwerecommendonlyusingindirectmessagingwithcyclic
+sleep.
+Encryption
+TheXBee3802.15.4RFModulesupportsAES128-bitencryption.128-bitencryptionreferstothe
+lengthoftheencryptionkeyenteredwiththeKYcommand(128bits=16bytes).The802.15.4
+protocolspecifieseightsecuritymodes,enumeratedasshowninthefollowingtable.
+|               |            | Lengthofmessageintegrity | Packetlength |
+| ------------- | ---------- | ------------------------ | ------------ |
+| Level Name    | Encrypted? | check                    | overhead     |
+| 0 N/A         | No         | 0(nocheck)               | 0            |
+| 1 MIC-32      | No         | 4                        | 9            |
+| 2 MIC-64      | No         | 8                        | 13           |
+| 3 MIC-128     | No         | 16                       | 21           |
+| 4 ENC         | Yes        | 0(nocheck)               | 5            |
+| 5 ENC-MIC-32  | Yes        | 4                        | 9            |
+| 6 ENC-MIC-64  | Yes        | 8                        | 13           |
+| 7 ENC-MIC-128 | Yes        | 16                       | 21           |
+TheXBee3802.15.4RFModuleonlysupportssecuritylevels0and4.Itdoesnotsupport
+messageintegritychecks.EE0selectssecuritylevel0andEE1selectssecuritylevel4.When
+usingencryption,alldevicesinthenetworkmustusethesame16-byteencryptionkeyforvalid
+datatogetthrough.Mismatchedkeyswillcorruptthedataoutputonthereceivingdevice.
+MismatchedEEparameterswillpreventthereceivingdevicefromoutputtingreceiveddata.
+Workingfromamaximumpacketsizeof116bytes,encryptionaffectsthemaximumpayloadas
+showninthefollowingtable.
+DigiXBee®3802.15.4RFModuleUserGuide 135
+
+Networking Maximumpayload
+Effecton
+maximum
+Factor payload Comment
+Compatibility Forceto95 IfC8bit0isset,allpacketsarelimitedto95bytes,regardlessof
+mode otherfactorslistedbelow.ThisishowtheLegacy802.15.4
+module(S1hardware)functions.
+Packet Reduceby Thispenaltyforenablingencryptionisunavoidableduetothe
+overhead 5 802.15.4protocol.
+Source Reduceby Thispenaltyisunavoidablebecausethe802.15.4requires
+address 6 encryptedpacketstobesentwithalongsourceaddress,evenifa
+shortaddresswouldotherwisebeused.
+Destination Reduceby Thispenaltyonlyappliesifsendingtoalongaddressratherthana
+address 6 shortaddress.
+Appheader Reduceby Theappheaderforencryptionis4byteslong.Thispenaltyonly
+4 appliesifMM=0or3.
+Becauseofthetwomandatoryreductionswhenusingencryption,nopacketcanexceed116-
+(5+6)=105bytes.Theotheroptionsmayfurtherreducethemaximumpayloadto101bytes,99
+bytes,or95bytes.
+WhenoperatinginAPImodeandnotusingencryption,ifthesourceaddressislong,thereceiving
+deviceoutputsanRXIndicator(0x80)frameforreceiveddata.But,ifthesourceaddressisshort,
+thereceivingdeviceoutputsaReceivePacket(0x81)frameforreceiveddata.Thesesamerules
+applyforencryptionifMMis0or3.Thisispossiblebecausethefour-byteencryptionAppheader
+includestheshortaddressofthesenderandthelongreceivedaddressisnotusedforAPIoutput.If
+encryptionisenabledwithMMof1or2,thennoAppheaderexists,thesourceaddressisalways
+long,andthereceivingdeviceinlegacyAPImode(AP=2) alwaysoutputsa64-bitReceivePacket
+-0x80.
+Maximum payload
+Theabsolutemaximumpayloadsizeforan802.15.4packetis116bytes.Dependingonmodule
+configuration,theactualmaximumpayloadsizewillbereduced.
+IfyouattempttosendanAPIpacketwithalargerpayloadthanspecified,thedevicerespondswith
+aTransmitStatusframe(0x89and0x8B)withtheStatusfieldsetto74(Datapayloadtoolarge).
+Whenoperatingintransparentmode,ifyouattempttosenddatalargerthanthemaximumpayload
+size,thedatawillbepacketizedandsentasmultipleover-the-airtransmissions.Formore
+information,seeSerial-to-RFpacketization.
+Maximum payload rules
+1. Ifyouenabletransmitcompatibility(C8)withtheLegacy802.15.4module(S1hardware):
+n Thereisafixedmaximumpayloadof100bytes
+n Therestoftherulesdonotapply.Theyapplyonlywhen youdisabletransmit
+compatibilitywiththeLegacy802.15.4module.
+DigiXBee®3802.15.4RFModuleUserGuide 136
+
+Networking Maximumpayload
+2. Themaximumachievablepayloadis116bytes.Thisisachievedwhen:
+n Notusingencryption.
+n Notusingtheapplicationheader(MMissetto1or2).
+n Usingtheshortsourceaddress.
+n Usingtheshortdestinationaddress.
+3. Ifyouareusing theapplicationheader,themaximumachievablepayloadisreducedby:
+n 2bytesifnotusingencryption(EE=0)
+n 4bytesifusingencryption(EE=1)
+4. Ifyouareusingthelongsourceaddress(MY=0xFFFE), themaximumachievablepayload
+isreducedby6bytes(sizeoflongaddress(8)-sizeofshortaddress(2)=6).
+5. Ifyouareusingencryption,thesourceaddressesarepromotedtolongsourceaddresses,
+sothemaximumachievablepayloadisreducedby6bytes.
+6. Ifyouareusingthelongdestinationaddress, themaximumachievablepayloadisreduced
+by6bytes(thedifferencebetweenthe8bytesrequiredforalongaddressandthe2bytes
+requiredforashortaddress).
+7. Ifyouareusingencryption,themaximumachievablepayloadisreducedby5bytes.
+NoteYoucanqueryNP(MaximumPacketPayloadBytes)todeterminethemaximumachievable
+payloadsizebasedoncurrentparameters.NPalwaysassumesalongdestinationaddresswillbe
+used.
+Maximum payload summary tables
+ThefollowingtableindicatesthemaximumpayloadwhenusingtransmitcompatibilitywithLegacy
+802.15.4modules(S1hardware).
+Encryption
+Enabled Disabled
+95B 100B
+Thefollowingtableindicatesthemaximumpayloadwhenusingtheapplicationheaderandnot
+usingencryption. Incrementthemaximumpayloadin2bytesifyouarenotusingtheapplication
+header.
+Destinationaddress
+Sourceaddress Short Long
+Short 114B 108B
+Long 108B 102B
+Thefollowingtableindicatesthemaximumpayloadwhenusingtheapplicationheaderand using
+encryption. Incrementthemaximumpayloadin4bytesifyouarenotusingtheapplicationheader.
+DigiXBee®3802.15.4RFModuleUserGuide 137
+
+Networking Maximumpayload
+Destinationaddress
+Sourceaddress Short Long
+Short 101B 95B
+Long 101B 95B
+Work with Legacy devices
+TheLegacy802.15.4device(S1hardware)transmitspacketsonebyone.Itdoesnottransmita
+packetuntilitreceivesallexpectedacknowledgmentsofthepreviouspacketorthetimeout
+expires.
+TheXBee/XBee-PROS2C802.15.4andXBee3802.15.4RFModulesenhancetransmissionby
+implementingatransmissionqueuethatallowsthedevicetotransmittoseveraldevicesatthe
+sametime.Broadcasttransmissionsareperformedinparallelwiththeunicasttransmissions.
+ThisenhancementintheXBee/XBee-PROS2C802.15.4andXBee3802.15.4RFModulescan
+produceproblematicbehavior undercertainconditionsifthereceiverisaLegacy802.15.4module
+(S1hardware).
+Theconditionsare:
+n ThesenderisanXBee3802.15.4RFModule,andthereceiverisaLegacy802.15.4module.
+n ThesenderhastheDigi headerenabled(MM=0or3)andRR(XBeeRetries)>0.
+n ThesendersendsbroadcastandunicastmessagesatthesametimetotheLegacy802.15.4
+modulewithoutwaitingforthetransmissionstatusofthepreviouspacket.
+Theeffectis:
+n Thereceivermaydisplayduplicatepackets.
+Thesolutionis:
+n Setbit0oftheC8(802.15.4compatibility)parameterto1toenableTXcompatibilitymodein
+theXBee3802.15.4RFModule.Thiseliminatesthetransmissionqueuetoavoidsendingto
+multipleaddressessimultaneously.ItalsolimitsthepacketsizetothelevelsoftheLegacy
+802.15.4module.
+ForinformationonthespecificdifferencesbetweenanXBee3andLegacy802.15.4devices,refer
+totheDigiXBee3802.15.4MigrationGuide.
+DigiXBee®3802.15.4RFModuleUserGuide 138
+
+Network commissioning and diagnostics
+Wecalltheprocessofdiscoveringandconfiguringdevicesinanetworkforoperation,"network
+commissioning."Devicesincludeseveraldevicediscoveryandconfigurationfeatures.Inaddition
+toconfiguringdevices,youmustdevelopastrategytoplacedevicestoensurereliableroutes.To
+accommodatetheserequirements,devicesincludefeaturestoaidinplacingdevices,configuring
+devices,andnetworkdiagnostics.
+Remoteconfigurationcommands 140
+Nodediscovery 141
+DigiXBee®3802.15.4RFModuleUserGuide 139
+
+Networkcommissioninganddiagnostics Remoteconfigurationcommands
+Remote configuration commands
+WhenrunninginAPImode,thefirmwarehasprovisionstosendconfigurationcommandsto
+remotedevicesusingRemoteATCommandRequest-0x17.Youcanusethisframetosend
+commandstoaremotedevicetoreadorsetcommandparameters.
+CAUTION!Itisimportanttosettheshortaddressto0xFFFEwhensendingtoalong
+address.Anyothervaluecausesthelongaddresstobeignored.Thisisparticularly
+problematicinthecasewherenodesaresetupwithdefaultaddressesof0andthe16-bit
+addressiserroneouslyleftat0.Inthatcase,evenwithacorrectlongaddresstheremote
+commandgoesouttoalldeviceswiththedefaultshortaddressof0,potentiallyresultingin
+harmfulconsequences,dependingonthecommand.
+Send a remote command
+TosendaremotecommandpopulatetheRemoteATCommandRequestframe(0x17)with:
+1. The64-bitaddressoftheremotedevice.
+2. Thecorrectcommandoptionsvalue.
+3. Thecommandandparameterdata(optional).If(andonlyif)allnodesinthePANhave
+uniqueshortaddresses,thenremoteconfigurationcommandscanbesentto16-bitshort
+addressesbysettingtheshortaddressintheAPIframeforRemoteATcommands.Inthat
+case,the64-bitaddressisunusedanddoesnotmatter.
+4. Ifyouwantacommandresponse,settheFrameIDfieldtoanon-zerovalue.
+a. Todistinguishwhichremotecommandresponseisassociatedwithagivenremote
+commandrequest,useadifferentnon-zerovalueFrameID foreachrequest.
+Apply changes on remote devices
+AnychangesyoumaketotheconfigurationcommandregistersusingATcommandsdonottake
+effectuntilyouapplythechanges.Forexample,ifyousendtheBDcommandtochangethebaud
+rate,theactualbaudratedoesnotchangeuntilyouapplythechanges.Toapplychanges:
+1. SettheApplyChangesoptionbitintheRemoteATCommandRequestframe(0x17).
+2. IssueanAC(ApplyChanges)commandtotheremotedevice.
+3. IssueaWR+FRcommandtotheremotedevicetosavechangesandresetthedevice.
+Remote command responses
+IftheremotedevicereceivesaRemoteATCommandRequest(0x17frametype),theremote
+sendsanATCommandResponse(0x88frametype)backtothedevicethatsenttheremote
+command.TheATcommandresponseindicatesthestatusofthecommand(success,orreason
+forfailure),andinthecaseofacommandquery,itincludestheparametervalue.
+Thedevicethatsendsaremotecommandwillnotreceivearemotecommandresponseframeif
+theframeIDintheremotecommandrequestissetto0,indicatingthattherequestissentwithout
+acknowledgment.
+DigiXBee®3802.15.4RFModuleUserGuide 140
+
+Networkcommissioninganddiagnostics Nodediscovery
+Node discovery
+Nodediscoveryhasthreevariationsasshowninthefollowingtable:
+Commands Syntax Description
+ND(Network ND Seekstodiscoverallnodesinthenetwork(onthecurrentPANID).
+Discover)
+ND(Network ND<NI Seekstodiscoverifaparticularnodenamed<NIString>isfoundin
+Discover) String> thenetwork.
+DN(Discover DN<NI SetsDH/DLtopointtotheaddress(64-bitor16-bitdependingonthe
+Node) String> MYvalueofthematchingnode)ofthenodewhose<NIString>
+matches.
+Thenodediscoverycommand(withoutanNIstringdesignated)sendsoutabroadcasttoevery
+nodeinthePANID.EachnodeinthePANsendsaresponsebacktotherequestingnodeaftera
+jitteredtimedelaytoensurereliabledelivery.
+About node discovery
+Thenodediscoverycommand(withoutanNIstringdesignated)sendsoutabroadcasttoevery
+nodeinthePANID.EachnodeinthePANsendsaresponsebacktotherequestingnode.
+WhenthenodediscoverycommandisissuedinATcommandmode,allotherATcommandsare
+inhibiteduntilthenodediscoverycommandtimesout,asspecifiedbytheNTparameter.Afterthe
+timeout,anextraCRLFisoutputtotheterminalwindow,indicatingthatnewATcommandscanbe
+entered.Thisisthebehaviorwhetherornottherewereanynodesthatrespondedtothebroadcast.
+WhenthenodediscoverycommandisissuedinAPImode,thebehavioristhesameexceptthat
+theresponseisoutputinAPImode.Ifnonodesrespond,therewillbenoresponsesatalltothe
+nodediscovercommand.TherequestingnodeisnotabletoprocessanewATcommanduntilNT
+timesout.
+Node discovery in compatibility mode
+Nodediscovery(withoutanNIstringparameter)incompatibilitymodeoperatesthesamein
+compatibilitymodeasitdoesoutsideofcompatibilitymodewithoneminorexception:
+IfC8bit1issetandifrequestingnodeisoperatinginAPImodeandifnoresponsesarereceived
+bythetimeNTtimesout,thenanAPIATcommandresponseofOK(APIframetype0x88)issent
+outtheserialportratherthangivingnoresponseatall,whichwouldhappenifC8bit1isnotset.
+Directed node discovery
+Thedirectednodediscoverycommand(NDwithanNIstringparameter)sendsoutabroadcastto
+findanodeinthenetworkwithamatchingNIstring.Ifsuchanodeexists,itsendsaresponsewith
+itsinformationbacktotherequestingnode.
+InTransparentmode,therequestingnodewilloutputanextraCRLFfollowingtheresponsefrom
+thedesignatednodeandthecommandwillterminate,beingreadytoacceptanewATcommand.
+Intheeventthattherequestednodedoesnotexistoristooslowtorespond,therequestingnode
+outputsanERRORresponseafterNTexpires.
+DigiXBee®3802.15.4RFModuleUserGuide 141
+
+Networkcommissioninganddiagnostics Nodediscovery
+InAPImode,theresponsefromtherequestingnodewillbeoutputinAPImodeandthecommand
+willterminateimmediately.Ifnoresponsecomesfromtherequestednode,therequestingnode
+outputsanerrorresponseinAPImodeafterNTexpires.
+Directed node discovery in compatibility mode
+ThebehavioroftheLegacy802.15.4module(S1hardware)varieswiththedefaultbehavior
+describedaboveforthedirectednodediscoverycommand.TheLegacymoduledoesnotcomplete
+thecommanduntilNTexpires,eveniftherequestednoderespondsimmediately.AfterNTexpires,
+itgivesasuccessfulresponse,eveniftherequestednodedidnotrespond.Toenablethisbehavior
+tobeequivalenttotheLegacy802.15.4module,setbit1oftheC8parameter.
+Destination Node
+DN(DiscoverNode)withanNI(NodeIdentifier)stringparametersendsoutabroadcastcontaining
+theNIstringbeingrequested.TherespondingnodewithamatchingNIstringsendsitsinformation
+backtotherequestingnode.ThelocalnodethensetsDH/DLtomatchtheaddressofthe
+respondingnode.Assoonasthisresponseoccurs,thecommandterminatessuccessfully.If
+operatinginCommandmode,anOKstringisoutputandCommandmodeexits.InAPImode
+anotherATcommandmaybeentered.
+IfanNIstringparameterisnotprovided,theDNcommandterminatesimmediatelywithanerror.If
+anodewiththegivenNIstringdoesn'trespond,theDNcommandterminateswithanerrorafterNT
+timesout.
+UnlikeND(withorwithoutanNIstring),DNdoesnotcausetheinformationfromtheresponding
+nodetobeoutput;ratheritsimplysetsDH/DLtotheaddressoftherespondingnode.Ifthe
+respondingnodehasashortaddress,thenDH/DLissettothatshortaddress(withDHat0andDL
+settothevalueofMY).Iftherespondingnodehasalongaddress(MYis0xFFFE),thenDH/DL
+aresettotheSH/SLoftherespondingnode.
+DigiXBee®3802.15.4RFModuleUserGuide 142
+
+Sleep support
+Sleepisimplementedtosupportinstallationswhereamainspowersourceisnotavailableanda
+batteryisrequired.Inordertoincreasebatterylife,thedevicesleeps,whichmeansitstops
+operating.Itcanbewokenbyatimerexpirationorapin.
+Sleepmodes 144
+Sleepparameters 145
+Sleeppins 145
+Sleepconditions 146
+DigiXBee®3802.15.4RFModuleUserGuide 143
+
+Sleepsupport Sleepmodes
+Sleep modes
+Sleepmodesenablethedevicetoenterstatesoflow-powerconsumptionwhennotinuse.To
+enterSleepmode,thefollowingconditionsmustbemet:
+n AvalidsleepmodeisselectedviaSM(SM=1,4,5,or6)
+n DTR/SLEEP_RQ(THpin9/SMTpin10)isasserted(whenSM=1or5)
+n Thedeviceisidle(nodatatransmissionorreception)fortheamountoftimedefinedbyST
+(CyclicSleepWakeTime)(whenSM=4or5)
+Thefollowingtableshowsthesleepmodeconfigurations.
+Sleep
+mode Description
+SM0 Nosleep
+SM1 Pinsleep
+SM4 Cyclicsleep
+SM 5 Cyclicsleepwithpinwake-up
+SM 6 MicroPythonsleep(withoptionalpinwake).ForcompletedetailsseetheDigi
+MicroPythonProgrammingGuide.
+Pin Sleep mode (SM = 1)
+PinSleepmodeminimizesquiescentpower(powerconsumedwheninastateofrestorinactivity).
+InordertousePinSleepmode,configureD8(DIO8/DTR/SLP_RequestConfiguration)(THpin
+9/SMTpin10)forDTR/SLEEP_RQinput(D8=1).Thismodeisvoltagelevel-activated;when
+SLEEP_RQisasserted,thedevicefinishesanytransmitorreceiveactivities,entersIdlemode,
+andthenentersastateofsleep.ThedevicedoesnotrespondtoeitherserialorRFactivitywhilein
+pinsleep.
+TowakeasleepingdeviceoperatinginPinSleepmode,de-assertDTR/SLEEP_RQ.Thedevice
+wakeswhenSLEEP_RQisde-assertedandisreadytotransmitorreceivewhentheCTSlineis
+low.Whenwakingthedevice,thepinmustbede-assertedatleasttwo'bytetimes'afterCTSgoes
+low.ThisassuresthatthereistimeforthedatatoentertheDIbuffer.
+DeviceswithSPIfunctionalitycanusetheSPI_SSELpininsteadofD8forpinsleepcontrol.IfD8=
+0andP7=1,SPI_SSELtakestheplaceofDTR/SLEEP_RQandfunctionsasdescribedabove.In
+ordertouseSPI_SSELforsleepcontrolwhilecommunicatingontheUART,theotherSPIpins
+mustbedisabled(P5,P6,andP8setto0).SeeLowpoweroperationforinformationonusingSPI_
+SSELforsleepcontrolwhilecommunicatingoverSPI.
+Cyclic Sleep mode (SM = 4)
+TheCyclicSleepmodesallowdevicestoperiodicallycheckforRFdata.WhentheSMparameter
+issetto4,theXBee3802.15.4RFModuleisconfiguredtosleep,thenwakesoncepercycleto
+checkfordatafromacoordinator.TheCyclicSleepRemotesendsapollrequesttothecoordinator
+ataspecificintervalsetbytheSP(CyclicSleepPeriod)parameter.Thecoordinatortransmitsany
+queueddataaddressedtothatspecificremoteuponreceivingthepollrequest.
+DigiXBee®3802.15.4RFModuleUserGuide 144
+
+Sleepsupport Sleepparameters
+IfthecoordinatordoesnotrespondwithqueueddataandnoUARTactivityisdetected,thedevice
+willimmediatelysleep.Ifitdetectsanyactivity(RForUART),thenthedevicewakesforSTtime.
+YoucanalsosetSObit8toforcethedevicetoalwayswakeforthefullSTtime.
+ON_SLEEPgoeshighandCTSgoesloweachtimetheremotewakes,allowingforcommunication
+initiatedbytheremotehostifdesired.
+Cyclic Sleep with Pin Wake-up mode (SM = 5)
+UsethismodetowakeasleepingremotedevicethrougheithertheRFinterfaceorbyasserting
+(low)DTR/SLEEP_RQforevent-drivencommunications.Thecyclicsleepmodeworksas
+describedpreviouslywiththeadditionofapin-controlledwake-upattheremotedevice.
+TheDTR/SLEEP_RQpinislevel-triggered.Thedevicewakeswhenalowisdetectedthensets
+CTSlowassoonasitisreadytotransmitorreceive.Thedevicestaysawakeaslongas
+DTR/SLEEP_RQislow;onceDTR/SLEEP_RQgoeshighthedevicereturnstocyclicsleep
+operation.IfDTR/SLEEP_RQismomentarilypulsedlow,theminimumwaketimeisST(Cyclic
+SleepWakeTime)evenifDTR/SLEEP_RQislowforlesstime.
+Onceawake,anyactivityresetstheST(CyclicSleepWakeTime)timer,sothedevicegoesbackto
+sleeponlyafterthereisnoRFactivityforthedurationofthetimer.
+MicroPython sleep with optional pin wake (SM = 6)
+TheMicroPythonsleepoptionallowsauser'sMicroPythonprogramtoexclusivelycontrolthe
+device'ssleepoperation(withoptionalpinwake).ForfulldetailsrefertotheDigiMicroPython
+ProgrammingGuide.
+Sleep parameters
+ThefollowingATcommandsareassociatedwiththesleepmodes.Seethelinkedcommandsfor
+theparameter'sdescription,rangeanddefaultvalues.
+n SM(SleepMode)
+n SP(CyclicSleepPeriod)
+n ST(CyclicSleepWakeTime)
+n DP(DisassociatedCyclicSleepPeriod)
+n SO(SleepOptions)
+Sleep pins
+Thefollowingtabledescribesthefiveexternaldevicepinsassociatedwithsleep.
+SeetheXBee3RFModuleHardwareReferenceManualforthepinoutofyourdevice.
+Description
+DTR/SLEEP_ ForSM=1,highputsthedevicetosleepandlowwakesitup.ForSM=5,a
+RQ hightolowtransitionwakesthedeviceuntilthepintransitionsbacktoahigh
+state.
+SPI_SSEL AlternativeSLEEP_RQlinefordevicesoperatinginSPI.SeeLowpower
+operationforfurtherinformation.
+DigiXBee®3802.15.4RFModuleUserGuide 145
+
+Sleepsupport Sleepconditions
+Description
+CTS IfD7=1,highindicatesthatthedeviceisasleepandlowindicatesthatitis
+awakeandreadytoreceiveserialdata.
+ON_SLEEP Lowindicatesthatthedeviceisasleepandhighindicatesthatitisawake.
+Sleep conditions
+Sinceinstructionsstopexecutingwhilethedeviceissleeping,itisimportanttoavoidsleeping
+whenthedevicehasworktodo.Forexample,thedevicewillnotsleepifanyofthefollowingare
+true:
+1. ThedeviceisoperatinginCommandmode,orintheprocessofgettingintoCommand
+modewiththe+++sequence.
+2. ThedeviceisprocessingATcommandsfromAPImode
+3. ThedeviceisprocessingremoteATcommands
+4. SomethingisqueuedtotheserialportandthatdataisnotblockedbyRTSflowcontrol
+Ifeachoftheaboveconditionsarefalse,thensleepmaystillbeblockedinthesecases:
+1. Enoughtimehasnotexpiredsincethedevicehasawakened.
+a. Ifthedeviceisoperatinginpinsleep,theamountoftimeneededforonecharactertobe
+receivedontheUARTisenoughtime.
+b. Ifthedeviceisoperatingincyclicsleep,enoughtimeisdefinedbyatimer.Theduration
+ofthattimeris:
+i. definedbySTifinSM5modeanditisawakenedbyapin
+ii. 30mstoallowenoughtimeforapollandapollresponse
+iii. 750mstoallowenoughtimeforassociation,incasethatneedstohappen
+c. Inaddition,thewaketimeisextendedbyanadditionalSTtimewhennew OTAdataor
+serialdataisreceived.
+2. SleepRequestpinisnotassertedwhenoperatinginpinsleepmode
+3. DataiswaitingtobesentOTA.
+DigiXBee®3802.15.4RFModuleUserGuide 146
+
+AT commands
+Networkingcommands 148
+Discoverycommands 150
+Coordinator/EndDeviceconfigurationcommands 155
+802.15.4Addressingcommands 159
+Securitycommands 162
+SecureSessioncommands 164
+RFinterfacingcommands 166
+MACdiagnosticscommands 167
+Sleepsettingscommands 168
+MicroPythoncommands 171
+FileSystemcommands 172
+Bluetooth®LowEnergycommands 175
+APIconfigurationcommmands 177
+UARTinterfacecommands 179
+ATCommandoptions 181
+UARTpinconfigurationcommands 182
+SMT/MMTSPIinterfacecommands 184
+I/Osettingscommands 187
+I/Osamplingcommands 196
+I/Olinepassingcommands 199
+Locationcommands 203
+Diagnosticcommands-firmware/hardwareinformation 204
+Memoryaccesscommands 207
+CustomDefaultcommands 208
+DigiXBee®3802.15.4RFModuleUserGuide 147
+
+ATcommands Networkingcommands
+Networking commands
+Configurethebasic802.15.4networksettings.Alldevicesonthenetworkmusthavematching
+networksettingstocommunicate.
+CH (Operating Channel)
+Theoperatingchanneldevicesusetotransmitandreceivedata.
+Inorderfordevicestocommunicatewitheachother,theymustsharethesamechannelnumber.A
+networkcanusedifferentchannelstopreventdevicesinonenetworkfromlisteningtothe
+transmissionsofanotherandtoreduceinterference.
+ThecommandusesIEEE 802.15.4channelnumbers.
+Parameterrange
+0xB-0x1A
+Default
+0xC(channel12)
+ID (Extended PAN ID)
+Thedevice'sPAN(PersonalAreaNetwork)identifier.PANIDsallowsforthelogicalseparationof
+multiplenetworksthatsharethesameRFchannel.
+Inorderfordevicestocommunicate,theymustbeconfiguredwiththesamePANIDandchannel.
+SettingIDto0xFFFFindicatesaglobaltransmissionforallPANs.Itdoesnotindicateaglobal
+receive.
+Parameterrange
+0-0xFFFF
+Default
+0x3332
+MM (MAC Mode)
+UsetheMMcommandtospecifytheoperatingMACMode;formoreinformationseeMACMode
+configuration.
+TheMACModeservestwopurposes:
+n Enable/disabletheuseofaDigiheader,whichenablesadvancedfeatures.
+n Enable/disableMAC-Layeracknowledgments.
+ThedefaultconfigurationincludesaDigi-specificheadertoeveryRFpacket.Thisheaderincludes
+informationthatenablesadvancedfeatures:
+n Networkdiscoverysupport[ND(NetworkDiscover)andDN(DiscoverNode)]
+n Application-layerretries[RR(XBeeRetries)]
+n Duplicatepacketdetection[RR(XBeeRetries)]
+n RemoteATcommandsupport[RemoteATCommandRequest-0x17]
+DigiXBee®3802.15.4RFModuleUserGuide 148
+
+| ATcommands |     | Networkingcommands |
+| ---------- | --- | ------------------ |
+ThepresenceoftheDigiheaderpreventsinteroperabilitywiththird-partydevices.WhentheDigi
+headerisdisabled,encrypteddatathatisnotvalidissentoutoftheUARTandnotfilteredout.The
+DigiheadercanbedisabledbysettingMMto1or2.
+WhenMMissetto1or3,MAC-layerretriesaredisabled.
+Parameterrange
+0-3
+| Parameter | Configuration | ACKs     |
+| --------- | ------------- | -------- |
+| 0         | Digimode      | WithACKs |
+| 1         | 802.15.4      | NoACKs   |
+| 2         | 802.15.4      | WithACKs |
+| 3         | Digimode      | NoACKs   |
+Default
+0
+| C8 (Compatibility Options) |     |     |
+| -------------------------- | --- | --- |
+Setstheoperationalcompatibilitywiththelegacy802.15.4device(S1hardware).Thisparameter
+shouldonlybesetwhenoperatinginamixednetworkthatcontainsXBeeSeries1devices.
+Bitfield:
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+Parameterrange
+0-3
+| Bit Meaning Setting | Description                         |     |
+| ------------------- | ----------------------------------- | --- |
+| 01 TX 0             | Transmissionsareoptimizedasfollows: |     |
+compatibility
+1. Maximumtransmissionsizeisaffectedbymultiple
+factors(MM,MY,DH,DL,andEE).SeeMaximum
+payloadrules.Inthebestcase,withnoappheader,
+shortsourceanddestinationaddresses,andno
+encryption,themaximumtransmissionsizeis116
+bytes.
+2. Multiplemessagescanbepresentsimultaneouslyon
+theactivequeue,providingtheyarealldestinedfor
+differentaddresses.Thisimprovesperformance.
+1Thisbitdoesnottypicallyneedtobeset.However,whentheXBee3802.15.4RFModuleisstreaming
+broadcastsintransparentmodetoaLegacy802.15.4module(S1hardware),andRR>0,setthisbittoavoid
+awatchdogresetontheLegacy802.15.4module.
+DigiXBee®3802.15.4RFModuleUserGuide 149
+
+ATcommands Discoverycommands
+Bit Meaning Setting Description
+1 TransmissionsoperateliketheLegacy802.15.4module,which
+meansthefollowing:
+1. Maximumtransmissionsizeis95bytesforencrypted
+packetsand100bytesforun-encryptedpackets.These
+maximumtransmissionsizesarenotadjustedupward
+forshortaddressesorforlackofanAPPheader.
+2. Onlyonetransmissionmessagecanbeactiveatatime,
+evenifothermessagesinthequeuewouldgotoa
+differentdestinationaddress.
+1 Node 0 NodediscoveryoperateslikeotherXBeedevicesandnotlike
+Discovery theLegacy802.15.4module.Thismeansthefollowing:
+compatibility
+1. AdirectedNDrequestterminatesafterthesingle
+responsearrives.Thisallowsthedevicetoprocess
+othercommandswithoutwaitingfortheNTtotimeout.
+2. ThedeviceoutputsanerrorresponsetothedirectedND
+requestifnoresponseoccurswithinthetimeout.
+1 ThemoduleoperatesliketheLegacy802.15.4module,which
+hasthefollowingeffect:
+1. Whentheexpectedresponsearrives,thecommand
+remainsactiveuntilNTtimesout.(NTdefaultsto2.5
+seconds.)Thispreventsthedevicefromprocessingany
+otherATcommand,evenifthedesiredresponseoccurs
+immediately.
+2. Whenthetimeoutoccurs,thecommandsilently
+terminatesandindicatessuccess,whetherornota
+responseoccurredwithintheNTtimeout.
+Default
+0x00
+Discovery commands
+NetworkDiscoveryandcorrespondingdiscoveryoptions.
+NetworkdiscoverycanonlybeperformediftheDigiheaderisenabledviatheMMcommand.
+NI (Node Identifier)
+Thenodeidentifierisauser-definednameordescriptionofthedevice.Usethisstringwithnetwork
+discoverycommandsinordertoeasilyidentifydevicesonthenetwork.
+UsetheND(NetworkDiscover)commandwiththisstringasanargumenttofilternetwork
+discoveryresults.
+UsetheDN(DiscoverNode)commandwiththisstringasanargumenttoresolvethe64-bit
+addressofanodewithamatchingNIstring.
+DigiXBee®3802.15.4RFModuleUserGuide 150
+
+ATcommands Discoverycommands
+Parameterrange
+Astringofcase-sensitiveASCIIprintablecharactersfrom1to20bytesinlength.Acarriage
+returnoracommaautomaticallyendsthecommand.
+Default
+0x20(anASCIIspacecharacter)
+DD (Device Type Identifier)
+StorestheDigidevicetypeidentifiervalue.Usethisvaluetodifferentiatebetweenmultipletypesof
+devices(forexample,sensorsorlights).
+Thiscommandcanoptionallybeincludedinnetworkdiscoveryresponsesbysettingbit1ofNO.
+Parameterrange
+0-0xFFFFFFFF
+Default
+0x130000
+NT (Node Discover Timeout)
+SetstheamountoftimeabasenodewaitsforresponsesfromothernodeswhenusingtheND
+(NetworkDiscover)andDN(DiscoverNode)commands.Whenadiscoveryisperformed,the
+broadcasttransmissionincludestheNTvaluetoprovideallremotedeviceswitharesponse
+timeout.Remotedeviceswaitarandomtime,lessthanNT,beforesendingtheirresponsetoavoid
+collisions.
+Parameterrange
+0x1-0xFC(x100ms)
+Default
+0x19(2.5seconds)
+NO (Network Discovery Options)
+SettheAdvancedOptionsthataffecthowaparticulardevicerespondstonetworkdiscoveries—ND,
+DNandFNcommands—andwhensendinganodeidentification.
+UseNOtosuppressorincludeaself-responsetoND(NodeDiscover)commands.WhenNObit1
+isset,adeviceperformingaNodeDiscoverincludesaresponseentryforitself.
+Bitfield:
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+Bit Meaning
+0x01 AppendtheDD(DigiDeviceIdentifier)valuetodiscoveryresponsesandnode
+identificationframes.
+0x02 LocaldevicesendsitsownNDresponsewhenNDisissued.
+0x04 AppendtheRSSIofthelasthoptodiscoveryresponsesandnodeidentificationframes.
+DigiXBee®3802.15.4RFModuleUserGuide 151
+
+ATcommands Discoverycommands
+Parameterrange
+0-1
+Default
+0x0
+ND (Network Discover)
+Thiscommandreportsthefollowinginformationafterajitteredtimedelay.Nodediscoverresponse
+whenissuedinCommandmode:
+MY<CR>(2bytes)(always0xFFFE)
+SH<CR>(4bytes)
+SL<CR>(4bytes)
+DB<CR>(ContainsthedetectedsignalstrengthoftheresponseinnegativedBmunits)
+NI<CR>(variable,0-20bytesplus0x00character)
+PARENT_NETWORKADDRESS<CR>(2bytes)
+DEVICE_TYPE<CR>(1byte:0=Coordinator,1=Router,2=EndDevice)
+STATUS<CR>(1byte:reserved)
+PROFILE_ID<CR>(2bytes)
+MANUFACTURER_ID<CR>(2bytes)
+DIGIDEVICETYPE<CR>(4bytes.OptionallyincludedbasedonNOsettings.)
+RSSIOFLASTHOP<CR>(1byte.OptionallyincludedbasedonNOsettings.)
+Asecondcarriagereturnindicatesthenetworkdiscoverytimeout(NT)hasexpired.
+WhenoperatinginAPImodeandaNetworkDiscoveryisissuedasa0x08or0x09frame,the
+responsecontainsbinarydataexceptfortheNIstringinthefollowingformat:
+2bytesforShortSourceAddress
+4bytesforUpperLongAddress
+4bytesforLowerLongAddress
+1byteforthesignalstrengthin-dBm(two'scomplementrepresentation)
+NULL-terminatedstringforNI(NodeIdentifier)value(maximum20byteswithoutNULL
+terminator)
+EachdevicethatrespondstotherequestwillgenerateaseparateLocalATCommandResponse-
+0x88.
+BroadcastanNDcommandtothenetwork.Ifthecommandincludesanoptionalnodeidentifier
+stringparameter,onlythosedeviceswithamatchingNIstringrespondwithoutarandomoffset
+delay.Ifthecommanddoesnotincludeanodeidentifierstringparameter,alldevicesrespondwith
+arandomoffsetdelay.Iftherearenomatchingdevicestothestringidentifierparameter,the
+commandreturnsan“ERROR”ifthedeviceisinTransparentmode.
+TheNTsettingdeterminesthemaximumtimeout(13secondsbydefault),thisvalueissentalong
+withthediscoverybroadcastanddeterminestherandomdelaytheremotenodesusetoprevent
+theresponsesfromcolliding.
+FormoreinformationabouttheoptionsthataffectthebehavioroftheNDcommand,seeNO
+(NetworkDiscoveryOptions).
+DigiXBee®3802.15.4RFModuleUserGuide 152
+
+ATcommands Discoverycommands
+WARNING!IftheNTsettingissmallrelativetothenumberofdevicesonthenetwork,
+responsesmaybelostduetochannelcongestion.RegardlessoftheNTsetting,
+becausetherandomoffsetonlymitigatestransmissioncollisions,gettingresponses
+fromalldevicesinthenetworkisnotguaranteed.
+TheNDcommandcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy(LE).
+Parameterrange
+20-byteprintableASCII string(optional)
+Default
+N/A
+DN (Discover Node)
+ResolvesanNI(Nodeidentifier)stringtoaphysicaladdress(casesensitive).
+TheDNcommandcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy(LE).
+ThefollowingeventsoccurafterDNdiscoversthedestinationnode:
+WhenDNissentinCommandmode:
+1. ThedevicesetsDLandDHtotheaddressofthedevicewiththematchingNIstring.
+2. ThereceivingdevicereturnsOK(orERROR).
+3. ThedeviceexitsCommandmodetoallowforimmediatecommunication.IfanERRORis
+received,thenCommandmodedoesnotexit.
+WhenDNissentasalocalATCommandAPIframe:
+1. Thereceivingdevicereturnsthe16-bitnetworkand64-bitextendedaddressesinanAPI
+CommandResponseframe.
+2. Ifthereisnoresponsefromamodulewithin(NT*100)millisecondsoryoudonotspecifya
+parameter(byleavingitblank),thereceivingdevicereturnsanERRORmessage.Inthe
+caseofanERROR,thedevicedoesnotexitCommandmode.SettheradiusoftheDN
+commandusingtheBHcommand.
+WhenDNissentasalocalLocalATCommandRequest-0x08:
+1. ThereceivingdevicereturnsasuccessresponseinaLocalATCommandResponse-0x88.
+2. Ifthereisnoresponsefromamodulewithin(NT*100)millisecondsoryoudonotspecifya
+parameter(byleavingitblank),thereceivingdevicereturnsanERRORmessage.
+Parameterrange
+20-byteASCIIstring
+Default
+N/A
+AS (Active Scan)
+SendsaBeaconRequesttoaBroadcastaddress(0xFFFF)andBroadcastPAN(0xFFFF)on
+everychannelinthescanchannelmask—SC(ScanChannels).ActiveScancanonlybeperformed
+DigiXBee®3802.15.4RFModuleUserGuide 153
+
+ATcommands Discoverycommands
+locallyandreturnsanERRORifattemptedremotely.
+TheAScommandcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy(LE).
+APanDescriptoriscreatedandreturnedforeveryBeaconreceivedfromthescan.Each
+PanDescriptorcontainsthefollowinginformation:
+CoordAddress(SH+SLparameters)<CR>
+NoteIfMYonthecoordinatorissetlessthan0xFFFF,theMYvalueisdisplayed.
+CoordPanID(IDparameter)<CR>
+CoordAddrMode<CR>
+0x02=16-bitShortAddress
+0x03=64-bitLongAddress
+Channel(CHparameter)<CR>
+SecurityUse<CR>
+ACLEntry<CR>
+SecurityFailure<CR>
+SuperFrameSpec<CR>(2bytes):
+bit15-AssociationPermitted(MSB)
+bit14-PANCoordinator
+bit13-Reserved
+bit12-BatteryLifeExtension
+bits8-11-FinalCAPSlot
+bits4-7-SuperframeOrder
+bits0-3-BeaconOrder
+GtsPermit<CR>
+RSSI<CR>(-RSSIisreturnedas-dBm)
+TimeStamp<CR>(3bytes)
+<CR>(AcarriagereturnindicatestheendofthePanDescriptor)
+TheActiveScanreturnsonePanDescriptorresponseperdiscoverednetwork.EachPanDescriptor
+hasatrailingcarriagereturn<CR>toindicatetheendoftheframe.Thesequenceof
+PanDescriptorshasafinaltrailingcarriagereturn(three<CR>insequenceindicatetheendofthe
+activescan).
+IfusingAPIMode,no<CR>’sarereturnedandaseparateresponseframeisgeneratedforeach
+PanDescriptor.Formoreinformation,seeOperateinAPImode.IfnoPANsarediscoveredduring
+thescan,onlyonecarriagereturnisprinted.
+TheAScommandcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy(LE).
+Beforeadeviceisassociatedtoanetwork(AI!=0),itwillcontinuouslyperformanactivescanin
+thebackground,searchingforavalidnetworktojoin.Whilethisisoccurring,youcannotmanually
+performanactivescanusingtheAScommand.YoucanbypassthisrestrictionbysettingDJto1.
+Thiswilldisablejoiningandhaltthebackgroundactivescans.
+Parameterrange
+N/A
+Default
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 154
+
+ATcommands Coordinator/EndDeviceconfigurationcommands
+Coordinator/End Device configuration commands
+Thefollowingcommandsconfigurethedeviceforamaster/slave802.15.4network.
+CE (Device Role)
+ThedefaultconfigurationforanXBee3802.15.4networktooperateinaPeer-to-Peer
+configuration.InaPeer-to-Peernetwork,everydevicemusthaveapreconfigurednetworkPANID
+andRFChannelinordertocommunicate.
+InaPeer-to-Peernetwork,settingCEto1configuresthedevicetoactasanindirectmessaging
+coordinatorifSPisnon-zero.
+TheXBee3802.15.4networkcanalsobeconfiguredforMaster/Slaveoperation.Thisisenabled
+bysettingbit2oftheA1(EndDeviceAssociation)orA2(CoordinatorAssociation)commandsand
+settingCEaccordingly.Theconfigurationoftheofthemaster/slavenetworkisdeterminedbythe
+A1andA2commands.Anetworkcoordinatorcanalsoactasanindirectmessagingcoordinatorif
+SPisnon-zero.
+EndDevicesconfiguredforcyclicsleepwilluseDP(DisassociatedCyclicSleepPeriod)insteadof
+SP(CyclicSleepPeriod)untilitassociateswithacoordinator.
+Parameterrange
+0-1
+Parameter Description
+0 Peer-to-Peer/NetworkEndDevice
+1 Network/IndirectMessagingCoordinator
+Default
+0
+NoteIfCE=1andSPisnot0,thenallmessagesaresentindirectly.SeeDirectandindirect
+transmissionformoreinformation.
+A1 (End Device Association)
+SetsordisplaystheEndDeviceassociationoptions.Theseoptionsareonlyapplicablewhen
+configuredasanEndDevicebysettingCE(DeviceRole)to0.
+Bit2mustbesetbeforeotheroptionsareenabled.
+Parameterrange
+0-0x0F(bitfield)
+Bitfield:
+Bit Meaning Setting Description
+0 AllowPanId 0 OnlyassociateswithCoordinatoroperatingonPANIDthat
+reassignment matchesdeviceID.
+DigiXBee®3802.15.4RFModuleUserGuide 155
+
+ATcommands Coordinator/EndDeviceconfigurationcommands
+Bit Meaning Setting Description
+1 MayassociatewithCoordinatoroperatingonanyPANID.
+1 AllowChannel 0 OnlyassociateswithCoordinatoroperatingonmatchingCH
+reassignment channelsetting.
+1 MayassociatewithCoordinatoroperatingonanychannel
+definedintheSC(ScanChannels)mask.
+2 AutoAssociate 0 Peer-to-Peeroperation-Devicewillnotattemptassociation.
+1 NetworkEndDevice-Deviceattemptsassociationuntil
+success.Ifconfiguredforcyclicsleep,DP(Disassociated
+CyclicSleepPeriod)isusedinsteadofSP(CyclicSleep
+Period)untilthedeviceassociates.
+3 Poll 0 PinWakedoesnotpolltheCoordinatorforindirect(pending)
+coordinatoron data.
+pinwake
+1 PinWakesendsPollRequesttoCoordinatortoextractany
+pendingdata.
+4-7 Reserved
+Default
+0
+A2 (Coordinator Association)
+SetsordisplaystheCoordinatorassociationoptions.Theseoptionsareonlyapplicablewhen
+configuredasacoordinatorbysettingCE(DeviceRole)to1.Bit2mustbesetbeforeotheroptions
+areenabled.
+Parameterrange
+0-7(bitfield)
+Bitfield:
+Bit Meaning Setting Description
+0 AllowPanID 0 CoordinatorwillnotperformActiveScantolocateavailable
+reassignment PANID.ItoperatesonID(PANID).
+1 CoordinatorperformsanActiveScantodeterminean
+availableID(PANID).IfaPANIDconflictisfound,theID
+parameterwillchange.
+1 AllowChannel 0 CoordinatorwillnotperformEnergyScantodeterminefree
+reassignment channel.ItoperatesonthechanneldeterminedbytheCH
+parameter.
+1 CoordinatorperformsanEnergyScantofindthequietest
+channeloutofthechannelstobescanneddeterminedbythe
+SCparameter.TheCoordinatorthenoperatesonthat
+DigiXBee®3802.15.4RFModuleUserGuide 156
+
+ATcommands Coordinator/EndDeviceconfigurationcommands
+Bit Meaning Setting Description
+channel.
+2 Allow 0 Peer-to-Peer-Willnotallowanydevicestoassociatetoit.
+Association
+1 NetworkCoordinator-Allowsdevicestoassociatetoit.
+3-7 Reserved
+Default
+0
+| SC (Scan | Channels) |     |
+| -------- | --------- | --- |
+SetsordisplaysthelistofchannelstoscanforallActiveandEnergyScansasabitfield.This
+affectsscansinitiatedinAS(ActiveScan)andED(EnergyDetect)commandsinCommandmode
+andduringEndDeviceAssociationandCoordinatorstartup.
+Parameterrange
+0-0xFFFF(bitfield)
+NoteAparameterof0willscanonthecurrentchannelconfiguredbyCH.
+Bitfieldmask:
+| Bit | IEEE802.15.4Channel | Frequency(GHz) |
+| --- | ------------------- | -------------- |
+| 0   | 11(0x0B)            | 2.405          |
+| 1   | 12(0x0C)            | 2.410          |
+| 2   | 13(0x0D)            | 2.415          |
+| 3   | 14(0x0E)            | 2.420          |
+| 4   | 15(0x0F)            | 2.425          |
+| 5   | 16(0x10)            | 2.430          |
+| 6   | 17(0x11)            | 2.435          |
+| 7   | 18(0x12)            | 2.440          |
+| 8   | 19(0x13)            | 2.445          |
+| 9   | 20(0x14)            | 2.450          |
+| 10  | 21(0x15)            | 2.455          |
+| 11  | 22(0x16)            | 2.460          |
+| 12  | 23(0x17)            | 2.465          |
+| 13  | 24(0x18)            | 2.470          |
+DigiXBee®3802.15.4RFModuleUserGuide 157
+
+ATcommands Coordinator/EndDeviceconfigurationcommands
+Bit IEEE802.15.4Channel Frequency(GHz)
+14 25(0x19) 2.475
+15 26(0x1A) 2.480
+NoteAvoidchannel26ifpossible,astheoutputpoweriscappedat+8dBmontheProvariant.
+Default
+0xFFFF
+SD (Scan Duration)
+Setsordisplaysthescandurationexponent.
+ScanTimeismeasuredas:
+([#ofchannelstoscan]*(2^SD)*15.36ms)+(38ms*[#ofchannelstoscan])+20ms
+UsetheSC(ScanChannels)commandtosetthenumberofchannelstoscan.
+Example
+Thefollowingtableshowstheresultsforathirteenchannelscan.
+SDsetting Time
+0x0 0.18s
+0x2 0.74s
+0x4 2.95s
+0x6 11.80s
+0x8 47.19s
+0xA 3.15min
+0xB 12.58min
+0xE 50.33min
+Parameterrange
+0-0x0F(exponent)
+Default
+4
+DA (Force Disassociation)
+CausestheEndDevicetoimmediatelydisassociatefromaCoordinator(ifassociated)andre-
+attempttoassociate.
+Parameterrange
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 158
+
+ATcommands 802.15.4Addressingcommands
+Default
+N/A
+AI (Association Indication)
+ReadstheAssociationstatuscodetomonitorassociationprogress.
+Thefollowingtableprovidesthestatuscodesandtheirmeanings.
+Status
+code Meaning
+0x00 Coordinatorsuccessfullystarted,Enddevicesuccessfullyassociated,oroperatingin
+peertopeermodewherenoassociationisneeded.
+0x03 ActiveScanfoundaPANcoordinator,butitisn'tcurrentlyacceptingassociations.
+0x05 ActiveScanfoundaPAN,butthePANIDdoesn'tmatchtheconfiguredPANIDonthe
+requestingenddeviceandbit0ofA1isnotsettoallowreassignmentofPANID.
+0x06 ActiveScanfoundaPANonachannelthatdoesnotmatchtheconfiguredchannelon
+therequestingenddeviceandbit1ofA1isnotsettoallowreassignmentofthe
+channel.
+0x0C Associationrequestfailedtogetaresponse.
+0x13 Enddeviceisdisassociatedorisintheprocessofdisassociating.
+0xFF Initializationtime;noassociationstatushasbeendeterminedyet.
+Parameterrange
+0-0xFF[read-only]
+Default
+N/A
+802.15.4 Addressing commands
+Thefollowingcommandsaffecthowoutgoing802.15.4transmissionsareaddressedand
+configured.
+SH (Serial Number High)
+Displaystheupper32bitsoftheuniqueIEEE64-bitextendedaddressassignedtotheXBeeinthe
+factory.
+Thisvalueisread-onlyanditneverchanges.
+Parameterrange
+0x0013A200-0x0013A2FF[read-only]
+Default
+Setinthefactory
+DigiXBee®3802.15.4RFModuleUserGuide 159
+
+ATcommands 802.15.4Addressingcommands
+SL (Serial Number Low)
+Displaysthelower32bitsoftheuniqueIEEE64-bitRFextendedaddressassignedtotheXBeein
+thefactory.
+Thisvalueisread-onlyanditneverchanges.
+Parameterrange
+0-0xFFFFFFFF[read-only]
+Default
+Setinthefactory
+MY (16-bit Source Address)
+Setsordisplaysthedevice's16-bitsourceaddress.SetMY=0xFFFEtodisablereceptionof
+packetswith16-bitaddresses.Tomaintaincompatibilitywitholderproducts,0xFFFFisalso
+acceptabletodisablethereceptionofpacketswith16-bitaddresses.Whenconfiguredinthisway,
+the64-bitlongsourceaddress(SH+SL)isusedforoutgoingmessages.
+RegardlessofMY,messagesaddressedtothe64-bitlongaddressofthedevicearealways
+delivered.
+Parameterrange
+0-0xFFFF
+Default
+0
+DH (Destination Address High)
+Setorreadtheupper32bitsofthe64-bitdestinationaddress.
+WhenyoucombineDHwithDL,itdefinesthe64-bitdestinationaddressthatthedeviceusesfor
+outgoingdatatransmissionsinTransparentmode(AP=0)andI/Osampling.Thisdestination
+addresscorrespondstotheserialnumber(SH+SL)ofthetargetdevice.
+Totransmitusinga16-bitaddress,setDHto0andDLlessthan0xFFFF.Whenassociatingtoa
+coordinatorasanenddevice(CE=0,A1|0x04),thedestinationaddressisautomaticallysetto
+addressthecoordinator.
+Reserved802.15.4networkaddresses:
+n 0x000000000000FFFFisabroadcastaddress(DH=0,DL=0xFFFF).
+Parameterrange
+0-0xFFFFFFFF
+Default
+0
+DL (Destination Address Low)
+Setorreadthelower32bitsofthe64-bitdestinationaddress.
+DigiXBee®3802.15.4RFModuleUserGuide 160
+
+ATcommands 802.15.4Addressingcommands
+WhenyoucombineDHwithDL,itdefinesthe64-bitdestinationaddressthatthedeviceusesfor
+outgoingdatatransmissionsinTransparentmode(AP=0)andI/Osampling.Thisdestination
+addresscorrespondstotheserialnumber(SH+SL)ofthetargetdevice.
+Totransmitusinga16-bitaddress,setDHto0andDLlessthan0xFFFF.Whenassociatingtoa
+coordinatorasanenddevice(CE=0,A1|0x04),thedestinationaddressisautomaticallysetto
+addressthecoordinator.
+Reserved802.15.4networkaddresses:
+n 0x000000000000FFFFisabroadcastaddress(DH=0,DL=0xFFFF).
+Parameterrange
+0-0xFFFFFFFF
+Default
+0
+RR (XBee Retries)
+Setorreadsthenumberofapplication-layerretriesthedeviceexecutes.Application-layerretries
+areonlyenabledifaDigiheaderispresentviatheMMcommand.
+EverytransmittedunicasttransmissionusesuptofiveMAC-Layerretries(ifenabledviatheMM
+command).IfRR>0,afailedunicasttransmissionwillbeattemptedRRtimes(eachapplication-
+layerretrywillexhaustthefiveMAC-layerretries).
+Whentransmittingabroadcastmessage,ifRR=0,onlyonepacketisbroadcast.IfRRis>0,then
+RR+2packetsaresentoneachbroadcast.Noacknowledgmentsarereturnedonabroadcast.
+TheRRvaluedoesnotneedtobesetonalldevicesforretriestowork.Ifretriesareenabled,the
+transmittingdevicesetsabitintheDigiRFPacketheaderthatrequeststhereceivingdeviceto
+sendanACK.EachdeviceretrycanpotentiallyresultintheMACsendingthepacketsixtimes(one
+tryplusfiveretries).
+Parameterrange
+0-6
+Default
+0
+TO (Transmit Options)
+Abitfieldthatconfigurestheadvancedoptionsusedforoutgoingdatatransmissionsfromadevice
+operatinginTransparentmode(AP=0).
+WhenoperatinginAPImode,iftheTransmitOptionsfieldintheAPIframeis0,theTOparameter
+valuewillbeusedinstead.
+SendingaunicastmessagewithMAC ACKsdisabledisnotintendedtobeareliableformof
+communication,asnoACKsareproducedbyrecipients.
+Parameterrange
+0-0xFF
+Bitfield:
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+DigiXBee®3802.15.4RFModuleUserGuide 161
+
+ATcommands Securitycommands
+Bit Meaning
+0 DisableMACacknowledgments(retries)forunicasttraffic.
+2 SendtobroadcastPANID.
+4 Senddatasecurely—requiressecuresessionbeestablishedwithdestination.Enablingthis
+bitwillreducemaximumpayloadsizeby4bytes.
+Default
+0
+NP (Maximum Packet Payload Bytes)
+ReadsthemaximumnumberofRFpayloadbytesthatyoucantypicallysendinatransmission
+basedoncurrentparametersettings.Someoptionsmayimpactmaximumpayloadsizethatare
+notcapturedbytheNPvalue.
+SeeMaximumpayloadformoreinformation.
+NPisbasedonmultiplefactorsincludingthelengthofthesourceaddress,thelengthofthe
+destinationaddress,thelengthoftheAPPheader,andwhetherornotencryptionisenabled.
+Forthepurposesofthiscommand,italwaysassumesalongdestinationaddress.Thismeansthat
+ifyouselectashortdestinationaddress,youwillbeabletosenduptoNP+6bytesinasingle
+packet.
+NoteNPreturnsahexadecimalvalue.Forexample,ifNPreturns0x66,thisisequivalentto102
+bytes.
+Parameterrange
+0-0xFF[read-only]
+Default
+N/A
+Security commands
+ThefollowingcommandsenableandcontroltheencryptionusedforRFtransmissions.
+EE (Encryption Enable)
+Enablesordisables128-bitAdvancedEncryptionStandard(AES)encryptionofRDdata
+transmissions.
+Thefirmwareusesthe802.15.4DefaultSecurityprotocolandusesAESencryptionwitha128-bit
+key.AESencryptiondictatesthatalldevicesinthenetworkusethesamekey,andthatthe
+maximumRFpacketsizeis95bytesifTxcompatibilityisenabled(yousetbit0ofC8).IfC8,bit0
+isnotset,seeMaximumpayload.
+Whenencryptionisenabled,thedevicealwaysusesits64-bitlongaddressasthesourceaddress
+forRFpackets.ThisdoesnotaffecthowtheMY(SourceAddress),DH(DestinationAddressHigh)
+andDL(DestinationAddressLow)parameterswork.
+IfMM(MACMode)issetto1or2andAP(APIEnable)parameter>0:
+DigiXBee®3802.15.4RFModuleUserGuide 162
+
+ATcommands Securitycommands
+Withencryptionenabledanda16-bitshortaddressset,receivingdevicescanonlyissueRX
+(Receive)64-bitindicators.ThisisnotanissuewhenMM=0or3.
+Ifadevicewithanon-matchingkeydetectsRFdata,buthasanincorrectkey:
+Whenencryptionisenabled,non-encryptedRFpacketsreceivedarerejectedandarenot
+sentouttheUART.
+Parameterrange
+0-1
+Parameter Description
+0 EncryptionDisabled
+1 EncryptionEnabled
+Default
+0
+KY (AES Encryption Key)
+Setsthe128-bitnetworksecuritykeyvaluethatthedeviceusesforencryptionanddecryption.
+Thiscommandiswrite-onlyandcannotberead.IfyouattempttoreadKY,thedevicereturnsan
+OKstatus.
+Setthiscommandparameterthesameonalldevicesinanetwork.
+TheentirepayloadofthepacketisencryptedusingthekeyandtheCRCiscomputedacrossthe
+ciphertext.
+Parameterrange
+128-bitvalue(upto16bytes)
+Default
+0
+DM (Disable Features)
+Abitfieldmaskthatyoucanusetoenableordisablefeatures.Ifdisablingdevicefunctionalityfor
+securitypurposes,werecommendthatyoualsoenablesecureremoteconfigurationtoprevent
+featuresfrombeingre-enabledremotely.
+Bitfield:
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+Abitfieldmaskthatyoucanusetoenableordisablespecificfeatures.
+Ifdisablingdevicefunctionalityforsecuritypurposes,werecommendthatyoualsoenablesecure
+remoteconfigurationtopreventfeaturesfrombeingre-enabledremotely.
+Bit Description
+0 Reserved
+DigiXBee®3802.15.4RFModuleUserGuide 163
+
+ATcommands SecureSessioncommands
+Bit Description
+1 Reserved
+2 Disablefirmwareover-the-air(FOTA)updates.
+Whensetto1,thedevicecannotactasaFOTAupdateclient.FOTAFileSystemaccess
+isprotectedwithFK(FileSystemPublicKey).
+NoteSerialfirmwareupdatesarealwayspossibleviathebootloader.
+3 DisableSRPauthenticationontheclientsideoftheconnection.
+4 DisableSRPauthenticationontheserversideoftheconnection.
+Parameterrange
+0,4-0x1F(bitfield)
+Default
+0
+US (OTA Upgrade Server)
+Specifiesthe64-bitaddressoftheserverthedeviceshoulduseforOTAupgrades.
+n 0:AcceptOTAupgradesfromanydevice
+n 0x1-0xFFFFFFFFFFFFFFFE:OnlyacceptOTAupgradesfromaserverwiththegiven64-
+bitaddress
+n 0xFFFFFFFFFFFFFFFF:Reserved
+NoteIfthisparameterisnot0,packetsfromtheOTAservermustbesentwith64-bitaddressing.
+ThisisdonebysettingMYto0xFFFE.
+Parameterrange
+0-0xFFFFFFFFFFFFFFFE
+Default
+0
+Secure Session commands
+ThesearetheATcommandsthatenableSecureSession.
+SA (Secure Access)
+TheSecureAccessOptionsbit-fielddefinesthefeatureset(s)intendedtobesecureagainst
+unauthorizedaccess.TheXBee3802.15.4RFModuleshouldestablishasecuresessioninorder
+toaccessfunctionalitydefinedbythefeatureset(s)onthelocaldevice.
+ApasswordmustbesetusingtheSecureSessionSaltandVerifierbeforeaccessissecured.
+Parameterrange
+0-0x1F(upto0xFFFF)
+DigiXBee®3802.15.4RFModuleUserGuide 164
+
+ATcommands SecureSessioncommands
+Bitfield
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+Bit Description
+0 Reserved
+1 RemoteATCommands
+Whensetto1andifapasswordhasbeenset,thedevicewillnotrespondtoinsecure
+RemoteATCommandrequests(APIFrame0x17)butstillcansendinsecureRemoteAT
+Commands.
+2 SerialData
+Whensetto1,thedevicewillnotemitanyserialdatathatwassentinsecurely.
+ThisfunctionalityappliestodevicesthatareconfiguredforTransparentmode,butinthis
+instance,onlytheSRPserverwouldbeAP=0,theclientwouldstillhavetosendthe
+SecureSessionControl-0x2EviaAPImode.Theserverwillalsonotemitany0x90or
+0x91frameswhenthisbitisset.
+NoteOn802.15.4insecure0x80frameswillalsonotbeemitted.
+Default
+0
+*S (Secure Session Salt)
+TheSecureRemotePassword(SRP)Saltisa32-bitnumberusedtocreateanencrypted
+passwordfortheXBee3802.15.4RFModule.The*Scommandcontainsthesaltvalueinthe
+salt/verifierpairusedforsecuresessionauthentication.
+Parameterrange
+0-FFFFFFFF
+Default
+0
+*V, *W, *X, *Y (Secure Session Verifier)
+Thesecuresessionverifierisa128-bytevalueusedtogetherwith*S(SecureSessionSalt)for
+securesessionauthentication.The*V,*W,*X,and*Ycommandseachcontain32bytesofthe
+securesessionverifier:*Vcontainsbytes0-31,*Wbytes32-63,*Xbytes54-95,and*Ybytes
+96-127.
+Parameterrange
+Eachcommandcanbeany32-bytevalue
+Default
+0
+DigiXBee®3802.15.4RFModuleUserGuide 165
+
+ATcommands RFinterfacingcommands
+| RF interfacing | commands |     |
+| -------------- | -------- | --- |
+ThefollowingATcommandsaffectthe2.4GHz802.15.4RFinterfaceofthedevice.
+| PL (TX Power | Level) |     |
+| ------------ | ------ | --- |
+Setsordisplaysthepowerlevelatwhichthedevicetransmitsconductedpowerfor802.15.4traffic.
+NoteIfoperatingonchannel26(CH=0x1A),outputpowerwillbecappedandcannotexceed8
+dBmregardlessofthePLsetting.
+Parameterrange
+0-4
+| Parameter | XBeenon-PRO | XBee3PRO |
+| --------- | ----------- | -------- |
+| 0         | -5dBm       | -5dBm    |
+| 1         | -1dBm       | +3dBm    |
+| 2         | +2dBm       | +8dBm    |
+| 3         | +5dBm       | +15dBm   |
+| 4         | +8dBm       | +19dBm   |
+Default
+4
+| PP (Output | Power | in dBm) |
+| ---------- | ----- | ------- |
+Displaytheoperatingoutputpowerbasedonthecurrentconfiguration(channelandPLsetting).
+ThevaluesreturnedareindBm,withnegativevaluesrepresentedintwo'scomplement;for
+example:
+-5 dBm=0xFB.
+Parameterrange
+0-0xFF[read-only]
+Default
+N/A
+| CA (CCA | Threshold) |     |
+| ------- | ---------- | --- |
+DefinestheClearChannelAssessment(CCA)threshold.Priortotransmittingapacket,thedevice
+performsaCCAtodetectenergyonthechannel.IfthedevicedetectsenergyabovetheCCA
+threshold,itwillnottransmitthepacket.
+TheCAparameterismeasuredinunitsof-dBm.TheCCAthresholdissetupondevice
+initialization,anychangetotheCCAthresholdmustbewrittentoflashwiththeWRcommandand
+themodulereset(powercycleorFRcommand)beforethenewthresholdisobserved.
+YoucansetCAto0todisableCCA;thiscanimprovelatencybutmaycauseinterferencewith
+other2.4GHzdeviceswhentransmitting.
+DigiXBee®3802.15.4RFModuleUserGuide 166
+
+ATcommands MACdiagnosticscommands
+Parameterrange
+0(disabled),0x28-0x64(-dBm)
+Default
+0x41
+RN (Random Delay Slots)
+Definestheminimumvalueoftheback-offexponentintheCSMA-CAalgorithm.TheCarrierSense
+MultipleAccess-CollisionAvoidance(CSMA-CA)algorithmwasengineeredforcollision
+avoidance(randomdelaysareinsertedtopreventdatalosscausedbydatacollisions.
+UnlikeCSMA-CD,whichreactstonetworktransmissionsaftercollisionshavebeendetected,
+CSMA-CAactstopreventdatacollisionsbeforetheyoccur.Assoonasadevicereceivesapacket
+thatistobetransmitted,itchecksifthechannelisclear(nootherdeviceistransmitting).Ifthe
+channelisclear,thepacketissentover-the-air.Ifthechannelisnotclear,thedevicewaitsfora
+randomlyselectedperiodoftime,thenchecksagaintoseeifthechannelisclear.Afteratime,the
+processendsandthedataislost.
+Parameterrange
+0-5(exponent)
+Default
+0
+MAC diagnostics commands
+ThefollowingcommandsprovideMediaAccessControldiagnosticinformation.
+DB (Last Packet RSSI)
+ReportstheRSSIin-dBmofthelastreceivedRFdatapacket.DBreturnsahexadecimalvaluefor
+the-dBmmeasurement.
+Forexample,ifDBreturns0x60,thentheRSSIofthelastpacketreceivedwas-96dBm.
+DBonlyindicatesthesignalstrengthofthelasthop.Itdoesnotprovideanaccuratequality
+measurementforamultihoplink.
+IftheXBee3802.15.4RFModulehasbeenresetandhasnotyetreceivedapacket,DBreports0.
+Thisvalueisvolatile(thevaluedoesnotpersistinthedevice'smemoryafterapower-up
+sequence).
+Parameterrange
+0-0xFF[read-only]
+Default
+N/A
+EA (ACK Failures)
+ThenumberofunicasttransmissionsthattimeoutawaitingaMACACK.ThiscanbeuptoRR+1
+timeoutsperunicastwhenRR>0.
+DigiXBee®3802.15.4RFModuleUserGuide 167
+
+ATcommands Sleepsettingscommands
+ThiscountincrementswheneveraMACACKtimeoutoccursonaMAC-levelunicast.Whenthe
+numberreaches0xFFFF,thefirmwaredoesnotcountfurtherevents.
+Toresetthecountertoany16-bitunsignedvalue,appendahexadecimalparametertothe
+command.
+Thisvalueisvolatile(thevaluedoesnotpersistinthedevice'smemoryafterapower-up
+sequence).
+Parameterrange
+0-0xFFFF
+Default
+0x0
+EC (CCA Failures)
+SetsordisplaysthenumberofframesthatwereblockedandnotsentduetoCCAfailuresor
+receptionsinprogress.IfCCAisdisabled(CAis0),thenthiscountonlyincrementsforframesthat
+areblockedduetoreceiveinprogress.Whenthiscountreachesitsmaximumvalueof0xFFFF,it
+stopscounting.
+YoucanresetECto0(oranyothervalue)atanytimetomakeiteasiertotrackerrors.Thisvalueis
+volatile(thevaluedoesnotpersistinthedevice'smemoryafterapower-upsequence).
+Parameterrange
+0-0xFFFF
+Default
+0x0
+ED (Energy Detect)
+Startsanenergydetectscan.Thedeviceloopsthroughalltheavailablechannelsandreturnsthe
+maximalenergyoneachchannel,acommafollowseachvalue,andthelistendswithacarriage
+return.ThevaluesreturnedreflecttheenergylevelthatEDdetectsin-dBmunits.
+EDacceptsaparametervaluebutitwillnotaffectthescandurationorresults.
+EDcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy(LE).
+Parameterrange
+0-0xFF
+Default
+N/A
+Sleep settings commands
+Thefollowingcommandsenableandconfigurethelowpowersleepmodesofthedevice.
+SM (Sleep Mode)
+Setsordisplaysthesleepmodeofthedevice.
+DigiXBee®3802.15.4RFModuleUserGuide 168
+
+ATcommands Sleepsettingscommands
+Bydefault,SleepModesaredisabled(SM=0)andthedeviceremainsinIdle/Receivemode.
+Wheninthisstate,thedeviceisconstantlyreadytorespondtoeitherserialorRFactivity.
+WhenoperatinginPinSleep(SM=1),D8(DIO8/DTR/SLP_RequestConfiguration)mustbesetas
+aperipheral(D8=1)inorderforthedevicetosleep.
+Parameterrange
+0-5
+Parameter Description
+0 Nosleep(disabled)
+1 Pinsleep
+2 Reserved
+3 Reserved
+4 CyclicSleepRemote
+5 CyclicSleepRemotewithpinwakeup
+6 MicroPythonsleep(withoptionalpinwake).ForcompletedetailsseetheDigi
+MicroPythonProgrammingGuide.
+Default
+0
+SP (Cyclic Sleep Period)
+Setsandreadsthedurationoftimethataremotedevicesleeps.Afterthecyclicsleepperiodis
+over,thedevicewakesandchecksfordata.Ifdataisnotpresent,thedevicegoesbacktosleep.
+Themaximumsleepperiodis4hours(SP=0x15F900).
+TheSPparameterisonlyvalidifyouconfiguretheenddevicetooperateinCyclicSleep(SM=4-
+5).CoordinatorandEndDeviceSPvaluesshouldalwaysbeequal.
+Tosenddirectmessagesonacoordinator,setSP=0.Ifthedeviceisacoordinator(CE(Device
+Role)=1)andSPisnot0,thedevicesendsalltransmissionsindirectly,meaningenddeviceshave
+topollthecoordinatortoreceivedata—FP(ForcePoll)orusingcyclicsleep.
+EndDevice:SPdeterminesthesleepperiodforcyclicsleepingremotes.Themaximumsleep
+periodis4hours(0x15F900).
+Coordinator:Ifnon-zero,SPdeterminesthetimetoholdanindirectmessagebeforediscardingit.
+ACoordinatordiscardsindirectmessagesafteraperiodof(2.5*SP,or65seconds,whicheveris
+smaller).
+Parameterrange
+0x0-0x15F900(x10ms)(4hours)
+Default
+0x0
+DigiXBee®3802.15.4RFModuleUserGuide 169
+
+ATcommands Sleepsettingscommands
+ST (Cyclic Sleep Wake Time)
+TheSTparameterisonlyvalidforenddevicesconfiguredwithCyclicSleepsettings(SM=4-5)
+andforcoordinators.UponwakingthedevicepollsforqueuedindirectmessagesandUARTdata.
+Ifitdoesnotdetectactivity,thedeviceimmediatelysleeps.ThedeviceonlystaysawakeforST
+timeifRForUARTactivityisdetecteduponwakeuporbit8ofSO(SleepOptions)issetto1.
+CoordinatorandEndDeviceSTvaluesmustbeequal.
+Parameterrange
+0x1-0x36EE80(x1ms)(1hour)
+Default
+0x7D0(2seconds)
+DP (Disassociated Cyclic Sleep Period)
+SetsordisplaysthesleepperiodforcyclicsleepingremotesthatareconfiguredforAssociationbut
+thatarenotassociatedtoaCoordinator.Forexample,ifadeviceisconfiguredtoassociateandis
+configuredasaCyclicSleepremote,butdoesnotfindaCoordinator,itsleepsforDPtimebefore
+reattemptingassociation.
+Parameterrange
+1-0x15F900(x10ms)
+Default
+0x3E8(10seconds)
+SN (Number of Sleep Periods)
+Setorreadthenumberofsleepperiodsvalue.Thiscommandcontrolsthenumberofsleepperiods
+thatmustelapsebetweenassertionsoftheON_SLEEPlineduringthewaketimeifnoRFdatais
+waitingfortheenddevice.Thiscommandallowsahostapplicationtosleepforanextendedtimeif
+noRFdataispresent.
+Parameterrange
+1-0xFFFF
+Default
+1
+SO (Sleep Options)
+AbitfieldthatcontainsadvancedsleepoptionsthatdonothavededicatedATcommands.
+Parameterrange
+0-0x103
+Bitfield:
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+DigiXBee®3802.15.4RFModuleUserGuide 170
+
+ATcommands MicroPythoncommands
+| Bit Setting | Meaning | Description |
+| ----------- | ------- | ----------- |
+0 0 Normal Adeviceconfiguredforcyclicsleepwillpollfordataonwaking
+operations
+1 Disable Adeviceconfiguredforcyclicsleepwillnotpollfordataon
+|     | wakeuppoll | waking                                           |
+| --- | ---------- | ------------------------------------------------ |
+| 1 0 | Normal     | AdeviceconfiguredinasleepmodewithADC/DIOsampling |
+|     | operations | enabledwillautomaticallyperformasamplingonwakeup |
+| 1   | Suppress   | AdeviceconfiguredinasleepmodewithADC/DIOsampling |
+|     | sampleon   | enabledwillnotautomaticallysampleonwakeup        |
+wakeup
+8 0 Normal Adeviceconfiguredforcyclicsleepwillwakeonlymomentarily
+|     | operations | aftertheexpirationofSP |
+| --- | ---------- | ---------------------- |
+1 Alwayswake Adeviceconfiguredforcyclicsleepwillalwaysremainawake
+|     | forST time | forSTtimebeforereturningtosleep |
+| --- | ---------- | ------------------------------- |
+Default
+0
+| FP (Force | Poll) |     |
+| --------- | ----- | --- |
+TheFPcommandisdeferreduntilchangesareapplied.Thispreventsindirectmessagesfrom
+arrivingattheenddevicewhileitisoperatinginCommandmode.
+Parameterrange
+N/A
+Default
+N/A
+MicroPython commands
+ThefollowingcommandsrelatetousingMicroPythonontheXBee3802.15.4RFModule.
+| PS (Python | Startup) |     |
+| ---------- | -------- | --- |
+SetswhetherornottheXBee3802.15.4RFModulerunsthestoredPythoncodeatstartup.
+Range
+0-1
+| Parameter | Description                        |     |
+| --------- | ---------------------------------- | --- |
+| 0         | DonotrunstoredPythoncodeatstartup. |     |
+| 1         | RunstoredPythoncodeatstartup.      |     |
+DigiXBee®3802.15.4RFModuleUserGuide 171
+
+ATcommands FileSystemcommands
+Default
+0
+PY (MicroPython Command)
+InteractwiththeXBee3802.15.4RFModuleusingMicroPython.PYisacommandwithsub-
+commands.Thesesub-commandsareargumentstoPY.
+PYB(BundledCodeReport)
+Youcanstorecompiledcodeinflashusingtheos.bundle()functionintheMicroPythonREPL;
+refertotheDigiMicroPythonProgrammingGuide.ThePYBsub-commandreportsdetailsofthe
+bundledcode.InCommandmode,itreturnstwolinesoftext,forexample:
+bytecode:619bytes(hash=0x0900DBCE)
+compiled:2017-05-09T15:49:44
+Themessagesare:
+n bytecode:thesizeofbytecodestoredinflashandits32-bithash.Asizeof0indicatesthat
+thereisnostoredcode.
+n compiled:acompilationtimestamp.Atimestampof2000-01-01T00:00:00indicatesthat
+theclockwasnotsetduringcompilation.
+InAPImode,PYBreturnsthree32-bitbig-endianvalues:
+n bytecodesize
+n bytecodehash
+n timestampassecondssince2000-01-01T00:00:00
+PYE(EraseBundledCode)
+PYEinterruptsanyrunningcode,erasesanybundledcodeandthendoesasoft-rebootonthe
+MicroPythonsubsystem.
+PYV(VersionReport)
+ReporttheMicroPythonversion.
+PY^(InterruptProgram)
+SendsKeyboardInterrupttoMicroPython.ThisisusefulifthereisarunawayMicroPython
+programandyouhavefilledthestdinbuffer.YoucanenterCommandmode(+++)andsend
+ATPY^tointerrupttheprogram.
+Default
+N/A
+File System commands
+Toaccessthefilesystem,enterCommandmodeandusethefollowingcommands.Allcommands
+blocktheATcommandprocessoruntilcompletedandonlyworkfromCommandmode;theyare
+notvalidforAPImodeorMicroPython'sxbee.atcmd()method.Commandsarecase-insensitiveas
+arefileanddirectorynames.Optionalparametersareshowninsquarebrackets([]).
+DigiXBee®3802.15.4RFModuleUserGuide 172
+
+ATcommands FileSystemcommands
+FS (File System)
+FSisacommandwithsub-commands.Thesesub-commandsareargumentstoFS.
+Errorresponses
+Ifacommandsucceedsitreturnsinformationsuchasthenameofthecurrentworkingdirectoryor
+alistoffiles,orOKifthereisnoinformationtoreport.Ifitfails,youseeadetailederrormessage
+insteadofthetypicalERRORresponseforafailingATcommand.Theresponseisanamederror
+codeandatextualdescriptionoftheerror.
+NoteTheexactcontentoferrormessagesmaychangeinthefuture.Allerrorsstartwithaupper
+caseE,followedbyoneormoreuppercaselettersanddigits,aspace,andandescriptionofthe
+error.IfwritingyourownATcommandparsingcode,youcandetermineifanFScommand
+responseisanerrorbycheckingifthefirstletteroftheresponseisuppercaseE.
+FS(FileSystem)
+Whensentwithoutanyparameters,FSprintsalistofsupportedcommands.
+FSPWD
+Printsthecurrentworkingdirectory,whichalwaysstartswith/anddefaultsto/flashatstartup.
+FSCDdirectory
+Changesthecurrentworkingdirectorytodirectory.Printsthecurrentworkingdirectoryoranerror
+ifunabletochangetodirectory.
+FSMDdirectory
+Createsthedirectorydirectory.PrintsOKifsuccessfuloranerrorifunabletocreatetherequested
+directory.
+FSLS[directory]
+Listsfilesanddirectoriesinthespecifieddirectory.Thedirectoryparameterisoptionaland
+defaultstoaperiod(.),whichrepresentsthecurrentdirectory.Thelistendswithablankline.
+Entriesstartwithzeroormorespaces,followedbyfilesizeorthestring<DIR>fordirectories,then
+asinglespacecharacterandthenameoftheentry.Directorynamesendwithaforwardslash(/)to
+differentiatethemfromfiles.
+<DIR>./
+<DIR>../
+<DIR>lib/
+32test.txt
+FSPUTfilename
+StartsaYMODEMreceiveontheXBee3802.15.4RFModule,storingthereceivedfiletofilename
+andignoringthefilenamethatappearsinblock0oftheYMODEMtransfer.TheXBee3802.15.4
+RFModulesendsaprompt(ReceivingfilewithYMODEM...)whenitisreadytoreceive,atwhich
+pointyoushouldinitiateaYMODEMsendinyourterminalemulator.
+Ifthecommandisincorrect,thereplywillbeanerrorasdescribedinErrorresponses.
+FSHASHfilename
+PrintaSHA-256hashofafiletoallowforverificationagainstalocalcopyofthefile.OnWindows,
+youcangenerateaSHA-256hashofafilewiththecommandcertutil-hashfiletest.txtSHA256.
+DigiXBee®3802.15.4RFModuleUserGuide 173
+
+ATcommands FileSystemcommands
+OnMacandLinuxuseshasum-b-a256test.txt.
+FSGETfilename
+StartsaYMODEMsendoffilenameontheXBeedevice.Whenitisreadytosend,theXBee3
+802.15.4RFModulesendsaprompt:(SendingfilewithYMODEM...).Whenthepromptissent,
+youshouldinitiateaYMODEMreceiveinyourterminalemulator.
+Ifthecommandisincorrect,thereplywillbeanerrorasdescribedinErrorresponses.
+FSRMfile_or_directory
+Removesthefileoremptydirectoryspecifiedbyfile_or_directory.Thiscommandfailswithan
+erroriffile_or_directorydoesnotexist,isnotempty,referstothecurrentworkingdirectoryorone
+ofitsparents.
+NoteRemovingafileonlyreclaimsspaceifthefileremovedisplacedlastinthefilesystem.
+Deleteddatathatiscontiguouswiththelastdeletedfileisalsoreclaimed.Directoriesareonly
+reclaimedifalldirectoriesinthatparticularblockofmemoryaredeletedandfoundattheendofthe
+filesystem.UsetheATFSINFOFULLcommandtoseewhereinthefilesystemfilesand
+directoriesareplaced.
+FSINFO
+Reportonthesizeofthefilesystem,showingbytesinuse,available,markedbadandtotal.The
+reportendswithablankline,aswithmostmulti-lineATcommandoutput.Exampleoutput:
+204800used
+695296free
+0bad
+900096total
+FSINFOFULL
+Reportseveryfileanddirectoryintheordertheyareplacedinthefilesystemalongwiththe
+amountofspacetheytakeupindividually.Alsoreportsdeletedspaceaswellasunuseddirectory
+slots.Exampleoutput:
+128/flash./
+128/flash/lib./
+128/flash/directory./
+1664[unuseddirslot(s)]
+2048/flash/file1.txt.
+2048[deletedspace]
+2048/flash/directory/file2.txt
+FSFORMATconfirm
+Formatsthefilesystem,leavingitwithadefaultdirectorystructure.Passthewordconfirmasthe
+firstparametertoconfirmtheformat.TheXBee3802.15.4RFModulerespondswithFormatting...
+whentheformatstarts,andwillprintOKfollowedbyacarriagereturnwhenitfinishes.
+FK (File System Public Key)
+Configuresthedevice'sFileSystemPublicKey(all65-bytesmustbeentered,includingany
+leadingzeros).
+YoumustsetFKlocallyviaCommandModeor0x08or0x09APIframes.Youcannotsetthepublic
+keyremotely.
+DigiXBee®3802.15.4RFModuleUserGuide 174
+
+ATcommands Bluetooth®LowEnergycommands
+The65-bytepublickeyisrequiredtoverifythatthefilesystemthatisdownloadedover-the-airisa
+validXBee3filesystemcompatiblewiththe802.15.4firmware.
+Forfurtherinformation,refertoSetthepublickeyontheXBeedevice.
+Parameterrange
+Avalid65-byteECDSApublickey—all65-bytesmustbeentered,includinganyleadingzeros.
+Otheracceptedparameters:
+0=Clearthepublickey
+1=Returnstheupper48bytesofthepublickey
+2=Returnsthelower17bytesofthepublickey
+Default
+0
+NoteTheDefaultvalueof0indicatesthatnopublickeyhasbeensetandhence,allfilesystem
+updateswillberejected.
+Bluetooth® Low Energy commands
+ThefollowingATcommandsareBluetoothLowEnergy(LE) commands.
+BT (Bluetooth® Enable)
+BTenablesordisablestheBluetooth®functionality.
+NoteWhenBluetoothisenabled,theXBee3802.15.4RFModulecannotbeinSleepmode.Ifthe
+deviceisconfiguredtoallowSleepmodeandyouenableBluetooth,theXBee3802.15.4RF
+Modulewillnotentersleep.
+WARNING!RFdatalossmaybeencounteredwhenBluetoothLowEnergy(LE) is
+enabledduetothePHYswitchingbetweenRFandBluetoothLE.Wehighly
+recommendedthatyouenableretriesandmulti-transmit—viatheRRandMT
+commands—whenBluetoothLEisenabled.
+Parameterrange
+Parameter Description
+0 Bluetoothfunctionalityisdisabled.
+1 Bluetoothfunctionalityisenabled.
+Default
+0
+DigiXBee®3802.15.4RFModuleUserGuide 175
+
+ATcommands Bluetooth®LowEnergycommands
+BL (Bluetooth® MAC Address)
+BLreportstheEUI-48Bluetooth®deviceaddress.DuetostandardXBeeATCommand
+processing,leadingzeroesarenotincludedintheresponsewheninCommandmode.
+Parameterrange
+N/A
+Default
+N/A
+BI (Bluetooth® Identifier)
+Ahuman-friendlynameforthedevice.ThisisthenamethatwillappearinBluetoothadvertisement
+messages.
+Ifsettodefault(ASCIIspacecharacter),theBluetoothindicatorwilldisplayasXBee3802.15.4.
+IfusingXBeeMobile,adjustmentstothefilteroptionswillbeneededifthisvalueispopulated.
+Parameterrange
+Astringofcase-sensitiveASCIIprintablecharactersfrom1to22bytesinlength.
+Default
+0x20(anASCIIspacecharacter)
+BP (Bluetooth® Power)
+SetsthepowerlevelforBluetoothAdvertisements.AllotherBluetoothLowEnergy
+(LE) transmissionsaresentat8dBm.
+Parameterrange
+Parameter Description
+0 -20dBm
+1 -10dBm
+2 0dBm
+3 8dBm
+Default
+3=8dBm
+$S (SRP Salt)
+NoteYoushouldonlyusethiscommandifyouhavealreadyconfiguredapasswordontheXBee
+deviceandthesaltcorrespondstothepassword.
+TheSecureRemotePassword(SRP) Saltisa32-bitnumberusedtocreateanencrypted
+passwordfortheXBee3802.15.4RFModule.Usethe$Scommandinconjunctionwiththe$V,
+DigiXBee®3802.15.4RFModuleUserGuide 176
+
+ATcommands APIconfigurationcommmands
+$W,$X,and$Yverifiers.Together,thecommandandtheverifiersauthenticatetheclientforthe
+Bluetooth®LowEnergy(LE) APIServicewithoutstoringtheXBeepasswordontheXBee3
+802.15.4RFModule.
+Configurethesaltinthe$Scommand.Inthe$V,$W,$X,and$Yverifiers,youspecifythe128-
+byteverifiervalue,whereeachcommandrepresents32bytesofthetotal128-byteverifiervalue.
+NoteTheXBee3802.15.4RFModuledoesnotallowfor0tobevalidsalt.Ifthevalueis0,SRPis
+disabledandyouarenotabletoauthenticateusingBluetooth.
+Parameterrange
+0-FFFFFFFF
+Default
+0
+$V, $W, $X, $Y commands (SRP Salt verifier)
+Usethe$V,$W,$X,and$Yverifiersinconjunctionwith$S(SRPSalt)tocreateanencrypted
+passwordfortheXBee3802.15.4RFModule.Together,$Sandtheverifiersauthenticatethe
+clientfortheBluetooth®LowEnergy(LE) APIServicewithoutstoringtheXBeepasswordonthe
+XBeedevice.
+Configurethesaltwiththe$Scommand.Inthe$V,$W,$X,and$Yverifiers,youspecifythe128-
+byteverifiervalue,whereeachcommandrepresents32bytesofthetotal128-byteverifiervalue.
+Parameterrange
+0-FFFFFFFF
+Default
+0
+API configuration commmands
+ThefollowingcommandsaffecthowAPImodeoperates.
+AP (API Enable)
+SetorreadtheAPImodesetting.ThedevicecanformattheRFpacketsitreceivesintoAPIframes
+andsendsthemouttheserialport.
+WhenyouenableAPI,youmustformattheserialdataasAPIframesbecauseTransparent
+operatingmodeisdisabled.
+Parameterrange
+0-4
+Parameter Description
+0 APIdisabled(operateinTransparentmode)
+1 APIenabled
+DigiXBee®3802.15.4RFModuleUserGuide 177
+
+ATcommands APIconfigurationcommmands
+Parameter Description
+2 APIenabled(withescapedcontrolcharacters)
+4 APIenabled(operateinMicropythonmode)
+Default
+0
+AO (API Output Options)
+ConfiguretheserialoutputandlegacyI/OsamplingoptionsforreceivedAPIframes.This
+parameterisonlyapplicablewhenthedeviceisoperatinginAPImode(AP=1or2).AOalso
+affectshowI/Osamplesaregatheredandtransmitted.FordetailedinformationonhowI/O
+samplingishandled,seeLegacysupport.
+Fornewdesigns,werecommendAO=0.ThisprovidesAPIcompatibilitywithDigiMeshand
+Zigbeeapplicationsandallowsforall15I/Olinestobesampled(D0throughP4).Incomingserial
+datapacketswillbeemittedasTransmitRequest-0x10.AlloutgoingI/Osampleswillbesentas
+I/OSampleIndicator -0x92.
+WhenAOissetto2,I/Osamplesaretransmittedinalegacyformatthatarecompatiblewithlegacy
+S1andS2C802.15.4XBeedevcies.Asaresult,only9I/Olinesareavailable(D0throughD8)for
+sampling.Incomingdatapacketswillbeemittedaseither0x81or0x82framesdependingonthe
+addressingschemeofthesender.AlloutgoingI/Osampleswillbesentas0x82or0x83frames
+dependingontheaddressingschemeofthesender.
+Parameterrange
+0-2
+Parameter Description
+0 APIRxIndicator-0x90,thisisforstandarddataframes.
+1 APIExplicitRxIndicator-0x91,thisisforExplicitAddressingdataframes.
+2 Legacy802.15.4APIIndicator-0x80/0x81.AlsorestrictstheDigitalInput
+samplingtoD0throughD8andallowsforOTAcompatibilitywithlegacyS1and
+S2Cdevices.
+Default
+2
+AZ (Extended API Options)
+OptionallyoutputadditionalZCLmessagesthatwouldnormallybemaskedbytheXBee
+application.
+UsethiswhendebuggingFOTAupdatesbyenablingclient-sidemessagestobesentoutofthe
+serialport.
+Thebitsinthisparameterareusedtoenabledifferentkindsofnormally-suppressedoutput:
+Parameterrange
+0x00-0x0A(bitfield)
+DigiXBee®3802.15.4RFModuleUserGuide 178
+
+ATcommands UARTinterfacecommands
+Unusedbitsmustbesetto0.ThesebitsmaybelogicallyOR'edtogether:
+Bit Description
+0 Reserved
+1 OutputreceiveframesforFOTAupdatecommands
+2 Reserved
+3 OutputExtendedModemStatus(0x98)framesinsteadofModemStatus(0x8A)frames
+whenaSecureSessionstatuschangeoccurs
+Default
+0
+UART interface commands
+ThefollowingcommandsaffecttheUARTserialinterface.
+BD (UART Baud Rate)
+ThiscommandconfigurestheserialinterfacebaudrateforcommunicationbetweentheUARTport
+ofthedeviceandthehost.
+Thedeviceinterpretsanyvaluebetween0x12Cand0x0EC400asacustombaudrate.Custom
+baudratesarenotguaranteedandthedeviceattemptstofindtheclosestachievablebaudrate.
+Aftersettinganon-standardbaudrate,queryBDtofindtheactualoperatingbaudratebefore
+applyingchanges.
+Parameterrange
+Standardbaudrates:0x0-0x0A
+Non-standardbaudrates:0x12C-0x0EC400
+NoteForfirmwareversionspriorto0x2015,theminimumnon-standardbaudrateis1200(0x4B0).
+Inversion0x2015andbeyond,theminimumnon-standardbaudrateis300(0x12C).
+Parameter Description
+0x0 1200b/s
+0x1 2400b/s
+0x2 4800b/s
+0x3 9600b/s
+0x4 19200b/s
+0x5 38400b/s
+0x6 57600b/s
+DigiXBee®3802.15.4RFModuleUserGuide 179
+
+ATcommands UARTinterfacecommands
+Parameter Description
+0x7 115200b/s
+0x8 230,400b/s
+0x9 460,800b/s
+0xA 921,600b/s
+Default
+3(9600baud)
+NB (Parity)
+SetorreadtheserialparitysettingsforUARTcommunications.
+Thedevicedoesnotactuallycalculateandchecktheparity.Itonlyinterfaceswithdevicesatthe
+configuredparityandstopbitsettingsforserialerrordetection.
+Parameterrange
+0-2
+| Parameter |     | Description |
+| --------- | --- | ----------- |
+| 0         |     | Noparity    |
+| 1         |     | Evenparity  |
+| 2         |     | Oddparity   |
+Default
+0
+| SB (Stop | Bits) |     |
+| -------- | ----- | --- |
+SetsordisplaysthenumberofstopbitsforUARTcommunications.
+Parameterrange
+0-1
+| Parameter |     | Description |
+| --------- | --- | ----------- |
+| 0         |     | Onestopbit  |
+| 1         |     | Twostopbits |
+Default
+0
+| FT (Flow | Control | Threshold) |
+| -------- | ------- | ---------- |
+Setordisplaytheflowcontrolthreshold.
+DigiXBee®3802.15.4RFModuleUserGuide 180
+
+ATcommands ATCommandoptions
+Thedevicede-assertsCTSwhenFTbytesareintheUARTreceivebuffer.Itre-assertsCTSwhen
+somewhatlessthanFTbytesareintheUARTreceivebuffer."Somewhatlessthan"allowsfor
+hysteresissothatCTSisnottogglingrapidlywhenclosetoFTbytesareintheUARTreceive
+buffer.
+Parameterrange
+0x20-0x1B0bytes
+Default
+0x158
+RO (Packetization Timeout)
+Setorreadthenumberofcharactertimesofinter-charactersilencerequiredbeforetransmission
+beginswhenoperatinginTransparentmode.A“charactertime”istheamountoftimeittakesto
+sendasingleASCIIcharacterattheoperatingbaudrate(BD).
+SetROto0totransmitcharactersastheyarriveinsteadofbufferingthemintooneRFpacket.
+TheROcommandonlyappliestoTransparentmode,itdoesnotapplytoAPImode.
+Parameterrange
+0-0xFF(xcharactertimes)
+Default
+3
+AT Command options
+ThefollowingcommandsaffecthowCommandmodeoperates.
+CC (Command Character)
+SetsordisplaysthecharactervalueusedtobreakfromdatamodetoCommandmode.The
+commandcharactermustbesentthreetimesinsuccessionwhileobservingtheminimumguard
+time(GT)ofsilencebeforeandafterthissequence.
+Thedefaultvalue(0x2B)istheASCIIcodefortheplus(+)character.Youmustenteritthreetimes
+withintheguardtimetoenterCommandmode.ToenterCommandmode,thereisalsoarequired
+periodofsilencebeforeandafterthecommandsequencecharactersoftheCommandmode
+sequence(GT+CC+GT).TheperiodofsilencepreventsinadvertentlyenteringCommandmode.
+Formoreinformation,seeEnterCommandmode.
+Parameterrange
+0-0xFF
+Recommended:0x20-0x7F(ASCII)
+Default
+0x2B(theASCIIpluscharacter: +)
+DigiXBee®3802.15.4RFModuleUserGuide 181
+
+ATcommands UARTpinconfigurationcommands
+CT (Command Mode Timeout)
+SetsordisplaystheCommandmodetimeoutparameter.IfthelocaldeviceentersCommandmode
+anddoesnotreceiveanyvalidATcommandswithinthistimeperiod,Commandmodesilently
+exits.
+Parameterrange
+2-0x1770(x100ms)
+Default
+0x64(10seconds)
+GT (Guard Times)
+Settherequiredperiodofsilencebeforeandafterthecommandsequencecharactersofthe
+Commandmodesequence,GT+CC+GT.Theperiodofsilencepreventsinadvertentlyentering
+CommandmodeifadatastreaminTransparentmodeincludestheCCcharacter.Formore
+information,seeEnterCommandmode.
+Parameterrange
+0x2-0x6D3(x1ms)
+Default
+0x3E8(onesecond)
+CN (Exit Command mode)
+Executablecommand.CNimmediatelyexitsCommandmodeandappliespendingchanges.
+Parameterrange
+N/A
+Default
+N/A
+UART pin configuration commands
+ThefollowingcommandsarerelatedtopinconfigurationfortheUARTinterface.
+D6 (DIO6/RTS Configuration)
+SetsordisplaystheDIO6/RTSconfiguration.
+Parameterrange
+0,1,3-5
+Parameter Description
+0 Disabled
+DigiXBee®3802.15.4RFModuleUserGuide 182
+
+ATcommands UARTpinconfigurationcommands
+Parameter Description
+1 RTSflowcontrol
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+D7 (DIO7/CTS Configuration)
+SetsordisplaystheDIO7/CTSconfiguration.
+Parameterrange
+0,1,3-7
+Parameter Description
+0 Disabled
+1 CTS flowcontrol
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+6 RS-485enable,lowTx(0Vontransmit,highwhenidle)
+7 RS-485enable,highTx(highontransmit,0Vwhenidle)
+Default
+1
+P3 (DIO13/UART_DOUT Configuration)
+SetsordisplaystheDIO13/UART_DOUTconfiguration.
+Parameterrange
+0,1,3-5
+Parameter Description
+0 Disabled
+DigiXBee®3802.15.4RFModuleUserGuide 183
+
+ATcommands SMT/MMTSPIinterfacecommands
+Parameter Description
+1 UARTDOUT
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P4 (DIO14/UART_DIN Configuration)
+SetsordisplaystheDIO14/UART_DINconfiguration.
+Parameterrange
+0,1,3-5
+Parameter Description
+0 Disabled
+1 UARTDIN
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+SMT/MMT SPI interface commands
+ThefollowingcommandsaffecttheSPIserialinterfaceonSMTandMMTvariants.These
+commandsarenotapplicabletothethrough-holevariantoftheXBee3;seeD1throughD4andP2
+forthrough-holeSPIsupport.
+P5 (DIO15/SPI_MISO Configuration)
+SetsordisplaystheDIO15/SPI_MISOconfiguration.
+Thisonlyappliestosurface-mountandmicrodevices.
+Parameterrange
+0,1,4,5
+DigiXBee®3802.15.4RFModuleUserGuide 184
+
+ATcommands SMT/MMTSPIinterfacecommands
+Parameter Description
+0 Disabled
+1 SPI_MISO
+2 N/A
+3 N/A
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P6 (DIO16/SPI_MOSI Configuration)
+SetsordisplaystheDIO16/SPI_MOSIconfiguration.
+Thisonlyappliestosurface-mountandmicrodevices.
+Parameterrange
+0,1,4,5
+Parameter Description
+0 Disabled
+1 SPI_MOSI
+2 N/A
+3 N/A
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P7 (DIO17/SPI_SSEL Configuration)
+SetsordisplaystheDIO17/SPI_SSELconfiguration.
+Thisonlyappliestosurface-mountandmicrodevices.
+Parameterrange
+0,1,4,5
+DigiXBee®3802.15.4RFModuleUserGuide 185
+
+ATcommands SMT/MMTSPIinterfacecommands
+Parameter Description
+0 Disabled
+1 SPI_SSEL
+2 N/A
+3 N/A
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P8 (DIO18/SPI_CLK Configuration)
+SetsordisplaystheDIO18/SPI_CLKconfiguration.
+Thisonlyappliestosurface-mountandmicrodevices.
+Parameterrange
+0,1,4,5
+Parameter Description
+0 Disabled
+1 SPI_CLK
+2 N/A
+3 N/A
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P9 (DIO19/SPI_ATTN Configuration)
+SetsordisplaystheDIO19/SPI_ATTNconfiguration.
+Thisonlyappliestosurface-mountandmicrodevices.
+Parameterrange
+0,1,4,5
+DigiXBee®3802.15.4RFModuleUserGuide 186
+
+ATcommands I/Osettingscommands
+Parameter Description
+0 Disabled
+1 SPI_ATTN
+2 N/A
+3 N/A
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+I/O settings commands
+ThefollowingcommandsconfigurethevariousI/OlinesavailableontheXBee3802.15.4RF
+Module.
+NoteSeeDigitalI/OsupportforphysicalI/Opinmappingforthesupportedmoduleformfactors.
+D0 (DIO0/ADC0/Commissioning Configuration)
+SetsordisplaystheDIO0/ADC0/CBconfiguration.
+Parameterrange
+0-5
+Parameter Description
+0 Disabled
+1 CommissioningPushbutton
+2 ADC
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+CB (Commissioning Pushbutton)
+UseCBtosimulateCommissioningPushbuttonpressesinsoftware.
+YoucanenableaphysicalcommissioningpushbuttonwithD0(DIO0/ADC0/Commissioning
+Configuration).
+DigiXBee®3802.15.4RFModuleUserGuide 187
+
+ATcommands I/Osettingscommands
+Settheparametervaluetothenumberofbuttonpressesthatyouwanttosimulate.Forexample,
+sendCB1toperformtheactionofpressingtheCommissioningPushbuttononce.
+Parameterrange
+1,4
+Parameter Description
+1 Keepsdeviceawakefor30seconds.
+4 Restoredefaults(equivalenttosendinganRE(RestoreDefaults)).
+Default
+N/A
+D1 (DIO1/ADC1/TH_SPI_ATTN Configuration)
+SetsordisplaystheDIO1/ADC1/TH_SPI_ATTNconfiguration.
+Parameterrange
+SMT/MMT:0,2-5
+TH:0-5
+Parameter Description
+0 Disabled
+1 SPI_ATTNforthethrough-hole
+device
+N/Aforsurface-mountdevice
+2 ADC
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+D2 (DIO2/ADC2/TH_SPI_CLK Configuration)
+SetsordisplaystheDIO2/ADC2/TH_SPI_CLKconfiguration.
+Parameterrange
+SMT/MMT:0,2-5
+TH:0-5
+DigiXBee®3802.15.4RFModuleUserGuide 188
+
+ATcommands I/Osettingscommands
+Parameter Description
+0 Disabled
+1 SPI_CLK forthrough-holedevices
+N/Aforsurface-mountdevices
+2 ADC
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+D3 (DIO3/ADC3/TH_SPI_SSEL Configuration)
+SetsordisplaystheDIO3/ADC3/TH_SPI_SSELconfiguration.
+Parameterrange
+SMT/MMT:0,2-5
+TH:0-5
+Parameter Description
+0 Disabled
+1 SPI_SSELforthethrough-holedevice
+N/Aforsurface-mountdevice
+2 ADC
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+D4 (DIO4/TH_SPI_MOSI Configuration)
+SetsordisplaystheDIO4/TH_SPI_MOSIconfiguration.
+Parameterrange
+SMT/MMT:0,3-5
+TH:0,1,3-5
+DigiXBee®3802.15.4RFModuleUserGuide 189
+
+ATcommands I/Osettingscommands
+Parameter Description
+0 Disabled
+1 SPI_MOSIforthethrough-holedevice
+N/Aforthesurface-mountandmicrodevice
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+D5 (DIO5/Associate Configuration)
+SetsordisplaystheDIO5/ASSOCIATED_INDICATORconfiguration.
+Parameterrange
+0,1,3-5
+Parameter Description
+0 Disabled
+1 AssociateLEDindicator-blinkswhenassociated
+2 N/A
+3 Digitalinput
+4 Digitaloutput,defaultlow
+5 Digitaloutput,defaulthigh
+Default
+1
+D8 (DIO8/DTR/SLP_Request Configuration)
+SetsordisplaystheDIO8/DTR/SLP_RQconfiguration.
+NoteIfD8isconfiguredasDTR/Sleep_Request(1),thelinewillbeleftfloatingwhilethedevice
+sleeps.LeavingD8setto1andthecorrespondingpinnotconnectedtoanythingexternaltothe
+devicemayresultinhighersleepcurrentdraw.
+Parameterrange
+0,1,3-5
+DigiXBee®3802.15.4RFModuleUserGuide 190
+
+ATcommands I/Osettingscommands
+Parameter Description
+0 Disabled
+1 DTR/Sleep_Request(usedwithpinsleepandcyclicsleepwithpinwake)
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+D9 (DIO9/ON_SLEEP Configuration)
+SetsordisplaystheDIO9/ON_SLEEPconfiguration.
+Parameterrange
+0,1,3-5
+Parameter Description
+0 Disabled
+1 ON/SLEEPindicator
+2 N/A
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P0 (DIO10/RSSI/PWM0 Configuration)
+SetsordisplaystheDIO10/RSSI/PWM0configuration(Micropin7/SMTpin7/THpin6).
+WhenconfiguredasRSSIPWMoutput,thedeviceoutputsaPWMsignalwithadutycycle
+equivalenttothedBmofthereceivedpacket.
+UseRP(RSSIPWMTimer)toconfigurethetimeout.
+WhenconfiguredasPWMoutput(2):youcanuseM0toexplicitlycontrolthePWM0output.When
+usedwithAnalogI/Osupport,PWM0correspondswithADC0.
+Parameterrange
+0-5
+DigiXBee®3802.15.4RFModuleUserGuide 191
+
+ATcommands I/Osettingscommands
+Parameter Description
+0 Disabled
+1 RSSIPWMoutput
+2 PWM0output.M0(PWM0DutyCycle)orI/Olinepassingcontrolthevalue.
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+1
+P1 (DIO11/PWM1 Configuration)
+SetsordisplaystheDIO11/PWM1configuration(Micropin8/SMTpin8/THpin7).
+WhenconfiguredasPWMoutput(2):youcanuseM1toexplicitlycontrolthePWM1output.When
+usedwithAnaloglinepassing,PWMcorrespondswithADC1.
+Parameterrange
+0,2-5
+Parameter Description
+0 Disabled
+1 N/A
+2 PWM1output.M1(PWM1DutyCycle)orI/Olinepassingcontrolthevalue.
+3 Digitalinput
+4 Digitaloutput,low
+5 Digitaloutput,high
+Default
+0
+P2 (DIO12/TH_SPI_MISO Configuration)
+SetsordisplaystheDIO12/TH_SPI_MISOconfiguration.
+Parameterrange
+SMT/MMT:0,3-5
+TH:0,1,3-5
+DigiXBee®3802.15.4RFModuleUserGuide 192
+
+| ATcommands |                                  |     | I/Osettingscommands |
+| ---------- | -------------------------------- | --- | ------------------- |
+| Parameter  | Description                      |     |                     |
+| 0          | Disabled                         |     |                     |
+| 1          | SPI_MISOforthethrough-holedevice |     |                     |
+N/Aforthesurface-mountandmicrodevice
+| 2   | N/A                |     |     |
+| --- | ------------------ | --- | --- |
+| 3   | Digitalinput       |     |     |
+| 4   | Digitaloutput,low  |     |     |
+| 5   | Digitaloutput,high |     |     |
+Default
+0
+| PR (Pull-up/Down | Resistor | Enable) |     |
+| ---------------- | -------- | ------- | --- |
+Thebitfieldthatconfigurestheinternalpull-up/downresistorstatusfortheI/Olines.Internalpull-
+up/downresistorsarenotavailablefordigitaloutputpins,analoginputpins,orfordisabledpins.
+n IfyousetaPRbitto1,itenablesthepull-up/downresistor
+n IfyousetaPRbitto0,itspecifiesnointernalpull-up/downresistor.
+ThePD(PullDirection)parameterdeterminesthedirectionoftheinternalpull-up/downresistor.
+PRandPDonlyaffectlinesthatareconfiguredasdigitalinputs(3).
+Bydefault,pull-upresistorsareenabledonalldisabled(0)I/Olines.
+Thefollowingtabledefinesthebit-fieldmapforPRandPDcommands.
+| Bit I/Oline | Micropin | Surface-mountpin | Through-holepin |
+| ----------- | -------- | ---------------- | --------------- |
+| 0 DIO4      | 23       | 24               | 11              |
+| 1 DIO3      | 28       | 30               | 17              |
+| 2 DIO2      | 29       | 31               | 18              |
+| 3 DIO1      | 30       | 32               | 19              |
+| 4 DIO0      | 31       | 33               | 20              |
+| 5 DIO6      | 27       | 29               | 16              |
+| 6 DIO8      | 9        | 10               | 9               |
+| 7 DIO14     | 4        | 4                | 3               |
+| 8 DIO5      | 26       | 28               | 15              |
+| 9 DIO9      | 25       | 26               | 13              |
+| 10 DIO12    | 5        | 5                | 4               |
+| 11 DIO10    | 7        | 7                | 6               |
+DigiXBee®3802.15.4RFModuleUserGuide 193
+
+| ATcommands |         |          |                  | I/Osettingscommands |
+| ---------- | ------- | -------- | ---------------- | ------------------- |
+| Bit        | I/Oline | Micropin | Surface-mountpin | Through-holepin     |
+| 12         | DIO11   | 8        | 8                | 7                   |
+| 13         | DIO7    | 24       | 25               | 12                  |
+| 14         | DIO13   | 3        | 3                | 2                   |
+| 15         | DIO15   | 16       | 17               | N/A                 |
+| 16         | DIO16   | 15       | 16               | N/A                 |
+| 17         | DIO17   | 14       | 15               | N/A                 |
+| 18         | DIO18   | 13       | 14               | N/A                 |
+| 19         | DIO19   | 11       | 12               | N/A                 |
+Parameterrange
+Through-hole:0-0xFFFF
+SMT/MMT:0-0xFFFFF
+Default
+0xFFFF
+Example
+SendingthecommandATPR6Fturnbits0,1,2,3,5and6ON,andbits4and7OFF.Thebinary
+equivalentof0x6Fis01101111.Bit0istheright-mostdigitinthebinarybitfield.
+| PD (Pull | Up/Down | Direction) |     |     |
+| -------- | ------- | ---------- | --- | --- |
+Theresistorpulldirectionbitfield(1=pull-up,0=pull-down)forcorrespondingI/Olinesthatare
+setbythePRcommand.
+SeePR(Pull-up/DownResistorEnable)forthebitmappings.
+Parameterrange
+Through-hole:0-0xFFFF
+SMT/MMT:0-0xFFFFF
+Default
+0xFFFF
+| M0 (PWM0 | Duty | Cycle) |     |     |
+| -------- | ---- | ------ | --- | --- |
+ThedutycycleofthePWM0line.
+IfIA(I/OInputAddress)issetcorrectlyandP0(DIO10/RSSI/PWM0Configuration)isconfiguredas
+PWM0output,incomingAD0samplesautomaticallymodifythePWM0value.SeePT(PWM
+OutputTimeout).
+ToconfigurethedutycycleofPWM0:
+DigiXBee®3802.15.4RFModuleUserGuide 194
+
+ATcommands I/Osettingscommands
+1. EnablePWM0output(P0=2).
+2. ChangeM0tothedesiredvalue.
+3. Applysettings(useCNorAC).
+ThePWMperiodis64µsandthereare0x03FF(1023decimal)stepswithinthisperiod.WhenM0
+=0(0%PWM),0x01FF(50%PWM),0x03FF(100%PWM),andsoforth.
+Parameterrange
+0-0x3FF
+Default
+0
+M1 (PWM1 Duty Cycle)
+IfIA(I/OInputAddress)issetcorrectlyandP1(DIO11/PWM1Configuration)isconfiguredas
+PWM1output,incomingAD0samplesautomaticallymodifythePWM1value.SeePT(PWM
+OutputTimeout).
+ToconfigurethedutycycleofPWM1:
+1. EnablePWM1output(P1=2).
+2. ChangeM1tothedesiredvalue.
+3. Applysettings(useCNorAC).
+ThePWMperiodis64µsandthereare0x03FF(1023decimal)stepswithinthisperiod.WhenM0
+=0(0%PWM),0x01FF(50%PWM),0x03FF(100%PWM),andsoforth.
+Parameterrange
+0-0x3FF
+Default
+0
+RP (RSSI PWM Timer)
+ThePWMtimerexpirationin0.1seconds.RPsetsthedurationofpulsewidthmodulation(PWM)
+signaloutputontheRSSIpin.Thepinsignaldutycycleupdateswitheachreceivedpacketand
+shutsoffwhenthetimerexpires.ThiscommandisonlyapplicablewhenP0issetto1which
+enablesRSSIPWMoutput.
+WhenRP=0xFF,theoutputisalwayson.
+Parameterrange
+0-0xFF(x100ms),0xFF
+Default
+0x28(fourseconds)
+LT (Associate LED Blink Time)
+SetorreadtheAssociateLEDblinktime.IfyouuseD5(DIO5/AssociateConfiguration)toenable
+theAssociateLEDfunctionality(DIO5/Associatepin),thisvaluedeterminestheonandoffblink
+DigiXBee®3802.15.4RFModuleUserGuide 195
+
+ATcommands I/Osamplingcommands
+timesfortheLEDwhenthedevicehasjoinedthenetwork.
+IfLT=0,thedeviceusesthedefaultblinkrate:500msforasleepcoordinator,250msforallother
+nodes.
+Parameterrange
+0,0x14-0xFF(x10ms)
+Default
+0
+I/O sampling commands
+ThefollowingcommandsconfigureI/Osamplingonanoriginatingdevice.AnyI/Osample
+generatedbythisdeviceissenttotheaddressspecifiedbyDHandDL.Youmustconfigureat
+leastoneI/Olineasaninputoroutputforasampletobegenerated.
+IS (I/O Sample)
+ImmediatelyforcesanI/OsampletobegeneratedforthedigitalandanalogI/Olinesthatare
+configuredforthelocaldevice.Ifyouissuethecommandtothelocaldevice,thesampledatais
+sentoutthelocalserialinterface.Ifsentremotely,thesampleistakenonthedestinationandthe
+sampledataisreturnedasanLocalATCommandResponse-0x88.
+IfthedevicereceivesERRORasaresponsetoanISquery,therearenovalidI/Olinestosample.
+TheIScommandcannotbeissuedfromwithinMicroPythonoroverBluetooth®LowEnergy (LE).
+RefertoOn-demandsamplingformoreinformationonusingthiscommandandexamples.
+StandardI/Ocapability
+IfAO(APIOutputOptions)issetto2,theXBee3802.15.4RFModule'sISI/OoptionsareD0
+(DIO0/ADC0/CommissioningConfiguration)-D8(DIO8/DTR/SLP_RequestConfiguration)and
+fouranalogchannels:AD0/DIO0-AD3/DIO3.
+WhenoperatinginTransparentmode(AP (APIEnable)=0andAO(APIOutputOptions)=2),the
+dataisreturnedinthefollowingformat:
+AllbytesareconvertedtoASCII:
+numberofsamples<CR>
+AIO/DIOmask(Bits0-8aredigitalI/O;Bits9-12analogchannels)<CR>
+DIOdata<CR>(IfDIOlinesareenabled)
+ADCchannelData<CR>(ThiswillrepeatforeveryenabledADCchannel)
+<CR>(endofdatanotedbyextra<CR>)
+WhenoperatinginAPImode(AP=1),thecommandimmediatelyreturnsanOKresponse.The
+datafollowsinthenormalAPIformatforDIOdata.
+ExtendedI/Ocapability
+IfA0issetto0or1,theXBee3802.15.4RFModule'sISI/OoptionsareD0
+(DIO0/ADC0/CommissioningConfiguration)-D9(DIO9/ON_SLEEPConfiguration)andP0
+(DIO10/RSSI/PWM0Configuration)-P4(DIO14/UART_DINConfiguration)andfouranalog
+channelsAD0/DIO0-AD3/DIO3.
+WhenoperatinginTransparentmode(AP=0andAO=0,AO=1),thedataisreturnedinthe
+followingformat:
+DigiXBee®3802.15.4RFModuleUserGuide 196
+
+ATcommands I/Osamplingcommands
+AllbytesareconvertedtoASCII:
+numberofsamples<CR>
+DIOmask(Bits0-14aredigitalI/O<CR>
+AIOmask(Bits0-3areAnalogchannels<CR>
+DIOdata<CR>(IfDIOlinesareenabled)
+ADCchannelData<CR>(ThiswillrepeatforeveryenabledADCchannel)
+<CR>(endofdatanotedbyextra<CR>)
+WhenoperatinginAPImode(AP=1),thecommandimmediatelyreturnsanOKresponse.The
+datafollowsinthenormalAPIformatforDIOdata.
+Parameterrange
+N/A
+Default
+N/A
+IR (Sample Rate)
+SetorreadtheI/Osampleratetoenableperiodicsampling.Whenset,thisparametercausesthe
+devicetosampleallenabledDIOandADCataspecifiedinterval.
+Toenableperiodicsampling,setIRtoanon-zerovalue,andenabletheanalogordigitalI/O
+functionalityofatleastonedevicepin(seeD0(DIO0/ADC0/CommissioningConfiguration)-D8
+(DIO8/DTR/SLP_RequestConfiguration),P0(DIO10/RSSI/PWM0Configuration)-P2(DIO12/TH_
+SPI_MISOConfiguration).
+WARNING!IfyousetIRto1or2,thedevicewillnotkeepupandmanysampleswillbe
+lost.
+Parameterrange
+0-0xFFFF(x1ms)
+Default
+0
+IC (DIO Change Detect)
+SetorreadthedigitalI/OpinstomonitorforchangesintheI/Ostate.
+ICworkswiththeindividualpinconfigurationcommands(D0-D9,P0-P5).Ifthedevicedetectsa
+changeonanenableddigitalI/Opin,itimmediatelytransmitsadigitalI/Osampletotheaddress
+specifiedbyDH+DL.Ifsleepisenabled,theedgetransitionmustoccurduringawakeperiodto
+triggerachangedetect.
+ThedatatransmissioncontainsonlyDIOdata.
+ICisabitmaskyoucanusetoenableordisableedgedetectiononindividualdigitalI/Olines.Only
+DIO0throughDIO15canbesampledusingaChangeDetect.
+DigiXBee®3802.15.4RFModuleUserGuide 197
+
+ATcommands I/Osamplingcommands
+Bitfield
+| Bit I/Oline | Devicepin                   |     |
+| ----------- | --------------------------- | --- |
+| 0 DIO0      | Micropin31/SMTpin33/THpin20 |     |
+| 1 DIO1      | Micropin30/SMTpin32/THpin19 |     |
+| 2 DIO2      | Micropin29/SMTpin31/THpin18 |     |
+| 3 DIO3      | Micropin28/SMTpin30/THpin17 |     |
+| 4 DIO4      | Micropin23/SMTpin24/THpin11 |     |
+| 5 DIO5      | Micropin26/SMTpin28/THpin15 |     |
+| 6 DIO6      | Micropin27/SMTpin29/THpin16 |     |
+| 7 DIO7      | Micropin24/SMTpin25/THpin12 |     |
+Micropin9/SMTpin10/THpin9
+8 DIO8
+Micropin25/SMTpin26/THpin13
+9 DIO9
+| 10 DIO10 | Micropin7/SMTpin7/THpin6 |     |
+| -------- | ------------------------ | --- |
+| 11 DIO11 | Micropin8/SMTpin8/THpin7 |     |
+| 12 DIO12 | Micropin5/SMTpin5/THpin4 |     |
+| 13 DIO13 | Micropin3/SMTpin3/THpin2 |     |
+| 14 DIO14 | Micropin4/SMTpin4/THpin3 |     |
+Parameterrange
+0-0x7FFF
+Default
+0
+| AV (Analog | Voltage | Reference) |
+| ---------- | ------- | ---------- |
+TheanalogvoltagereferenceusedforA/Dsampling.
+Parameterrange
+0-2
+| Parameter |     | Description    |
+| --------- | --- | -------------- |
+| 0         |     | 1.25Vreference |
+| 1         |     | 2.5Vreference  |
+| 2         |     | VDD reference  |
+Default
+0
+DigiXBee®3802.15.4RFModuleUserGuide 198
+
+ATcommands I/Olinepassingcommands
+IT (Samples before TX)
+Setsordisplaysthenumberofsamplestocollectbeforetransmittingdata.Themaximumnumber
+ofsamplesisdependentonthenumberofenabledI/Olinesandthemaximumpayloadavailable.
+IfITissettoanumbertoobigtofitinthemaximumpayload,itisreducedsuchthatitwillfit.Aquery
+ofITaftersettingitreportstheactualnumberofsamplesinapacket.
+Parameterrange
+0x1-0xFF
+Default
+1
+IF (Sleep Sample Rate)
+SetorreadthenumberofsleepcyclesthatmustelapsebetweenperiodicI/Osamples.Thisallows
+thefirmwaretotakeI/Osamplesonlyduringsomewakecycles.Duringthosecycles,thefirmware
+takesI/OsamplesattheratespecifiedbyIR(SampleRate).Inaddition,settingIFtozeroallows
+I/Osamplestooccurbeforethedevicegoestosleepandoccurthereaftereverywakecycle
+specifiedbyIR.
+Toenableperiodicsampling,setIRtoanon-zerovalue,andenabletheanalogordigitalI/O
+functionalityofatleastonedevicepin.Thesamplerateismeasuredinmilliseconds.
+Formoreinformation,seethefollowingcommands:
+n D0(DIO0/ADC0/CommissioningConfiguration)throughD9(DIO9/ON_SLEEP
+Configuration)
+n P0(DIO10/RSSI/PWM0Configuration)throughP2(DIO12/TH_SPI_MISOConfiguration)
+Parameterrange
+0-0xFFFF(x1ms)
+Default
+1
+IO (Digital Output Level)
+Setsdigitaloutputlevels.ThisallowsDIOlinessetupasoutputstobechangedthroughCommand
+mode.
+Parameterrange
+8-bitbitmap;eachbitrepresentsthelevelofanI/Olinesetupasanoutput
+Default
+N/A
+I/O line passing commands
+ThefollowingATcommandsallowI/Olinepassingtobeenabledandconfigurethetimeoutthatwill
+beusedforeachI/Oline.LinePassingrequiresthedevicetoreceiveanI/Osamplefromthe
+addressspecifiedbyIAandhaveanI/Olinesconfiguredasoutputsthatcorrespondstoinputsin
+thereceivedI/Osample.
+DigiXBee®3802.15.4RFModuleUserGuide 199
+
+ATcommands I/Olinepassingcommands
+| IA (I/O Input | Address) |     |
+| ------------- | -------- | --- |
+Thesourceaddressofthedevicetowhichoutputsarebound.
+TodisableI/Olinepassing,setallbytesto0xFF.
+ToallowanyI/Opacketaddressedtothisdevice(includingbroadcasts)tochangetheoutputs,set
+IAto0xFFFF.
+Parameterrange
+0-0xFFFFFFFFFFFFFFFF
+Default
+0xFFFFFFFFFFFFFFFF(I/Olinepassingdisabled)
+| IU (I/O Output | Enable) |     |
+| -------------- | ------- | --- |
+IUdisablesorenablesI/OAPI UARToutputwhenlinepassingisenabledifthereceivedsample
+hasasourceaddressthatmatchesIA(I/OInputAddress)orifIAissetto0xFFFF.
+NoteToenableAPIoutput,youmustsetAP (APIEnable)toanAPI mode(AP=1or2).
+Parameterrange
+0-1
+| Parameter | Description |     |
+| --------- | ----------- | --- |
+| 0         | Disabled    |     |
+| 1         | Enabled     |     |
+Default
+1
+| T0 (D0 Timeout | Timer) |     |
+| -------------- | ------ | --- |
+SpecifieshowlongpinD0(DIO0/ADC0/CommissioningConfiguration)holdsagivenvaluebefore
+itrevertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+| T1 (D1 Output | Timeout | Timer) |
+| ------------- | ------- | ------ |
+SpecifieshowlongpinD1(DIO1/ADC1/TH_SPI_ATTNConfiguration)holdsagivenvaluebeforeit
+revertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+DigiXBee®3802.15.4RFModuleUserGuide 200
+
+ATcommands I/Olinepassingcommands
+Default
+0
+T2 (D2 Output Timeout Timer)
+SpecifieshowlongpinD2(DIO2/ADC2/TH_SPI_CLKConfiguration)holdsagivenvaluebeforeit
+revertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T3 (D3 Output Timeout Timer)
+SpecifieshowlongpinD3(DIO3/ADC3/TH_SPI_SSELConfiguration)holdsagivenvaluebeforeit
+revertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T4 (D4 Output Timeout Timer)
+SpecifieshowlongpinD4(DIO4/TH_SPI_MOSIConfiguration)holdsagivenvaluebeforeit
+revertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T5 (D5 Output Timeout Timer)
+SpecifieshowlongpinD5(DIO5/AssociateConfiguration)holdsagivenvaluebeforeitrevertsto
+configuredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T6 (D6 Output Timeout Timer)
+SpecifieshowlongpinD6(DIO6/RTSConfiguration)holdsagivenvaluebeforeitrevertsto
+configuredvalue.Ifsetto0,thereisnotimeout.
+DigiXBee®3802.15.4RFModuleUserGuide 201
+
+ATcommands I/Olinepassingcommands
+Parameterrange
+0-0xFF
+Default
+0
+T7 (D7 Output Timeout Timer)
+SpecifieshowlongpinD7(DIO7/CTSConfiguration)holdsagivenvaluebeforeitrevertsto
+configuredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T8 (D8 Output Timer)
+SpecifieshowlongpinD8(DIO8/DTR/SLP_RequestConfiguration)holdsagivenvaluebeforeit
+revertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+T9 (D9 Output Timer)
+SpecifieshowlongpinD9(DIO9/ON_SLEEPConfiguration)holdsagivenvaluebeforeitrevertsto
+configuredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+Q0 (P0 Output Timer)
+SpecifieshowlongP0(DIO10/RSSI/PWM0Configuration)(Micropin7/SMTpin7/THpin6)holds
+agivenvaluebeforeitrevertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+DigiXBee®3802.15.4RFModuleUserGuide 202
+
+ATcommands Locationcommands
+Q1 (P1 Output Timer)
+SpecifieshowlongP1(DIO11/PWM1Configuration)(Micropin8/SMTpin8/THpin7)holdsa
+givenvaluebeforeitrevertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+Q2 (P2 Output Timer)
+SpecifieshowlongpinP2(DIO12/TH_SPI_MISOConfiguration)(Micropin5/SMTpin5/THpin4)
+holdsagivenvaluebeforeitrevertstoconfiguredvalue.Ifsetto0,thereisnotimeout.
+Parameterrange
+0-0xFF
+Default
+0
+PT (PWM Output Timeout)
+SpecifieshowlongbothPWMoutputs(P0,P1)outputagivenPWM signalbeforeitrevertstothe
+configuredvalue(M0/M1).Ifsetto0,thereisnotimeout.Thistimeoutonlyaffectsthesepinswhen
+theyareconfiguredasPWMoutputandananalogsampleforAD0/AD1isreceived.
+Parameterrange
+0-0xFF(x100ms)
+Default
+0xFF
+Location commands
+Thefollowingcommandsareuser-definedparametersusedtostorethephysicallocationofthe
+deployeddevice.
+LX (Location X—Latitude)
+User-definedGPSlatitudecoordinatesofthenodethatisdisplayedonDigiRemoteManagerand
+NetworkAssistant.
+Parameterrange
+0-15ASCIIcharacters
+Default
+OneASCIIspacecharacter(0x20)
+DigiXBee®3802.15.4RFModuleUserGuide 203
+
+ATcommands Diagnosticcommands-firmware/hardwareinformation
+LY (Location Y—Longitude)
+User-definedGPSlongitudecoordinatesofthenodethatisdisplayedonDigiRemoteManager
+andNetworkAssistant.
+Parameterrange
+0-15ASCIIcharacters
+Default
+OneASCIIspacecharacter(0x20)
+LZ (Location Z—Elevation)
+User-definedGPSelevationofthenodethatisdisplayedonDigiRemoteManagerandNetwork
+Assistant.
+Parameterrange
+0-15ASCIIcharacters
+Default
+OneASCIIspacecharacter(0x20)
+Diagnostic commands - firmware/hardware information
+Thefollowingread-onlycommandsarediagnosticsthatprovidemoreinformationaboutthedevice.
+VR (Firmware Version)
+Readsthefirmwareversiononadevice.
+Themostsignificantbyterepresentsthehardwareandregion.SeeR?(RegionCode) foravailable
+regionvalues.
+Parameterrange
+0x2000-0x2FFF
+Default
+Setinthefirmware
+VL (Version Long)
+Showsdetailedversioninformationincludingtheapplicationbuilddateandtime.
+Parameterrange
+N/A
+Default
+N/A
+VH (Bootloader Version)
+Readsthebootloaderversionofthedevice.
+DigiXBee®3802.15.4RFModuleUserGuide 204
+
+ATcommands Diagnosticcommands-firmware/hardwareinformation
+Parameterrange
+N/A
+Default
+N/A
+HV (Hardware Version)
+Displaythehardwareversionnumberandrevisionnumberofthedevice.Theupperbyteisthe
+Hardwareversionandthelowerbyteisthehardwarerevision.
+Thehardwareversiondistinguishesoneradiotypefromanother.
+Thehardwarerevisionforaparticularmodulecanchangeforavarietyofreasonsandshouldnot
+beusedasthesoledeterminationthatamodule’sfunctionalityhaschangedfromprevious
+revisions.Therevisionmaychangeforvariousreasonsincludinganewsoftwareversion,aminor
+hardwaremodification,orevenduetoalabelupdate.Furthermore,thefirmwareonamodulemay
+beupgradedordowngradedbyauserthusmakingitdifferentfromthefirmwareversionitwas
+manufacturedwith.Thustherevisionnumberisnotareliableindicatorofthefirmwareversionon
+themodule.Ifanexplanationfortherevisionnumberisnotfoundinthereleasenotesanditisa
+concern,contactDigiSupport.Inmostcasestherevisionnumberdoesnotrelayanyuseful
+informationtotheconsumeranditcanbeignored.
+Parameterrange
+0-0xFFFF[read-only]
+Pre-definedHVvaluesforXBee3devices:
+n 0x41=XBee3Micro(MMT)andSurfaceMount(SMT)
+n 0x42=XBee3ThroughHole(TH)
+Default
+Setinthefactory
+R? (Power Variant)
+SpecifieswhetherthedeviceisaPROorNon-PROvariant.
+n 0=PRO(+19dBmoutputpower)
+n 1=Non-PRO(+8dBmoutputpower)
+Parameterrange
+0,1[read-only]
+Default
+N/A
+%C (Hardware/Software Compatibility)
+Specifieswhatfirmwareiscompatiblewiththisdevice'shardware.%Ciscomparedtothetothe
+"compatibility_number"fieldofthefirmwareconfigurationxmlfile.Firmwarewithacompatibility
+numberlowerthanthevaluereturnedby%Ccannotbeloadedontotheboard.Ifaninvalid
+firmwareisloaded,thedevicewillnotbootuntilavalidfirmwareisreloaded.
+DigiXBee®3802.15.4RFModuleUserGuide 205
+
+ATcommands Diagnosticcommands-firmware/hardwareinformation
+Parameterrange
+[read-only]
+Default
+N/A
+%V (Supply Voltage)
+ReadsthevoltageontheVccpininmV.
+Parameterrange
+0-0xFFFF(inmV)[readonly]
+Default
+N/A
+TP (Module Temperature)
+ThecurrentmoduletemperatureindegreesCelsius.Thetemperatureisrepresentedintwo’s
+complement,asshowninthefollowingexample:
+1°C=0x0001and-1°C=0xFFFF
+Parameterrange
+0-0xFFFF(Celsius)[read-only]
+Default
+N/A
+CK (Configuration CRC)
+Readsthecyclicredundancycheck(CRC)ofthecurrentATcommandconfigurationsettingsto
+determineiftheconfigurationhaschanged.
+Afterafirmwareupdatethiscommandmayreturnadifferentvalue.
+Parameterrange
+0-0xFFFF[read-only]
+Default
+N/A
+%P (Invoke Bootloader)
+Forcesthedevicetoresetintothebootloadermenu.
+Thiscommandcanonlybeissuedlocally.
+Parameterrange
+N/A
+Default
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 206
+
+ATcommands Memoryaccesscommands
+D% (Manufacturing Date)
+Readsthemanufacturingdateofthemodule.
+TheformatofthevaluegivenforATD%is16hexcharacters,i.e.ATD%DDDDDDHH000FFFFF,
+whereDDDDDDrepresentsthemanufacturingdateasthenumberofdayssince1/1/1900:
+1/1/2000=0x008EAC,etc.HHrepresentsthehourbasedona24-hourclock.000isthreeempty
+hexdigits.FFFFFrepresentsthetestfixtureserialnumberasadecimal(thisnumberisnot
+convertedtohex).
+Parameterrange
+0-0xFFFFFFFFFFFFFFFF[read-only]
+Default
+N/A
+Memory access commands
+Thissectiondetailstheexecutablecommandsthatprovidememoryaccesstothedevice.
+FR (Software Reset)
+Resetsthedevice.ThedevicerespondsimmediatelywithanOKandperformsareset100ms
+later.
+IfyouissueFRwhilethedeviceisinCommandmode,thereseteffectivelyexitsCommandmode.
+Parameterrange
+N/A
+Default
+N/A
+AC (Apply Changes)
+ThiscommandapplieschangestoallcommandparametersconfiguredinCommandmode.
+AnyofthefollowingalsoapplieschangesthesameasissuinganACcommand:
+n ExitingCommandmodewithaCNcommand.
+n ExitingCommandmodeviatimeout.
+n Receivinga0x08APIcommandframe.
+n Issuinga0x08LocalATCommandAPIframe.
+n Issuingaremote0x17ATCommandAPIframewithoptionbit1set.
+Example:AlteringtheUARTbaudratewiththeBDcommanddoesnotchangetheoperatingbaud
+rateuntilafteranACcommandisreceived;atthispoint,theinterfaceimmediatelychangesbaud
+rates.
+Parameterrange
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 207
+
+ATcommands CustomDefaultcommands
+Default
+N/A
+WR (Write)
+Immediatelywritesparametervaluestonon-volatileflashmemorysotheypersistthroughapower
+cycle.OperatingnetworkparametersarepersistentanddonotrequireaWRcommandforthe
+devicetoreattachtothenetwork.
+Note OnceyouissueaWRcommand,donotsendanyadditionalcharacterstothedeviceuntil
+afteryoureceivetheOKresponse.UsetheWRcommandsparingly;thedevice’sflashonly
+supports10,000erase/writecycles.
+Parameterrange
+N/A
+Default
+N/A
+RE (Restore Defaults)
+Restoredeviceparameterstofactoryorcustom-setdefaults.
+DoesnotexitoutofCommandmode.
+Parameterrange
+N/A
+Default
+N/A
+Custom Default commands
+Thefollowingcommandsareusedtoassigncustomdefaultstothedevice.SendRE(Restore
+Defaults)torestorecustomdefaults.YoumustsendthesecommandsaslocalATcommands,they
+cannotbesetusingRemoteATCommandRequest-0x17.
+%F (Set Custom Default)
+When%Fisreceived,theXBee3802.15.4RFModuletakesthenextcommandreceivedand
+appliesittoboththecurrentconfigurationandthecustomdefaults,sothatwhendefaultsare
+restoredwithRE(RestoreDefaults)thecustomvalueisused.
+Parameterrange
+N/A
+Default
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 208
+
+ATcommands CustomDefaultcommands
+!C (Clear Custom Defaults)
+Clearsallcustomdefaults.Thiscommanddoesnotchangethecurrentsettings,butonlychanges
+thedefaultssothatRE(RestoreDefaults)restoressettingstothefactoryvalues.
+Parameterrange
+N/A
+Default
+N/A
+R1 (Restore Factory Defaults)
+Restoresfactorydefaults,ignoringanycustomdefaultssetusing%F(SetCustomDefault).
+Parameterrange
+N/A
+Default
+N/A
+DigiXBee®3802.15.4RFModuleUserGuide 209
+
+| Operate | in API | mode |
+| ------- | ------ | ---- |
+APImodeoverview 211
+UsetheAPcommandtosettheoperationmode 211
+APIframeformat 211
+DigiXBee®3802.15.4RFModuleUserGuide 210
+
+OperateinAPImode APImodeoverview
+| API mode | overview |     |     |     |
+| -------- | -------- | --- | --- | --- |
+AsanalternativetoTransparentoperatingmode,youcanuseAPIoperatingmode.APImode
+providesastructuredinterfacewheredataiscommunicatedthroughtheserialinterfacein
+organizedpacketsandinadeterminedorder.Thisenablesyoutoestablishcomplex
+communicationbetweendeviceswithouthavingtodefineyourownprotocol.TheAPIspecifies
+howcommands,commandresponsesanddevicestatusmessagesaresentandreceivedfromthe
+deviceusingtheserialinterfaceortheSPI interface.
+Wemayaddnewframetypestofutureversionsofthefirmware,sowerecommendbuildingthe
+abilitytofilteroutadditionalAPIframeswithunknownframetypesintoyoursoftwareinterface.
+| Use the | AP command | to set | the operation | mode |
+| ------- | ---------- | ------ | ------------- | ---- |
+UseAP (APIEnable)tospecifytheoperationmode:
+APcommand
+| setting |     | Description |     |     |
+| ------- | --- | ----------- | --- | --- |
+AP=0 Transparentoperatingmode,UART seriallinereplacementwithAPImodes
+disabled.Thisisthedefaultoption.
+AP=1
+APIoperation.
+| AP=2 |     | APIoperationwithescapedcharacters(onlypossibleonUART). |     |     |
+| ---- | --- | ------------------------------------------------------ | --- | --- |
+TheAPIdataframestructurediffersdependingonwhatmodeyouchoose.
+| API frame | format |     |     |     |
+| --------- | ------ | --- | --- | --- |
+AnAPIframeconsistsofthefollowing:
+n Startdelimeter
+n Length
+n Framedata
+Checksum
+n
+| API | operation | (AP parameter | = 1) |     |
+| --- | --------- | ------------- | ---- | --- |
+ThisistherecommendedAPImodeformostapplications.Thefollowingtableshowsthedata
+framestructurewhenyouenablethismode:
+| Framefields    |     | Byte        | Description                              |     |
+| -------------- | --- | ----------- | ---------------------------------------- | --- |
+| Startdelimiter |     | 1           | 0x7E                                     |     |
+| Length         |     | 2-3         | MostSignificantByte,LeastSignificantByte |     |
+| Framedata      |     | 4-number(n) | API-specificstructure                    |     |
+| Checksum       |     | n+1         | 1byte                                    |     |
+DigiXBee®3802.15.4RFModuleUserGuide 211
+
+OperateinAPImode APIframeformat
+Anydatareceivedpriortothestartdelimiterissilentlydiscarded.Iftheframeisnotreceived
+correctlyorifthechecksumfails,theXBeereplieswitharadiostatusframeindicatingthenatureof
+thefailure.
+API operation with escaped characters (AP parameter = 2)
+SettingAPIto2allowsescapedcontrolcharactersintheAPIframe.Duetoitsincreased
+complexity,weonlyrecommendthisAPImodeinspecificcircumstances.API2mayhelpimprove
+reliabilityiftheserialinterfacetothedeviceisunstableormalformedframesarefrequentlybeing
+generated.
+WhenoperatinginAPI2,ifanunescaped0x7Ebyteisobserved,itistreatedasthestartofanew
+APIframeandalldatareceivedpriortothisdelimiterissilentlydiscarded.Formoreinformationon
+usingthisAPImode,seetheEscapedCharactersandAPIMode2intheDigiKnowledgebase.
+APIescapedoperatingmodeworkssimilarlytoAPImode.Theonlydifferenceisthatwhenworking
+inAPIescapedmode,thesoftwaremustescapeanypayloadbytesthatmatchAPIframespecific
+data,suchasthestart-of-framebyte(0x7E).ThefollowingtableshowsthestructureofanAPI
+framewithescapedcharacters:
+Framefields Byte Description
+Start 1 0x7E
+delimiter
+Length 2-3 MostSignificantByte,LeastSignificant Charactersescapedif
+Byte needed
+Framedata 4-n API-specificstructure
+Checksum n+1 1byte
+Startdelimiterfield
+Thisfieldindicatesthebeginningofaframe.Itisalways0x7E.Thisallowsthedevicetoeasily
+detectanewincomingframe.
+EscapedcharactersinAPIframes
+IfoperatinginAPImodewithescapedcharacters(APparameter=2),whensendingorreceivinga
+serialdataframe,specificdatavaluesmustbeescaped(flagged)sotheydonotinterferewiththe
+dataframesequencing.Toescapeaninterferingdatabyte,insert0x7Dandfollowitwiththebyte
+tobeescaped(XORedwith0x20).
+Thefollowingdatabytesneedtobeescaped:
+n 0x7E:startdelimiter
+n 0x7D:escapecharacter
+n 0x11:XON
+n 0x13:XOFF
+NoteSincesoftwareflowcontrolisnotimplementedonthisdevice,havinghexvaluesof0x11and
+0x13intheAPI frameisn'tareasontouseAP=2.
+Since0x7Distheescapecharacteritself,theonlyvalueofAP=2istodistinguisha0x7Einthe
+datacomparedtothestartdelimiter0x7E.
+DigiXBee®3802.15.4RFModuleUserGuide 212
+
+| OperateinAPImode |     |     |     |     |     |     |     |     | APIframeformat |     |
+| ---------------- | --- | --- | --- | --- | --- | --- | --- | --- | -------------- | --- |
+Toescapeacharacter:
+1. Insert0x7D(escapecharacter).
+2. Appenditwiththebyteyouwanttoescape,XORedwith0x20.
+InAPImodewithescapedcharacters,thelengthfielddoesnotincludeanyescapecharactersin
+theframeandthefirmwarecalculatesthechecksumwithnon-escapeddata.
+Example:escapeanAPIframe
+ToexpressthefollowingAPInon-escapedframeinAPIoperatingmodewithescapedcharacters:
+FrameData
+| Start     |     |        | Frame |      |       |       |       |       |             |          |
+| --------- | --- | ------ | ----- | ---- | ----- | ----- | ----- | ----- | ----------- | -------- |
+|           |     | Length |       |      |       |       |       |       |             | Checksum |
+| delimiter |     |        | type  | Data |       |       |       |       |             |          |
+| 7E        |     | 00     | 0F 17 | 01   | 00 13 | A2 00 | 40 AD | 14 2E | FF FE 02 4E | 49 6D    |
+Youmustescapethe0x13byte:
+1. Inserta0x7D.
+2. XORbyte0x13with0x20:13⊕20=33
+Thefollowingfigureshowstheresultingframe.Notethatthelengthandchecksumarethesameas
+thenon-escapedframe.
+| Start     |     |        | Frame | FrameData |     |     |     |     |     |          |
+| --------- | --- | ------ | ----- | --------- | --- | --- | --- | --- | --- | -------- |
+|           |     | Length |       |           |     |     |     |     |     | Checksum |
+| delimiter |     |        | type  |           |     |     |     |     |     |          |
+Data
+| 7E  |     | 00  | 0F 17 | 01 00 | 7D 33 | A2 00 | 40 AD | 14 2E | FF FE 02 4E | 49 6D |
+| --- | --- | --- | ----- | ----- | ----- | ----- | ----- | ----- | ----------- | ----- |
+Thelengthfieldhasatwo-bytevaluethatspecifiesthenumberofbytesintheframedatafield.It
+doesnotincludethechecksumfield.
+Lengthfield
+Thelengthfieldisatwo-bytevaluethatspecifiesthenumberofbytescontainedintheframedata
+field.Itdoesnotincludethechecksumfield.
+Framedata
+Thisfieldcontainstheinformationthatadevicereceivesorwilltransmit.Thestructureofframe
+datadependsonthepurposeoftheAPIframe:
+Framedata
+Start
+|     | delimiter |     | Length | Frametype     |     |     |     | Data |         | Checksum   |
+| --- | --------- | --- | ------ | ------------- | --- | --- | --- | ---- | ------- | ---------- |
+|     | 1         |     | 2      | 3             | 4   | 5   | 6   | 7 8  | 9 ... n | n+1        |
+|     | 0x7E      |     | MSB    | LSB API frame |     |     |     | Data |         | Singlebyte |
+type
+n FrametypeistheAPIframetypeidentifier.ItdeterminesthetypeofAPIframeand
+indicateshowtheDatafieldorganizestheinformation.
+n Datacontainsthedataitself.Thisinformationanditsorderdependonthewhattypeof
+framethattheFrametypefielddefines.
+Multi-bytevaluesaresentbig-endian.
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |     |     |     |     |     |     | 213 |
+| ----------------------------------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+
+OperateinAPImode APIframeformat
+Calculateandverifychecksums
+TocalculatethechecksumofanAPIframe:
+1. Addallbytesofthepacket,exceptthestartdelimiter0x7Eandthelength(thesecondand
+thirdbytes).
+2. Keeponlythelowest8bitsfromtheresult.
+3. Subtractthisquantityfrom0xFF.
+ToverifythechecksumofanAPIframe:
+1. Addallbytesincludingthechecksum;donotincludethedelimiterandlength.
+2. Ifthechecksumiscorrect,thelasttwodigitsonthefarrightofthesumequal0xFF.
+Example
+Considerthefollowingsampledatapacket:7E000808014E49584245453B
+Byte(s) Description
+7E Startdelimiter
+0008 Lengthbytes
+08 APIidentifier
+01 APIframeID
+4E49 ATCommand
+58424545 Parametervalue
+3B Checksum
+Tocalculatethechecksumyouaddallbytesofthepacket,excludingtheframedelimiter7Eand
+thelength(thesecondandthirdbytes):
+7E000808014E49584245453B
+Addthesehexbytes:
+0x08+0x01+0x4E+0x49+0x58+0x42+0x45+0x45=0x0147
+Nowtaketheresultof0x0147andkeeponlythelowest8bitswhichinthisexampleis0x47(the
+twofarrightdigits).Subtract0x47from0xFFandyouget0x3B(0xFF-0x47=0x3B).0x3Bisthe
+checksumforthisdatapacket.
+IfanAPIdatapacketiscomposedwithanincorrectchecksum,theXBee3802.15.4RFModulewill
+considerthepacketinvalidandwillignorethedata.
+ToverifythechecksumofanAPIpacketaddallbytesincludingthechecksum(donotincludethe
+delimiterandlength)andifcorrect,thelasttwofarrightdigitsofthesumwillequalFF.
+0x08+0x01+0x4E+0x49+0x58+0x42+0x45+0x45+0x3B=0x01FF
+DigiXBee®3802.15.4RFModuleUserGuide 214
+
+Frame descriptions
+ThefollowingsectionsdescribetheAPIframes.
+64-bitTransmitRequest-0x00 216
+16-bitTransmitRequest -0x01 218
+LocalATCommandRequest-0x08 220
+QueueLocalATCommandRequest-0x09 222
+TransmitRequest-0x10 223
+ExplicitAddressingCommandRequest-0x11 226
+RemoteATCommandRequest-0x17 230
+Bluetooth®LowEnergy(LE) UnlockRequest-0x2C 232
+UserDataRelayInput -0x2D 235
+SecureSessionControl-0x2E 237
+64-bitReceivePacket-0x80 241
+16-bitReceivePacket-0x81 243
+64-bitI/OSampleIndicator-0x82 245
+16-bitI/OSampleIndicator-0x83 247
+LocalATCommandResponse-0x88 249
+TransmitStatus-0x89 251
+ModemStatus-0x8A 254
+ExtendedTransmitStatus-0x8B 256
+ReceivePacket-0x90 258
+ExplicitReceiveIndicator-0x91 260
+I/OSampleIndicator -0x92 262
+RemoteATCommandResponse-0x97 265
+ExtendedModemStatus-0x98 267
+Bluetooth®LowEnergy(LE) UnlockResponse-0xAC 268
+UserDataRelayOutput-0xAD 269
+SecureSessionResponse-0xAE 270
+DigiXBee®3802.15.4RFModuleUserGuide 215
+
+Framedescriptions 64-bitTransmitRequest-0x00
+64-bit Transmit Request - 0x00
+Responseframe: TransmitStatus-0x89
+Description
+ThisframetypeisusedtosendserialpayloaddataasanRFpackettoaremotedevicewitha
+corresponding64-bitIEEEaddress.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouse Transmit
+Request-0x10 toinitiateAPItransmissions.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype 64-bitTransmitRequest -0x00
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 64-bit Destination Settothe64-bitIEEEaddressofthedestinationdevice.
+address Ifsetto0x000000000000FFFF,thebroadcastaddressis
+used.
+13 8-bit Options Abitfieldofoptionsthataffecttheoutgoingtransmission:
+n Bit0:DisableMACACK[0x01]
+n Bit1:Reserved(setto0)
+n Bit2:SendpacketwithBroadcastPANID[0x04]
+l 802.15.4firmwaresonly
+NoteOptionvaluesmaybecombined.Setallunusedbits
+to0.
+14-n variable RFdata Theserialdatatobesenttothedestination.UseNPto
+querythemaximumpayloadsizethatcanbesupported
+basedoncurrentsettings.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+DigiXBee®3802.15.4RFModuleUserGuide 216
+
+| Framedescriptions |     |     |     | 64-bitTransmitRequest-0x00 |
+| ----------------- | --- | --- | --- | -------------------------- |
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Sendingaunicasttransmissiontoadevicewiththe64-bitaddressof0013A20012345678withthe
+serialdata"TxData".
+Thecorresponding TransmitStatus-0x89 responsewithamatchingFrameIDwillindicate
+whetherthetransmissionsucceeded.
+7E001100520013A20012345678005478446174619E
+| Frametype | FrameID | 64-bitdestaddress | Txoptions | RFdata          |
+| --------- | ------- | ----------------- | --------- | --------------- |
+| 0x00      | 0x52    | 0x0013A200        | 0x00      | 0x547844617461  |
+12345678
+| Input | Matchesresponse |     |     | "TxData" |
+| ----- | --------------- | --- | --- | -------- |
+64-bitbroadcast
+Sendingabroadcasttransmissionoftheserialdata"Broadcast"andsuppressingthe
+correspondingresponsebysettingFrameIDto0.
+7E00140000000000000000FFFF0042726F6164636173746E
+| Frame |         | 64-bitdest | Tx      |                      |
+| ----- | ------- | ---------- | ------- | -------------------- |
+| type  | FrameID | address    | options | RFdata               |
+| 0x00  | 0x00    | 0x00000000 | 0x00    | 0x42726F616463617374 |
+0000FFFF
+| Input | Suppress | Broadcastaddress |     | "Broadcast" |
+| ----- | -------- | ---------------- | --- | ----------- |
+response
+DigiXBee®3802.15.4RFModuleUserGuide 217
+
+Framedescriptions 16-bitTransmitRequest -0x01
+16-bit Transmit Request - 0x01
+Responseframe: TransmitStatus-0x89
+Description
+ThisframetypeisusedtosendserialpayloaddataasanRFpackettoaremotedevicewitha
+corresponding16-bitnetworkaddress.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouse Transmit
+Request-0x10 toinitiateAPItransmissions.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype 16-bitTransmitRequest -0x01
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 16-bit Destination Settothe16-bitnetworkaddressofthedestinationdevice.
+address Ifsetto0xFFFF,thebroadcastaddressisused.
+7 8-bit Options Abitfieldofoptionsthataffecttheoutgoingtransmission:
+n Bit0:DisableMACACK[0x01]
+n Bit1:Reserved(setto0)
+n Bit2:SendpacketwithBroadcastPANID[0x04]
+l 802.15.4firmwaresonly
+NoteOptionvaluesmaybecombined.Setallunusedbits
+to0.
+8-n variable RFdata Theserialdatatobesenttothedestination.UseNPto
+querythemaximumpayloadsizethatcanbesupported
+basedoncurrentsettings.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+DigiXBee®3802.15.4RFModuleUserGuide 218
+
+| Framedescriptions |     |     |     | 16-bitTransmitRequest -0x01 |
+| ----------------- | --- | --- | --- | --------------------------- |
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+16-bitunicast
+Sendingaunicasttransmissiontoadevicewiththe16-bitaddressof1234withtheserialdata
+"TxData".
+Thecorresponding TransmitStatus-0x89 responsewithamatchingFrameIDwillindicate
+whetherthetransmissionsucceeded.
+7E000B0187123400547844617461EB
+| Frametype | FrameID         | 16-bitdestaddress | Txoptions | RFdata          |
+| --------- | --------------- | ----------------- | --------- | --------------- |
+| 0x01      | 0x87            | 0x1234            | 0x00      | 0x547844617461  |
+| Input     | Matchesresponse |                   |           | "TxData"        |
+16-bitbroadcast
+Sendingabroadcasttransmissionoftheserialdata"Broadcast"andsuppressingthe
+correspondingresponsebysettingFrameIDto0.
+7E000E0100FFFF0042726F6164636173746D
+| Frame |          | 16-bitdest       | Tx      |                      |
+| ----- | -------- | ---------------- | ------- | -------------------- |
+| type  | FrameID  | address          | options | RFdata               |
+| 0x01  | 0x00     | 0xFFFF           | 0x00    | 0x42726F616463617374 |
+| Input | Suppress | Broadcastaddress |         | "Broadcast"          |
+response
+DigiXBee®3802.15.4RFModuleUserGuide 219
+
+Framedescriptions LocalATCommandRequest-0x08
+Local AT Command Request - 0x08
+Responseframe: LocalATCommandResponse-0x88
+Description
+Thisframetypeisusedtoqueryorsetcommandparametersonthelocaldevice.Anyparameter
+thatissetwiththisframetypewillapplythechangeimmediately.Ifyouwishtoqueuemultiple
+parameterchangesandapplythemlater,usetheQueueLocalATCommandRequest-0x09
+instead.
+Whenqueryingparametervalues,thisframebehavesidenticallytoQueueLocalATCommand
+Request-0x09:Youcanqueryparametervaluesbysendingthisframewithacommandbutno
+parametervaluefield—thetwo-byteATcommandisimmediatelyfollowedbytheframechecksum.
+WhenanATcommandisqueried,aLocalATCommandResponse-0x88 frame ispopulatedwith
+theparametervaluethatiscurrentlysetonthedevice.TheFrameIDofthe0x88responseisthe
+sameonesetbythecommandinthe0x08requestframe.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit StartDelimiter IndicatesthestartofanAPIframe.
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype LocalATCommandRequest-0x08
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 16-bit ATcommand ThetwoASCIIcharactersthatidentifythe ATCommand.
+7-n variable Parameter Ifpresent,indicatestherequestedparametervaluetoset
+value thegivenregister.
+(optional) Ifnocharactersarepresent,itqueriesthecurrent
+parametervalueandreturnstheresultintheresponse.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+Setthelocalcommandparameter
+SettheNIstringoftheradioto"EndDevice".
+DigiXBee®3802.15.4RFModuleUserGuide 220
+
+| Framedescriptions |     |     | LocalATCommandRequest-0x08 |
+| ----------------- | --- | --- | -------------------------- |
+Thecorresponding LocalATCommandResponse-0x88 withamatchingFrameIDwillindicate
+whethertheparameterchangesucceeded.
+7E000E08A14E49456E642044657669636538
+| Frametype | FrameID         | ATcommand | Parametervalue         |
+| --------- | --------------- | --------- | ---------------------- |
+| 0x08      | 0xA1            | 0x4E49    | 0x456E6420446576696365 |
+| Request   | Matchesresponse | "NI"      | "EndDevice"            |
+Querylocalcommandparameter
+Querythetemperatureofthemodule—TPcommand.
+ThecorrespondingLocalATCommandResponse-0x88 withamatchingFrameIDwillreturnthe
+temperaturevalue.
+7E0004081754503C
+| Frametype | FrameID         | ATcommand | Parametervalue    |
+| --------- | --------------- | --------- | ----------------- |
+| 0x08      | 0x17            | 0x5450    | (omitted)         |
+| Request   | Matchesresponse | "TP"      | Querytheparameter |
+DigiXBee®3802.15.4RFModuleUserGuide 221
+
+| Framedescriptions |          |         |         | QueueLocalATCommandRequest-0x09 |
+| ----------------- | -------- | ------- | ------- | ------------------------------- |
+| Queue             | Local AT | Command | Request | - 0x09                          |
+Responseframe: LocalATCommandResponse-0x88
+Description
+Thisframetypeisusedtoqueryorsetqueuedcommandparametersonthelocaldevice.In
+contrasttoLocalATCommandRequest-0x08,thisframequeuesnewparametervaluesanddoes
+notapplythemuntilyoueither:
+n IssueaLocalATCommandusingthe0x08frame
+n IssueanACcommand—queuedorotherwise
+Whenqueryingparametervalues,thisframebehavesidenticallytoLocalATCommandRequest-
+0x08:Youcanqueryparametervaluesbysendingthisframewithacommandbutnoparameter
+valuefield—thetwo-byteATcommandisimmediatelyfollowedbytheframechecksum.Whenan
+ATcommandisqueried,aLocalATCommandResponse-0x88frameispopulatedwiththe
+parametervaluethatiscurrentlysetonthedevice.TheFrameIDofthe0x88responseisthesame
+onesetbythecommandinthe0x09requestframe.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+|     | Offset Size | FrameField     | Description                               |     |
+| --- | ----------- | -------------- | ----------------------------------------- | --- |
+|     | 0 8-bit     | StartDelimiter | IndicatesthestartofanAPIframe.            |     |
+|     | 1 16-bit    | Length         | Numberofbytesbetweenthelengthandchecksum. |     |
+|     |             | Frametype      | QueueLocalATCommandRequest-0x09           |     |
+3 8-bit
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 16-bit ATcommand ThetwoASCIIcharactersthatidentifythe ATCommand.
+7-n variable Parameter Ifpresent,indicatestherequestedparametervaluetoset
+|     |     | value      | thegivenregisteratalatertime.                |     |
+| --- | --- | ---------- | -------------------------------------------- | --- |
+|     |     | (optional) | Ifnocharactersarepresent,itqueriesthecurrent |     |
+parametervalueandreturnstheresultintheresponse.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+DigiXBee®3802.15.4RFModuleUserGuide 222
+
+| Framedescriptions |     |     |     | TransmitRequest-0x10 |
+| ----------------- | --- | --- | --- | -------------------- |
+Queuesettinglocalcommandparameter
+SettheUARTbaudrateto115200,butdonotapplychangesimmediately.
+Thedevicewillcontinuetooperateatthecurrentbaudrateuntilthechangeisappliedwitha
+subsequentACcommand.
+Thecorresponding LocalATCommandResponse-0x88 withamatchingFrameIDwillindicate
+whethertheparameterchangesucceeded.
+7E0005095342440716
+| Frametype |     | FrameID         | ATcommand | Parametervalue |
+| --------- | --- | --------------- | --------- | -------------- |
+| 0x09      |     | 0x53            | 0x4244    | 0x07           |
+| Request   |     | Matchesresponse | "BD"      | 7=115200baud   |
+Querylocalcommandparameter
+Querythetemperatureofthemodule(TPcommand).
+Thecorresponding0x88-LocalATCommandResponse framewithamatchingFrameIDwill
+returnthetemperaturevalue.
+7E0004091754503B
+| Frametype |         | FrameID         | ATcommand | Parametervalue    |
+| --------- | ------- | --------------- | --------- | ----------------- |
+| 0x09      |         | 0x17            | 0x5450    | (omitted)         |
+| Request   |         | Matchesresponse | "TP"      | Querytheparameter |
+| Transmit  | Request | - 0x10          |           |                   |
+Responseframe: ExtendedTransmitStatus-0x8B
+Description
+ThisframetypeisusedtosendpayloaddataasanRFpackettoaspecificdestination.Thisframe
+typeistypicallyusedfortransmittingserialdatatooneormoreremotedevices.
+TheendpointsusedforthesedatatransmissionsaredefinedbytheSEandDEcommandsandthe
+clusterIDdefinedbytheCIcommand—excluding802.15.4.Todefinethe application-layer
+addressingfieldsonaper-packetbasis,usethe ExplicitAddressingCommandRequest-
+0x11 instead.
+QuerytheNP commandtoreadthemaximumnumberofpayloadbytesthatcanbesent.
+SeeMaximumpayloadforadditionalinformationonpayloadsizerestrictions.
+64-bitaddressing
+n Forbroadcasttransmissions,setthe64-bitdestinationaddressto0x000000000000FFFF
+Forunicasttransmissions,setthe64-bitaddressfieldtotheaddressofthedesired
+n
+destinationnode
+DigiXBee®3802.15.4RFModuleUserGuide 223
+
+Framedescriptions TransmitRequest-0x10
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+| Offset | Size  | FrameField | Description                    |
+| ------ | ----- | ---------- | ------------------------------ |
+| 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | TransmitRequest-0x10                      |
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponseframe.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 64-bit 64-bit Settothe64-bitIEEEaddressofthedestinationdevice.
+|     |     | destination | Broadcastaddressis0x000000000000FFFF. |
+| --- | --- | ----------- | ------------------------------------- |
+address
+|     |        | Reserved  | Unused,butthisfieldistypicallysetto0xFFFE.         |
+| --- | ------ | --------- | -------------------------------------------------- |
+| 13  | 16-bit |           |                                                    |
+| 15  | 8-bit  | Broadcast | Setsthemaximumnumberofhopsabroadcast               |
+|     |        | radius    | transmissioncantraverse.Thisparameterisonlyusedfor |
+broadcasttransmissions.
+Ifsetto0—recommended—thevalueofNHspecifiesthe
+broadcastradius.
+16 8-bit Transmit SeetheTransmitoptionsbitfieldtablebelowforavailable
+|     |     | options | options. |
+| --- | --- | ------- | -------- |
+Ifsetto 0,thevalueof TO specifiesthetransmitoptions.
+17-n variable Payload Datatobesenttothedestinationdevice. Upto NP bytes
+|     |     | data | perpacket. |
+| --- | --- | ---- | ---------- |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+| Transmit | options | bit field |     |
+| -------- | ------- | --------- | --- |
+Theavailabletransmitoptionsvarydependingontheprotocolbeingused.Bitfieldoptionscanbe
+combined.Setallunusedbitsto0.
+SendingaunicastmessagewithMAC ACKsdisabledisnotintendedtobeareliableformof
+communication,asnoACKsareproducedbyrecipients.
+802.15.4
+| Bit Meaning        |     |     | Description                          |
+| ------------------ | --- | --- | ------------------------------------ |
+| 0 DisableACK[0x01] |     |     | Disableacknowledgmentsonallunicasts. |
+DigiXBee®3802.15.4RFModuleUserGuide 224
+
+| Framedescriptions |                    |     |                              | TransmitRequest-0x10 |     |
+| ----------------- | ------------------ | --- | ---------------------------- | -------------------- | --- |
+| Bit               | Meaning            |     | Description                  |                      |     |
+| 1                 | BroadcastPAN[0x02] |     | TransmissionissenttoallPANs. |                      |     |
+| 2                 | Reserved           |     | <setthisbitto0>              |                      |     |
+| 3                 | Reserved           |     | <setthisbitto0>              |                      |     |
+4 SecureSessionEncryption EncryptpayloadfortransmissionacrossaSecure
+|     | [0x10] |     | Session. |     |     |
+| --- | ------ | --- | -------- | --- | --- |
+Reducesmaximumpayloadsizeby4bytes.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Sendingaunicasttransmissiontoadevicewiththe64-bitaddressof0013A20012345678withthe
+serialdata"TxData".Transmitoptionsaresetto0,whichmeansthetransmissionwillsendusing
+theoptionssetbytheTOcommand.
+ThecorrespondingTransmitStatus-0x89responsewithamatchingFrameIDwillindicate
+whetherthetransmissionsucceeded.
+7E001410520013A20012345678FFFE000054784461746191
+| Frame |     |     | 16-bit | Bcast |     |
+| ----- | --- | --- | ------ | ----- | --- |
+radius
+| type | FrameID | 64-bitdest | dest   | Options   | RFdata          |
+| ---- | ------- | ---------- | ------ | --------- | --------------- |
+| 0x10 | 0x52    | 0x0013A200 | 0xFFFE | 0x00 0x00 | 0x547844617461  |
+12345678
+| Request | Matches | Destination | Unused | N/A Willuse | "TxData" |
+| ------- | ------- | ----------- | ------ | ----------- | -------- |
+response TO
+64-bitbroadcast
+Sendingabroadcasttransmissionoftheserialdata"Broadcast"toneighboringdevices and
+suppressingthecorrespondingresponsebysettingFrameIDto0.
+7E00171000000000000000FFFFFFFE010042726F616463617374 60
+| Frame   |          |            | 16-bit Bcast  | Tx                       |     |
+| ------- | -------- | ---------- | ------------- | ------------------------ | --- |
+| type    | FrameID  | 64-bitdest | dest radius   | Options RFdata           |     |
+| 0x10    | 0x00     | 0x00000000 | 0xFFFE 0x01   | 0x00 0x42726F61646361737 |     |
+|         |          | 0000FFFF   |               | 4                        |     |
+| Request | Suppress | Broadcast  | Unused Single | Willuse "Broadcast"      |     |
+|         | response | address    | hop           | TO                       |     |
+broadcast
+DigiXBee®3802.15.4RFModuleUserGuide 225
+
+Framedescriptions ExplicitAddressingCommandRequest-0x11
+Explicit Addressing Command Request - 0x11
+Responseframe: ExtendedTransmitStatus-0x8B
+Description
+ThisframetypeisusedtosendpayloaddataasanRFpackettoaspecificdestination
+using application-layeraddressingfields.ThebehaviorofthisframeissimilartoTransmitRequest
+-0x10,butwithadditionalfieldsavailableforuser-definedendpoints,clusterID,andprofileID.
+ThisframetypeistypicallyusedforOTAupdates,andserialdatatransmissions.
+QueryNP(MaximumPacketPayloadBytes)toreadthemaximumnumberofpayloadbytesthat
+canbesentin.
+SeeMaximumpayloadforadditionalinformationonpayloadsizerestrictions.
+64-bit addressing
+n Forbroadcasttransmissions,setthe64-bitdestinationaddressto 0x000000000000FFFF
+n Forunicasttransmissions,setthe64-bitaddressfieldtotheaddressofthedesired
+destinationnode
+Reserved endpoints
+Forserialdatatransmissions,the0xE8 endpointshouldbeusedforbothsourceanddestination
+endpoints.
+Endpoints0xDC-0xEEarereservedforspecialusebyDigiandshouldnotbeusedinan
+applicationoutsideofthelistedpurpose. TheXBee802.15.4firmwareonlysupportsDigi-specific
+endpoints,endpointsusedoutsideofthisrangewillbeinterpretedasthe0xE8dataendpoint.
+TheactiveDigiendpointsare:
+n 0xE8-DigiDataendpoint
+n 0xE6-DigiDeviceObject (DDO) endpoint
+n 0xE5-XBee3-SecureSessionServerendpoint
+n 0xE4-XBee3-SecureSessionClientendpoint
+n 0xE3-XBee3-SecureSessionSRPauthenticationendpoint
+Reserved cluster IDs
+Forserialdatatransmissions,the0x0011clusterIDshouldbeused.
+ThefollowingclusterIDscanbeusedonthe0xE8dataendpoint:
+n 0x0011-TransparentdataclusterID
+n 0x0012 - LoopbackclusterID:Thedestinationnodeechoesanytransmittedpacketbackto
+thesourcedevice.
+Reserved profile IDs
+TheDigiprofileIDof0xC105shouldbeusedwhensendingserialdatabetweenXBeedevices.
+DigiXBee®3802.15.4RFModuleUserGuide 226
+
+Framedescriptions ExplicitAddressingCommandRequest-0x11
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+| Offset | Size  | FrameField | Description                    |
+| ------ | ----- | ---------- | ------------------------------ |
+| 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+|     |        | Frametype | ExplicitAddressingCommandRequest-0x11     |
+| 3   | 8-bit  |           |                                           |
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 64-bit 64-bit Settothe64-bitIEEEaddressofthedestinationdevice.
+|     |     | destination | Broadcastaddressis 0x000000000000FFFF. |
+| --- | --- | ----------- | -------------------------------------- |
+address
+13 16-bit Reserved Unused,butthisfieldistypicallysetto0xFFFE.
+|     |       | Source      | Sourceendpointforthetransmission.      |
+| --- | ----- | ----------- | -------------------------------------- |
+| 15  | 8-bit |             |                                        |
+|     |       | Endpoint    | Serialdatatransmissionsshoulduse0xE8.  |
+| 16  | 8-bit | Destination | Destinationendpointforthetransmission. |
+|     |       | Endpoint    | Serialdatatransmissionsshoulduse0xE8.  |
+17 16-bit ClusterID TheClusterIDthatthehostusesinthetransmission.
+Serialdatatransmissionsshoulduse0x11.
+19 16-bit ProfileID TheProfileIDthatthehostusesinthetransmission.
+SerialdatatransmissionsbetweenXBeedevicesshould
+use0xC105.
+| 21  | 8-bit | Broadcast | Setsthemaximumnumberofhopsabroadcast               |
+| --- | ----- | --------- | -------------------------------------------------- |
+|     |       | radius    | transmissioncantraverse.Thisparameterisonlyusedfor |
+broadcasttransmissions.
+Ifsetto 0(recommended),thevalueof NH specifiesthe
+broadcastradius.
+22 8-bit Transmit SeetheTransmitoptionsbitfieldtablebelowforavailable
+|     |     | options | options. |
+| --- | --- | ------- | -------- |
+Ifsetto 0,thevalueof TO specifiesthetransmitoptions.
+23-n variable Command Datatobesenttothedestinationdevice. Upto NP bytes
+|     |     | data | perpacket. |
+| --- | --- | ---- | ---------- |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+| Transmit | options | bit field |     |
+| -------- | ------- | --------- | --- |
+Theavailabletransmitoptionsvarydependingontheprotocolbeingused.Bitfieldoptionscanbe
+combined.Setallunusedbitsto0.
+DigiXBee®3802.15.4RFModuleUserGuide 227
+
+| Framedescriptions |     |     | ExplicitAddressingCommandRequest-0x11 |     |     |
+| ----------------- | --- | --- | ------------------------------------- | --- | --- |
+SendingaunicastmessagewithMAC ACKsdisabledisnotintendedtobeareliableformof
+communication,asnoACKsareproducedbyrecipients.
+802.15.4
+| Bit Meaning          |     | Description                          |     |     |     |
+| -------------------- | --- | ------------------------------------ | --- | --- | --- |
+| 0 DisableACK[0x01]   |     | Disableacknowledgmentsonallunicasts. |     |     |     |
+| 1 BroadcastPAN[0x02] |     | TransmissionissenttoallPANs.         |     |     |     |
+| 2 Reserved           |     | <setthisbitto0>                      |     |     |     |
+| 3 Reserved           |     | <setthisbitto0>                      |     |     |     |
+4 SecureSessionEncryption EncryptpayloadfortransmissionacrossaSecure
+| [0x10] |     | Session. |     |     |     |
+| ------ | --- | -------- | --- | --- | --- |
+Reducesmaximumpayloadsizeby4bytes.
+Examples
+Eachexampleiswrittenwithoutescapes(AP = 1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+SendingaunicasttransmissiontoanXBeedevicewiththe64-bitaddress
+of 0013A20012345678 withtheserialdata"TxData".Transmitoptionsaresetto0,whichmeans
+thetransmissionwillsendusingtheoptionssetbytheTOcommand.Thistransmissionisidentical
+toa TransmitRequest-0x10 usingdefaultsettings.
+Thecorresponding ExtendedTransmitStatus-0x8B responsewithamatchingFrameIDwill
+indicatewhetherthetransmissionsucceeded.
+7E001A11870013A20012345678FFFEE8E80011C1050000547844617461B4
+Bca
+| Fram    |        | Sour      |           | st          | Tx            |
+| ------- | ------ | --------- | --------- | ----------- | ------------- |
+| e Frame | 64-bit | Reserv ce | Des Clust | Profil radi | optio Command |
+| type ID | dest   | ed EP     | tEP er    | e us        | ns data       |
+0x11 0x87 0x0013A 0xFFF 0xE8 0xE 0x00 0xC1 0x00 0x00 0x54784461
+|     | 200 | E   | 8 11 | 05  | 7461  |
+| --- | --- | --- | ---- | --- | ----- |
+1234567
+8
+Expli Match Destinati Unused Digi Digi Data Digi N/A Use "TxData"
+| cit es       | on  | data | dat | profile | TO  |
+| ------------ | --- | ---- | --- | ------- | --- |
+| reque respon |     |      | a   |         |     |
+st se
+LoopbackPacket
+Sendingaloopbacktransmissiontoandevicewiththe64-bitaddressof 0013A20012345678
+usingClusterID0x0012.Tobetterunderstandtherawperformance,retriesand
+DigiXBee®3802.15.4RFModuleUserGuide 228
+
+Framedescriptions ExplicitAddressingCommandRequest-0x11
+acknowledgementsaredisabled.
+Thecorresponding ExtendedTransmitStatus-0x8BresponsewithamatchingFrameIDcanbe
+usedtoverifythatthetransmissionwassent.
+Thedestinationwillnotemitareceiveframe,insteaditwillreturnthetransmissionbacktothe
+sender.Thesourcedevicewillemitthereceiveframe—theframetypeisdeterminedbythevalue
+of AO—ifthepacketloopedbacksuccessfully.
+7E001A11F80013A20012345678FFFEE8E80012C105000154784461746141
+Bca
+| Fram    |        |        | Sour         | st          | Tx            |
+| ------- | ------ | ------ | ------------ | ----------- | ------------- |
+| e Frame | 64-bit | Reserv | ce Des Clust | Profil radi | optio Command |
+| type ID | dest   | ed     | EP tEP er    | e us        | ns data       |
+0x0013A
+| 0x11 0xF8 |     | 0xFFF | 0xE8 0xE 0x00 | 0xC1 0x00 | 0x01 0x54784461 |
+| --------- | --- | ----- | ------------- | --------- | --------------- |
+|           | 200 | E     | 8 12          | 05        | 7461            |
+1234567
+8
+Expli Match Destinati Unused Digi Digi Data Digi N/A Disab "TxData"
+| cit es       | on  |     | data dat | profile | le     |
+| ------------ | --- | --- | -------- | ------- | ------ |
+| reque respon |     |     | a        |         | retrie |
+| st se        |     |     |          |         | s      |
+DigiXBee®3802.15.4RFModuleUserGuide 229
+
+Framedescriptions RemoteATCommandRequest-0x17
+Remote AT Command Request - 0x17
+Responseframe: 0x97-RemoteATCommandResponse
+Description
+ThisframetypeisusedtoqueryorsetATcommandparametersonaremotedevice.
+Forparameterchangesontheremotedevicetotakeeffect,youmustapplychanges,eitherby
+settingtheApplyChangesoptionsbit,orbysendinganACcommandtotheremote.
+Whenqueryingparametervaluesyoucanqueryparametervaluesbysendingthisframewitha
+commandbutnoparametervaluefield—thetwo-byteATcommandisimmediatelyfollowedbythe
+framechecksum.WhenanATcommandisqueried,a RemoteATCommandResponse-
+0x97 frame ispopulatedwiththeparametervaluethatiscurrentlysetonthedevice.TheFrameID
+ofthe0x97responseisthesameonesetbythecommandinthe0x17requestframe.
+XBee3802.15.4RFModulefirmwaressupportsecuredremoteconfigurationthroughaSecure
+Session.Referto SecuredremoteATcommands forinformationonhowtosecureyourdevices
+againstunauthorizedremoteconfiguration.
+NoteRemoteATCommandRequestsshouldonlybeissuedasunicasttransmissionstoavoid
+potentialnetworkdisruption.Broadcastsarenotacknowledged,sothereisnoguaranteeall
+deviceswillreceivetherequest.Responsesarereturnedimmediatelybyallreceivingdevices,
+whichcancausecongestiononalargenetwork.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype RemoteATCommandRequest-0x17.
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 64-bit 64-bit Settothe64-bitIEEEaddressofthedestinationdevice.
+destination Whenusing16-bitaddressing,setthisfield
+address to 0xFFFFFFFFFFFFFFFF.
+13 16-bit Reserved Unused,butthisfieldistypicallysetto 0xFFFE.
+15 8-bit Remote BitfieldofoptionsthatapplytotheremoteATcommand
+command request:
+options
+n Bit0:DisableACK [0x01]
+DigiXBee®3802.15.4RFModuleUserGuide 230
+
+| Framedescriptions |            |             | RemoteATCommandRequest-0x17 |     |     |
+| ----------------- | ---------- | ----------- | --------------------------- | --- | --- |
+| Offset Size       | FrameField | Description |                             |     |     |
+n Bit1:Applychangesonremote[0x02]
+Ifnotset,changeswillnotapplieduntilthedevice
+l
+receivesanACcommandorasubsequent
+commandchangeisreceivedwiththisbitset
+n Bit2:Reserved(setto0)
+n Bit3:Reserved(setto0)
+n Bit4:Sendtheremotecommandsecurely[0x10]
+|     |     | l   | Requiresasecuresessionbeestablishedwith |     |     |
+| --- | --- | --- | --------------------------------------- | --- | --- |
+thedestination
+NoteOptionvaluesmaybecombined. Setallunusedbitsto
+0.
+| 16 16-bit | AT  | ThetwoASCIIcharactersthatidentifythe ATCommand. |     |     |     |
+| --------- | --- | ----------------------------------------------- | --- | --- | --- |
+command
+18-n variable Parameter Ifpresent,indicatestherequestedparametervaluetoset
+|     | value      | thegivenregister.                            |     |     |     |
+| --- | ---------- | -------------------------------------------- | --- | --- | --- |
+|     | (optional) | Ifnocharactersarepresent,itqueriesthecurrent |     |     |     |
+parametervalueandreturnstheresultintheresponse.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes—AP=1—andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+Setremotecommandparameter
+SettheNIstringof adevicewiththe64-bitaddressof0013A20012345678to"Remote"andapply
+thechangeimmediately.
+Thecorresponding RemoteATCommandResponse-0x97withamatchingFrameIDwillindicate
+success.
+7E001517270013A20012345678FFFE024E4952656D6F7465F6
+| Frame |     |     | Command | AT  |     |
+| ----- | --- | --- | ------- | --- | --- |
+type FrameID 64-bitdest Reserved options command Parametervalue
+| 0x17 0x27 | 0x0013A200 | 0xFFFE | 0x02 | 0x4E49 | 0x52656D6F7465 |
+| --------- | ---------- | ------ | ---- | ------ | -------------- |
+12345678
+| Request Matches |     | Unused | Apply | "NI" | "Remote" |
+| --------------- | --- | ------ | ----- | ---- | -------- |
+response Change
+DigiXBee®3802.15.4RFModuleUserGuide 231
+
+| Framedescriptions |     |     | Bluetooth®LowEnergy(LE) UnlockRequest-0x2C |     |     |     |
+| ----------------- | --- | --- | ------------------------------------------ | --- | --- | --- |
+Queueremotecommandparameterchange
+ChangethePANIDofaremotedevicesoitcanmigratetoanewPAN,sincethischangewould
+causenetworkdisruption,thechangeisqueuedsothatitcanbemadeactivelaterwitha
+subsequent ACcommandorwrittentoflashwithaqueuedWRcommandsothechangewillbe
+activeafterapowercycle.
+ThecorrespondingRemoteATCommandResponse-0x97 withamatchingFrameIDwillindicate
+success.
+7E001117680013A20012345678FFFE0049440451D8
+| Frame |         |            |          | Command | AT      | Parameter |
+| ----- | ------- | ---------- | -------- | ------- | ------- | --------- |
+| type  | FrameID | 64-bitdest | Reserved | options | command | value     |
+| 0x17  | 0x68    | 0x0013A200 | 0xFFFE   | 0x00    | 0x4944  | 0x0451    |
+12345678
+| Request | Matches  |     | Unused | Queue  | "ID" |     |
+| ------- | -------- | --- | ------ | ------ | ---- | --- |
+|         | response |     |        | Change |      |     |
+Queryremotecommandparameter
+Querythetemperatureofaremotedevice—TPcommand.
+Thecorresponding RemoteATCommandResponse-0x97 withamatchingFrameIDwillreturn
+thetemperaturevalue.
+7E000F17FA0013A20012345678FFFE00545084
+| Frame |         |            |          | Command | AT      | Parameter |
+| ----- | ------- | ---------- | -------- | ------- | ------- | --------- |
+| type  | FrameID | 64-bitdest | Reserved | options | command | value     |
+| 0x17  | 0xFA    | 0x0013A200 | 0xFFFE   | 0x00    | 0x5450  | (omitted) |
+12345678
+| Request    | Matches    |             | Unused | N/A     | "TP"   | Querythe  |
+| ---------- | ---------- | ----------- | ------ | ------- | ------ | --------- |
+|            | response   |             |        |         |        | parameter |
+| Bluetooth® | Low Energy | (LE) Unlock |        | Request | - 0x2C |           |
+Responseframe: Bluetooth®LowEnergy(LE) UnlockResponse-0xAC
+Description
+ThisframetypeisusedtoauthenticateaconnectionontheBluetooth®interfaceandunlockthe
+processingofAT commandframesacrossthisinterface.TheframeformatfortheBluetooth®Low
+Energy(LE) UnlockRequest-0x2C andBluetooth®LowEnergy(LE) UnlockResponse-
+0xAC areidentical.
+TheunlockprocessisanimplementationoftheSRP(SecureRemotePassword)algorithmusing
+theRFC50541024-bitgroupandtheSHA-256hashalgorithm. TheSRPidentifyingusername,
+commonlyreferredtoas I,isfixedtotheusernameapiservice.
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |     |     | 232 |
+| ----------------------------------- | --- | --- | --- | --- | --- | --- |
+
+Framedescriptions Bluetooth®LowEnergy(LE) UnlockRequest-0x2C
+Uponcompletion,eachsidewillhavederivedasharedsessionkeywhichisusedtocommunicate
+inanencryptedfashionwiththepeer.Additionally,aModemStatus-0x8Awiththestatuscode
+0x32(BluetoothConnected)isemitted.Whenanunlockedconnectionisterminated,aModem
+Statusframewiththestatuscode0x33(BluetoothDisconnected)isemitted.
+ThefollowingimplementationsareknowntoworkwiththeBluetoothLE SRPimplementation:
+n github.com/cncfanatics/SRP
+YouneedtomodifythehashingalgorithmtoSAH256andthevaluesofNandgtousethe
+RFC50541024-bitgroup.
+n github.com/cocagne/csrp
+n github.com/cocagne/pysrp
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+Offset Size Field Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype BluetoothLEUnlockRequest-0x2C
+BluetoothLEUnlockResponse-0xAC
+4 8-bit Step Indicatesthephaseofauthenticationandinterpretationof
+payloaddata:
+1. ClientpresentsAvalue
+2. ServerpresentsBandsalt
+3. ClientpresentM1sessionkeyvalidationvalue
+4. ServerpresentsM2sessionkeyvalidationvalueand
+two12-bytenonces
+Seethephasetablesbelowformoreinformation.
+Stepvaluesgreaterthan0x80indicateerrorconditions:
+0x80=UnabletoofferB—cryptographicerrorwith
+content,usuallyduetoAmodN==0
+0x81=Incorrectpayloadlength
+0x82=Badproofofkey
+0x83=Resourceallocationerror
+0x84=Requestcontainedastepnotinthecorrect
+sequence
+5-n varies Payload PayloadstructurevariesbyStepvalue.Refertothephase
+tablesbelowforthestructureofthisfield.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte—
+betweenlengthandchecksum.
+DigiXBee®3802.15.4RFModuleUserGuide 233
+
+| Framedescriptions |        |     |     | Bluetooth®LowEnergy(LE) UnlockRequest-0x2C |
+| ----------------- | ------ | --- | --- | ------------------------------------------ |
+| Phase             | tables |     |     |                                            |
+Thefollowingfieldsareinsertedasthepayloaddatadependingonthephaseoftheauthentication
+process
+Phase1(ClientpresentsA)
+Frame
+| Offset | Size     | Field | Description                                 |     |
+| ------ | -------- | ----- | ------------------------------------------- | --- |
+| 5      | 1024-bit | A     | One-timeephemeralclientpublickey.           |     |
+|        | (128     |       | IftheAvalueiszero,theserverwillterminatethe |     |
+connection.
+bytes)
+Phase2(ServerpresentsBandsalt)
+| Offset | Size   |     | FrameField | Description                      |
+| ------ | ------ | --- | ---------- | -------------------------------- |
+| 5      | 32-bit |     | Salt       | TheSRPSaltvaluefromthe$Scommand. |
+(4bytes)
+| 9   | 1024-bit |     | B   | One-timeephemeralhostpublickey. |
+| --- | -------- | --- | --- | ------------------------------- |
+(128bytes)
+Phase3(ClientpresentsM1)
+| Offset | Size    |     | FrameField | Description                |
+| ------ | ------- | --- | ---------- | -------------------------- |
+| 5      | 256-bit |     | M1         | SHA256hashalgorithmdigest. |
+(32bytes)
+Phase4(ServerpresentsM2)
+Frame
+| Offset | Size    | Field | Description                 |     |
+| ------ | ------- | ----- | --------------------------- | --- |
+| 5      | 256-bit | M2    | SHA256hashalgorithmdigest . |     |
+(32
+bytes)
+37 96-bit Tx Randomnonceusedastheconstantprefixofthecounterblockfor
+(12 nonce encryption/decryptionofdatatransmittedtotheAPIservicebythe
+|     | bytes) |     | client. |     |
+| --- | ------ | --- | ------- | --- |
+49 96-bit Rx Randomnonceusedastheconstantprefixofthecounterblockfor
+(12 nonce encryption/decryptionofdatareceivedbytheclientfromtheAPI
+|     | bytes) |     | service. |     |
+| --- | ------ | --- | -------- | --- |
+DigiXBee®3802.15.4RFModuleUserGuide 234
+
+Framedescriptions UserDataRelayInput -0x2D
+UponcompletionofM2verification,thesessionkeyhasbeendeterminedtobecorrectandtheAPI
+serviceisunlockedandwillallowadditionalAPIframestobeused.Contentfromthispointwillbe
+encryptedusingAES-256-CTRwiththefollowingparameters:
+n Key:Theentire32-bytesessionkey.
+n Counter:128bitstotal,prefixedwiththeappropriatenoncesharedduringauthentication.
+Initialremainingcountervalueis1.
+ThecounterfordatasentintotheXBeeAPIServiceisprefixedwiththeTXnoncevalue—see
+thePhase4table,above—andthecounterfordatasentbytheXBeetotheclientisprefixed
+withtheRXnoncevalue.
+Examples
+ExamplesequencetoperformATCommandXBeeAPIframesover
+Bluetooth®LE
+1. DiscovertheXBee3802.15.4RFModulethroughscanningforadvertisements.
+2. CreateaconnectiontotheGATTServer.
+3. Optional,butrecommended:requestalargerMTUfortheGATTconnection.
+4. TurnonindicationsfortheAPIResponsecharacteristic.
+5. PerformunlockprocedureusingBluetoothLE UnlockRequest-0x2C unlockframes.
+6. Onceunlocked,youmaysendLocalATCommandRequest-0x08framesandreceiveAT
+CommandResponseframesreceived.
+a. Foreachframetosend,formtheAPIFrame,andencryptthroughthestreamcipheras
+describedintheunlockprocedure.
+b. Writetheframeusingoneormorewriteoperations.
+c. Whensuccessful,theresponsearrivesinoneormoreindications.Ifyourstackdoesnot
+doitforyou,remembertoacknowledgeeachindicationasitisreceived.Notethatyou
+areexpectedtoprocesstheseindicationsandtheresponsedataisnotavailableifyou
+attempttoperformareadoperationtothecharacteristic.
+d. Decryptthestreamofcontentprovidedthroughtheindications,usingthestreamcipher
+asdescribedintheunlockprocedure.
+User Data Relay Input - 0x2D
+Responseframe:TransmitStatus-0x89
+Outputframe: UserDataRelayOutput-0xAD
+Description
+Thisframetypeisusedtorelayuserdatabetweenlocalinterfaces:MicroPython(internal
+interface),Bluetooth®LowEnergy(LE),ortheserialport. Datarelayedtotheserialport—whilein
+APImode—willbeoutputasaUserDataRelayOutput-0xAD frame.
+ForinformationandexamplesonhowtorelayuserdatausingMicroPython,seeSendandreceive
+UserDataRelayframesintheMicroPythonProgrammingGuide.
+ForinformationandexamplesonhowtorelayuserdatausingBluetooth®LE,seeCommunicate
+withaMicropythonapplicationintheXBeeMobileSDKuserguide.
+DigiXBee®3802.15.4RFModuleUserGuide 235
+
+Framedescriptions UserDataRelayInput -0x2D
+Use cases
+n YoucanusethisframetosenddatatoanexternalprocessorthroughtheXBeeUART/SPI
+viatheBluetoothLEconnection.UseacellphonetosendtheframewithUARTinterfaceas
+atarget.DatacontainedwithintheframeissentouttheUARTcontainedwithinanOutput
+Frame.Theexternalprocessorthenreceivesandactsontheframe.
+n UseanexternalprocessortooutputtheframeovertheUARTwiththeBluetoothLE
+interfaceasatarget.ThisoutputsthedatacontainedintheframeastheOutputFrameover
+theactiveBluetoothLE connectionviaindication.
+n AnexternalprocessoroutputstheFrameovertheUARTwiththeMicropythoninterfaceasa
+target. Micropythonoperatesoverthedataandpublishesthedatatomqtttopic.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype UserDataRelayInput-0x2D
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewitha
+subsequentresponse.
+Ifsetto0,thedevicewillnotemitaresponseframe.
+5 8-bit Destination Theintendedinterfaceforthepayloaddata:
+Interface 0= Serialport—SPI,orUARTwheninAPImode
+1=BluetoothLE
+2=MicroPython
+6-n variable Data Theuserdatatoberelayed
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Error cases
+Errorsarereportedina TransmitStatus-0x89framethatcorrespondswiththeFrameIDofthe
+RelayDataframe:
+Error
+code Error Description
+0x7C InvalidInterface Theuserspecifiedadestinationinterfacethatdoesnotexistoris
+unsupported.
+0x7D Interfacenot Thedestinationinterfaceisavalidinterface,butisnotinastatethat
+DigiXBee®3802.15.4RFModuleUserGuide 236
+
+Framedescriptions SecureSessionControl-0x2E
+Error
+code Error Description
+acceptingframes canacceptdata.
+Forexample:UARTnotinAPImode,BluetoothLEdoesnothavea
+GATTclientconnected,orbufferqueuesarefull.
+Ifthemessagewasrelayedsuccessfully,nostatuswillbegenerated.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+RelaytoMicroPython
+Ahostdeviceneedstopassthemessage"RelayData"toaMicroPythonapplicationrunningona
+localXBeedeviceviatheserialport.
+Acorresponding TransmitStatus-0x89 responsewithamatchingFrameIDwillindicateifthere
+wasaproblemwithrelayingthedata.
+Ifsuccessful,theXBeemicropythonapplicationcancall relay.receive()toretrievethedata.
+7E000D2D3D0252656C61792044617461FC
+Frametype FrameID Destinationinterface Data
+0x2D 0x3D 0x02 0x52656C61792044617461
+Input Matchesresponse MicroPython "RelayData"
+Secure Session Control - 0x2E
+Responseframe: 0xAE-SecureSessionResponse
+Description
+Thisframetypeisusedtocontrolasecuresessionbetweenaclientandaserver.Iftheremote
+nodehasapasswordsetandyousettheframetologin,thiswillestablishasecuresessionthatwill
+allowsecuredmessagestobepassedbetweentheserverandclient.
+Thisframeisalsousedforclientstologoutofanexistingsecuresession.
+SecureSessionsareend-to-endconnections.Ifaloginattemptisaddressedtoabroadcast
+address,theattemptwillfailwithaninvalidvalue—status0xA—error.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+DigiXBee®3802.15.4RFModuleUserGuide 237
+
+Framedescriptions SecureSessionControl-0x2E
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype SecureSessionControl-0x2E
+4 64-bit 64-bit Settothe64-bitIEEEaddressofthedestinationdevice.
+destination Settoabroadcastaddress(0x000000000000FFFF)to
+address affectallactiveincomingsessions.
+12 8-bit Secure Bitfieldofoptionsthat alterthesessionbehavior:
+Session
+n Bit0:Client-sidecontrol:
+options
+l [0x00]=Login-Logintoaserverasaclient.
+o Ifthisbitisclear,thelocaldevicewillactasa
+clientandinitiateSRPauthenticationwiththe
+targetserver.
+l [0x01]=Logout-Logoutofanexistingsession
+asaclient.
+o Ifthisbitisset,thelocaldevicewillattemptto
+endanexistingclient-sidesessionwiththe
+targetserver.
+o Whenset,allotheroptions,thetimeoutfield,
+andpasswordwillbeignored.
+n Bit1:Server-sidecontrol:
+l [0x02]= TerminateSession- Ifthisbitisset,the
+serverwillendactiveincomingsession(s).
+o Theaddressfieldcanbesettoaspecificnode
+orthebroadcastaddresscanbeusedtoend
+allincomingsessions.
+o Use ExtendedModemStatus-0x98 framesto
+managemultipleincomingsessions.
+n Bit2:Timeouttype:
+l [0x00]=Fixedtimeout-Thesessionterminates
+afterthetimeoutperiodhaselapsed.
+l [0x04]=Inter-packettimeout- Thetimeoutis
+refreshedeverytimeasecuretransmission
+occursbetweenclientandserver.
+NoteOptionvaluesmaybecombined. Setallunusedbitsto
+0.
+13 16-bit Timeout Timeoutvalueforthesecuresessioninunitsof⅒th
+second.Acceptsupto0x4650(30minutes).
+DigiXBee®3802.15.4RFModuleUserGuide 238
+
+Framedescriptions SecureSessionControl-0x2E
+Offset Size FrameField Description
+Asessionwithatimeoutof0x0000isconsideredayielding
+session.Yieldingsessionswillnevertimeout,butifaserver
+receivesarequesttostartasessionwhenithasthe
+maximumincomingsessions,theoldestyieldingsession
+willbeendedbytheservertomakeroomforthenew
+session.Sessionswithnon-zerotimeoutswillneverbe
+endedinthisway.
+15-n variable Password Thepasswordsetontheremotenode—upto64ASCII
+characters.Willbeignoredifthisframeisalogoutorserver
+terminationframe.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte—
+betweenlengthandchecksum.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+SecureSessionClient-Loginwithfixedtimeout
+Achangeisneededtobemadeonadevicethatissecuredagainstunauthorizedconfiguration
+changes.Agatewaythatisauthorizedtomakethechangelogsintotheremotenodefor5minutes
+asaclientusingthefollowingframe:
+Thecorresponding SecureSessionResponse-0xAE willindicatewhethertheloginattempt
+succeeded.
+7E00142E0013A20012345678000BB850415353574F5244D2
+Frametype 64-bitdest Sessionoptions Timeout Password
+0x2E 0x0013A200 0x00 0x02B8 0x50415353574F5244D2
+12345678
+Request Login 5minutes "PASSWORD"
+Fixed
+SecureSessionClient-Loginforstreamingdata
+Alargestreamofdataneedstobesenttoagatewaythatissecuredagainstreceiving
+unauthorizeddata.Becausethedatastream,andthegateway'sabilitytoprocessthedatais
+unknown,aSecureSessionusinga60secondinter-packettimeoutisestablished.Thesending
+devicelogsintothegatewayasaclientusingthefollowingframe:
+Thecorresponding SecureSessionResponse-0xAE willindicatewhethertheloginattempt
+succeeded.
+7E00132E0000000000000000040258526F7333627564D1
+DigiXBee®3802.15.4RFModuleUserGuide 239
+
+| Framedescriptions |            |                | SecureSessionControl-0x2E |                  |
+| ----------------- | ---------- | -------------- | ------------------------- | ---------------- |
+| Frametype         | 64-bitdest | Sessionoptions | Timeout                   | Password         |
+| 0x2E              | 0x00000000 | 0x04           | 0x0258                    | 0x526F7333627564 |
+00000000
+| Request | Zigbeecoordinator | Login |  60seconds | "Ros3bud" |
+| ------- | ----------------- | ----- | ---------- | --------- |
+Inter-packet
+DigiXBee®3802.15.4RFModuleUserGuide 240
+
+Framedescriptions 64-bitReceivePacket-0x80
+64-bit Receive Packet - 0x80
+Requestframes:
+n TransmitRequest-0x10
+n ExplicitAddressingCommandRequest-0x11
+n 64-bitTransmitRequest-0x00
+n 16-bitTransmitRequest -0x01
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithlegacyAPIoutput—AO(APIOutput
+Options) = 2—receivesanRFdatapacketfromadeviceconfiguredtouse64-bitsource
+addressing—MY=0xFFFE.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouseReceive
+Packet-0x90forreceptionofAPItransmissions.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+Offset Size Field Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype 64-bitReceivePacket-0x80
+4 64-bit 64-bit Thesender's64-bitIEEEaddress.
+source
+address
+12 8-bit RSSI ReceivedSignalStrengthIndicator.TheHexadecimal
+equivalentof(-dBm)value.ForexampleifRXsignal
+strengthis-40dBm,then0x28(40decimal)isreturned.
+13 8-bit Options Bitfieldofoptionsthatapplytothereceivedmessage:
+n Bit0:Reserved
+n Bit1:Packetwassentasabroadcast[0x02]
+n Bit2:802.15.4only-Packetwasbroadcastacrossall
+PANs [0x04]
+NoteOptionvaluesmaybecombined.
+DigiXBee®3802.15.4RFModuleUserGuide 241
+
+| Framedescriptions |     |     |     | 64-bitReceivePacket-0x80 |
+| ----------------- | --- | --- | --- | ------------------------ |
+Frame
+| Offset Size | Field | Description |     |     |
+| ----------- | ----- | ----------- | --- | --- |
+TheRFpayloaddatathatthedevicereceives.
+| 14-n variable | RFdata |     |     |     |
+| ------------- | ------ | --- | --- | --- |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Adevicewiththe64-bitaddressof 0013A20087654321 sentaunicasttransmissiontoaspecific
+devicewiththepayloadof"TxData".Thefollowingframeisemittedifthedestinationisconfigured
+withAO=2.
+7E0011800013A200123456785E0154784461746111
+| Frametype | 64-bitsource | RSSI | Rxoptions | Receiveddata    |
+| --------- | ------------ | ---- | --------- | --------------- |
+| 0x80      | 0x0013A200   | 0x5E | 0x01      | 0x547844617461  |
+87654321
+| Output |     | -94dBm | ACKwassent | "TxData" |
+| ------ | --- | ------ | ---------- | -------- |
+DigiXBee®3802.15.4RFModuleUserGuide 242
+
+Framedescriptions 16-bitReceivePacket-0x81
+16-bit Receive Packet - 0x81
+Requestframes:
+n TransmitRequest-0x10
+n ExplicitAddressingCommandRequest-0x11
+n 64-bitTransmitRequest-0x00
+n 16-bitTransmitRequest -0x01
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithlegacyAPIoutput—AO(APIOutput
+Options)=2—receivesanRFdatapacketfromadeviceconfiguredtouse16-bitsource
+addressing—MY<0xFFFE.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouseReceive
+Packet-0x90forreceptionofAPItransmissions.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+Offset Size Field Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype 16-bitReceivePacket-0x81
+4 16-bit 16-bit Thesender's16-bitnetworkaddress.
+source
+address
+6 8-bit RSSI ReceivedSignalStrengthIndicator.TheHexadecimal
+equivalentof(-dBm)value.ForexampleifRXsignal
+strengthis-40dBm,then0x28(40decimal)isreturned.
+7 8-bit Options Bitfieldofoptionsthatapplytothereceivedmessage:
+n Bit0:Reserved
+n Bit1:Packetwassentasabroadcast[0x02]
+n Bit2:802.15.4only-Packetwasbroadcastacrossall
+PANs [0x04]
+NoteOptionvaluesmaybecombined.
+DigiXBee®3802.15.4RFModuleUserGuide 243
+
+| Framedescriptions |     |     |     | 16-bitReceivePacket-0x81 |
+| ----------------- | --- | --- | --- | ------------------------ |
+Frame
+| Offset Size | Field | Description |     |     |
+| ----------- | ----- | ----------- | --- | --- |
+TheRFpayloaddatathatthedevicereceives.
+| 8-n variable | RFdata |     |     |     |
+| ------------ | ------ | --- | --- | --- |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Adevicewiththe16-bitaddressof1234sentaunicasttransmissiontoaspecificdevicewiththe
+payloadof"TxData".ThefollowingframeisemittedifthedestinationisconfiguredwithAO=2.
+7E000B8112345E0154784461746193
+| Frametype | 64-bitsource | RSSI   | Rxoptions  | Receiveddata    |
+| --------- | ------------ | ------ | ---------- | --------------- |
+| 0x80      | 0x1234       | 0x5E   | 0x01       | 0x547844617461  |
+| Output    |              | -94dBm | ACKwassent | "TxData"        |
+DigiXBee®3802.15.4RFModuleUserGuide 244
+
+Framedescriptions 64-bitI/OSampleIndicator-0x82
+| 64-bit I/O | Sample | Indicator | - 0x82 |
+| ---------- | ------ | --------- | ------ |
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithlegacyAPIoutput—AO(APIOutput
+Options)=2—receivesanI/Osampleframefromaremotedeviceconfiguredtouse64-bitsource
+addressing—MY=0xFFFE.OnlydevicesrunninginAPImodewillsendI/Osamplesouttheserial
+port.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouseI/OSample
+Indicator -0x92forreceptionofI/Osamples.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+| Offset | Size  | Field | Description                    |
+| ------ | ----- | ----- | ------------------------------ |
+| 0      | 8-bit | Start | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | 64-bitI/OSampleIndicator -0x82            |
+| 4   | 64-bit | 64-bit    | Thesender's64-bitIEEEaddress.             |
+source
+address
+| 12  | 8-bit | RSSI | ReceivedSignalStrengthIndicator.TheHexadecimal |
+| --- | ----- | ---- | ---------------------------------------------- |
+equivalentof(-dBm)value.ForexampleifRXsignal
+strengthis-40dBm,then0x28(40decimal)isreturned.
+13 8-bit Options Bitfieldofoptionsthatapplytothereceivedmessage:
+n Bit0:Reserved
+n Bit1:Packetwassentasabroadcast[0x02]
+Bit2:802.15.4only-Packetwasbroadcastacrossall
+n
+PANs [0x04]
+NoteOptionvaluesmaybecombined.
+| 14  | 8-bit | Numberof | Thenumberofsamplesetsincludedinthepayload. |
+| --- | ----- | -------- | ------------------------------------------ |
+samples
+15 16-bit Sample Bitfieldthat indicateswhichI/Olinesontheremoteare
+|     |     | mask | configuredasinputs,ifany: |
+| --- | --- | ---- | ------------------------- |
+DigiXBee®3802.15.4RFModuleUserGuide 245
+
+Framedescriptions 64-bitI/OSampleIndicator-0x82
+Frame
+Offset Size Field Description
+bit0:DIO0
+bit1:DIO1
+bit2:DIO2
+bit3:DIO3
+bit4:DIO4
+bit5:DIO5
+bit6:DIO6
+bit7:DIO7
+bit8:DIO8
+bit9:ADC0
+bit10:ADC1
+bit11:ADC2
+bit12:ADC3
+bit13:N/A
+bit14:N/A
+bit15:N/A
+EachbitrepresentseitheraDIOlineorADCchannel.Bitset
+to1ifchannelisactive.
+17 16-bit Digital IfthesamplesetincludesanydigitalI/O lines—Digital
+samples(if channelmask>0—thisfieldcontainsamplesforallenabled
+included) digitalI/Olines.Ifnodigitallinesareconfiguredasinputsor
+outputs,thisfieldwillbeomitted.
+DIOlinesthatdonothavesamplingenabledreturn0.Bitsin
+thisfieldarearrangedthesameastheyareinthechannel
+maskfield.
+19 16-bit Analog IfthesamplesetincludesanyanalogI/O lines,eachenabled
+variable samples(if analoginputreturnsa16-bitvalueindicatingtheADC
+included) measurementofthatinput.
+AnalogsamplesareorderedsequentiallyfromAD0toAD3.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+DigiXBee®3802.15.4RFModuleUserGuide 246
+
+Framedescriptions 16-bitI/OSampleIndicator-0x83
+| 16-bit I/O | Sample | Indicator | - 0x83 |
+| ---------- | ------ | --------- | ------ |
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithlegacyAPIoutput—AO(APIOutput
+Options)=2—receivesanI/Osampleframefromaremotedeviceconfiguredtouse64-bitsource
+addressing—MY=0xFFFE.OnlydevicesrunninginAPImodewillsendI/Osamplesouttheserial
+port.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.Fornewdesigns,weencourageyoutouseI/OSample
+Indicator -0x92forreceptionofI/Osamples.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+| Offset | Size  | Field | Description                    |
+| ------ | ----- | ----- | ------------------------------ |
+| 0      | 8-bit | Start | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | 16-bitI/OSampleIndicator -0x83            |
+| 4   | 16-bit | 16-bit    | Thesender's16-bitnetworkaddress.          |
+source
+address
+| 6   | 8-bit | RSSI | ReceivedSignalStrengthIndicator.TheHexadecimal |
+| --- | ----- | ---- | ---------------------------------------------- |
+equivalentof(-dBm)value.ForexampleifRXsignal
+strengthis-40dBm,then0x28(40decimal)isreturned.
+7 8-bit Options Bitfieldofoptionsthatapplytothereceivedmessage:
+n Bit0:Reserved
+n Bit1:Packetwassentasabroadcast[0x02]
+Bit2:802.15.4only-Packetwasbroadcastacrossall
+n
+PANs [0x04]
+NoteOptionvaluesmaybecombined.
+| 8   | 8-bit | Numberof | Thenumberofsamplesetsincludedinthepayload. |
+| --- | ----- | -------- | ------------------------------------------ |
+samples
+9 16-bit Sample Bitfieldthat indicateswhichI/Olinesontheremoteare
+|     |     | mask | configuredasinputs,ifany: |
+| --- | --- | ---- | ------------------------- |
+bit0:DIO0
+DigiXBee®3802.15.4RFModuleUserGuide 247
+
+Framedescriptions 16-bitI/OSampleIndicator-0x83
+Frame
+Offset Size Field Description
+bit1:DIO1
+bit2:DIO2
+bit3:DIO3
+bit4:DIO4
+bit5:DIO5
+bit6:DIO6
+bit7:DIO7
+bit8:DIO8
+bit9:ADC0
+bit10:ADC1
+bit11:ADC2
+bit12:ADC3
+bit13:N/A
+bit14:N/A
+bit15:N/A
+EachbitrepresentseitheraDIOlineorADCchannel.Bitset
+to1ifchannelisactive.
+11 16-bit Digital IfthesamplesetincludesanydigitalI/O lines—Digital
+samples(if channelmask>0—thisfieldcontainsamplesforallenabled
+included) digitalI/Olines.Ifnodigitallinesareconfiguredasinputsor
+outputs,thisfieldwillbeomitted.
+DIOlinesthatdonothavesamplingenabledreturn0.Bitsin
+thisfieldarearrangedthesameastheyareinthechannel
+maskfield.
+13 16-bit Analog IfthesamplesetincludesanyanalogI/O lines,eachenabled
+variable samples(if analoginputreturnsa16-bitvalueindicatingtheADC
+included) measurementofthatinput.
+AnalogsamplesareorderedsequentiallyfromAD0toAD3.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+DigiXBee®3802.15.4RFModuleUserGuide 248
+
+Framedescriptions LocalATCommandResponse-0x88
+| Local AT | Command | Response | - 0x88 |
+| -------- | ------- | -------- | ------ |
+Requestframes:
+n LocalATCommandRequest-0x08
+n QueueLocalATCommandRequest-0x09
+Description
+ThisframetypeisemittedinresponsetoalocalATCommandrequest.Somecommandssend
+backmultipleresponseframes;forexample,ND(NetworkDiscover).RefertoindividualAT
+commanddescriptionsfordetailsonAPIresponsebehavior.
+Thisframeisonlyemittedifthe FrameIDintherequestisnon-zero.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+| Offset | Size  | FrameField | Description                    |
+| ------ | ----- | ---------- | ------------------------------ |
+| 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | LocalATCommandResponse-0x88               |
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewithaprior
+request.
+| 5   | 16-bit | AT  | ThetwoASCIIcharactersthatidentifythe ATCommand. |
+| --- | ------ | --- | ----------------------------------------------- |
+command
+Statuscodeforthehost'srequest:
+| 7   | 8-bit | Command |      |
+| --- | ----- | ------- | ---- |
+|     |       | status  | 0=OK |
+1=ERROR
+2=Invalidcommand
+3=Invalidparameter
+8-n variable Command Ifthehostrequestedacommandparameterchange,this
+|     |     | data       | fieldwillbeomitted.                            |
+| --- | --- | ---------- | ---------------------------------------------- |
+|     |     | (optional) | Ifthehostqueriedacommandbyomittingtheparameter |
+valueintherequest,thisfieldwillreturnthevaluecurrently
+setonthedevice.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+DigiXBee®3802.15.4RFModuleUserGuide 249
+
+| Framedescriptions |     |     | LocalATCommandResponse-0x88 |     |     |
+| ----------------- | --- | --- | --------------------------- | --- | --- |
+Setlocalcommandparameter
+HostsettheNIstringofthelocaldeviceto"EndDevice"usinga0x08requestframe.
+ThecorrespondingLocalATCommandResponse-0x88 withamatchingFrameIDisemittedasa
+response:
+7E000588014E4900DF
+|           |         | AT      | Command |                          |     |
+| --------- | ------- | ------- | ------- | ------------------------ | --- |
+| Frametype | FrameID | command | Status  | Commanddata              |     |
+| 0x88      | 0xA1    | 0x4E49  | 0x00    | (omitted)                |     |
+| Response  | Matches | "NI"    | Success | Parameterchangesreturnno |     |
+|           | request |         |         | data                     |     |
+Querylocalcommandparameter
+Hostqueriesthetemperatureofthelocaldevice—TPcommand—usinga0x08requestframe.
+ThecorrespondingLocalATCommandResponse-0x88 withamatchingFrameIDisemittedwith
+thetemperaturevalueasaresponse:
+7E00078801545000FFFED5
+| Frametype | FrameID        | ATcommand | CommandStatus |     | Commanddata |
+| --------- | -------------- | --------- | ------------- | --- | ----------- |
+| 0x88      | 0x17           | 0x5450    | 0x00          |     | 0xFFFE      |
+| Response  | Matchesrequest | "TP"      | Success       |     | -2°C        |
+DigiXBee®3802.15.4RFModuleUserGuide 250
+
+Framedescriptions TransmitStatus-0x89
+Transmit Status - 0x89
+Requestframes:
+n 64-bitTransmitRequest-0x00
+n 16-bitTransmitRequest -0x01
+n UserDataRelayInput -0x2D
+Description
+Thisframetypeisemittedwhenatransmitrequest completes.Thestatusfieldofthisframe
+indicateswhethertherequestsucceededorfailedandthereason.
+ThisframeisonlyemittediftheFrameIDintherequestisnon-zero.
+NoteThisframeformatisdeprecatedandshouldonlybeusedbycustomerswhorequire
+compatibilitywithlegacyDigiRFproducts.
+NoteBroadcasttransmissionsarenotacknowledgedandalwaysreturnastatusof0x00,evenif
+thedeliveryfailed.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+Offset Size Field Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype TransmitStatus-0x89
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewithaprior
+request.
+5 8-bit Delivery Completelistofdeliverystatuses:
+status 0x00 =Success
+0x01=NoACKreceived
+0x02=CCAfailure
+0x03=Indirectmessageunrequested
+0x04=Transceiverwasunabletocompletethe
+transmission
+0x21 = NetworkACKfailure
+0x22= Notjoinedtonetwork
+0x2C=Invalidframevalues(checkthephonenumber)
+0x31=Internalerror
+0x32= Resourceerror-lackoffreebuffers,timers,etc.
+0x34=NoSecureSessionConnection
+DigiXBee®3802.15.4RFModuleUserGuide 251
+
+Framedescriptions TransmitStatus-0x89
+Frame
+Offset Size Field Description
+0x35=EncryptionFailure
+0x74=Messagetoolong
+0x76=Socketclosedunexpectedly
+0x78 =InvalidUDPport
+0x79=InvalidTCPport
+0x7A=Invalidhostaddress
+0x7B=Invaliddatamode
+0x7C=Invalidinterface. See UserDataRelayInput -
+0x2D.
+0x7D=Interfacenotacceptingframes. See UserData
+RelayInput -0x2D.
+0x7E=Amodemupdateisinprogress.Tryagainafter
+theupdateiscomplete.
+0x80=Connectionrefused
+0x81=Socketconnectionlost
+0x82=Noserver
+0x83=Socketclosed
+0x84=Unknownserver
+0x85=Unknownerror
+0x86=InvalidTLSconfiguration(missingfile,andso
+forth)
+0x87=Socketnotconnected
+0x88=Socketnotbound
+Refertothetablesbelowforafilteredlistofstatuscodesthat
+areappropriateforspecificdevices.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Delivery status codes
+Protocol-specificstatuscodesfollow
+802.15.4
+0x00 =Success
+0x01=NoACKreceived
+0x02=CCAfailure
+0x03=Indirectmessageunrequested
+0x04=Transceiverwasunabletocompletethetransmission
+0x21 = NetworkACKfailure
+0x22= Notjoinedtonetwork
+0x31=Internalerror
+0x32= Resourceerror-lackoffreebuffers,timers,etc.
+0x34=NoSecureSessionConnection
+0x35=EncryptionFailure
+0x74=Messagetoolong
+0x7C=Invalidinterface. See UserDataRelayInput -0x2D.
+DigiXBee®3802.15.4RFModuleUserGuide 252
+
+Framedescriptions TransmitStatus-0x89
+0x7D=Interfacenotacceptingframes. See UserDataRelayInput -0x2D.
+Example
+Thisexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,onlythehighlightedbytesoftheframearedocumented.
+Successfultransmission
+Hostsentaunicasttransmissiontoaremotedeviceusinga 64-bitTransmitRequest-0x00 frame.
+Thecorresponding 0x89TransmitStatus withamatchingFrameIDisemittedasaresponsetothe
+request:
+7E0003895200 24
+| Frametype | FrameID        | Deliverystatus |
+| --------- | -------------- | -------------- |
+| 0x89      | 0x52           | 0x00           |
+| Response  | Matchesrequest | Success        |
+DigiXBee®3802.15.4RFModuleUserGuide 253
+
+Framedescriptions ModemStatus-0x8A
+Modem Status - 0x8A
+Description
+Thisframetypeisemittedinresponsetospecificconditions.Thestatusfieldofthisframeindicates
+thedevicebehavior.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+Offset Size Field Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype ModemStatus-0x8A
+4 8-bit Modem Completelistofmodemstatuses:
+status 0x00=Hardwareresetorpowerup
+0x01= Watchdogtimerreset
+0x02=Joinednetwork
+0x03=Leftnetwork
+0x06=Coordinatorstarted
+0x07=Networksecuritykeywasupdated
+0x0B=Networkwokeup
+0x0C=Networkwenttosleep
+0x0D=Voltagesupplylimitexceeded
+0x0E=RemoteManagerconnected
+0x0F=RemoteManagerdisconnected
+0x11=Modemconfigurationchangedwhilejoininprogress
+0x12=Accessfault
+0x13=Fatalerror
+0x3B=Securesessionsuccessfullyestablished
+0x3C=Securesessionended
+0x3D=Securesessionauthenticationfailed
+0x3E=CoordinatordetectedaPANIDconflictbuttookno
+action
+0x3F=CoordinatorchangedPANIDduetoaconflict
+0x32=Bluetooth®LowEnergy(LE) Connect
+0x33=BluetoothLEDisconnect
+0x34=Bandmaskconfigurationfailed
+0x35=Cellularcomponentupdatestarted
+0x36=Cellularcomponentupdatefailed
+0x37=Cellularcomponentupdatecompleted
+0x38=XBeefirmwareupdatestarted
+0x39=XBeefirmwareupdatefailed
+0x3A=XBeefirmwareupdateapplying
+DigiXBee®3802.15.4RFModuleUserGuide 254
+
+Framedescriptions ModemStatus-0x8A
+Frame
+Offset Size Field Description
+0x40=RouterPANIDwaschangedbycoordinatorduetoa
+conflict
+0x42=NetworkWatchdogtimeoutexpired
+0x80 through 0xFF=Stackerror
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Modem status codes
+Statusesforspecificmodemtypesarelistedhere.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+Bootstatus
+Whenadevicepowersup,itreturnsthefollowingAPIframe:
+7E00028A0075
+Frametype ModemStatus
+0x8A 0x00
+Status HardwareReset
+DigiXBee®3802.15.4RFModuleUserGuide 255
+
+Framedescriptions ExtendedTransmitStatus-0x8B
+| Extended | Transmit | Status | - 0x8B |
+| -------- | -------- | ------ | ------ |
+Requestframes:
+n TransmitRequest-0x10
+n ExplicitAddressingCommandRequest-0x11
+Description
+Thisframetypeisemittedwhenanetworktransmissionrequest completes.Thestatusfieldofthis
+frameindicateswhethertherequestsucceededorfailedandthereason.Thisframetypeprovides
+additionalnetworkingdetailsaboutthetransmission.
+Thisframeisonlyemittedifthe FrameIDintherequestisnon-zero.
+NoteBroadcasttransmissionsarenotacknowledgedandalwaysreturnastatusof0x00,evenif
+thedeliveryfailed.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+| Offset | Size  | FrameField | Description                    |
+| ------ | ----- | ---------- | ------------------------------ |
+| 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | TransmitStatus-0x8B                       |
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewithaprior
+request.
+| 5   | 16-bit | Reserved | Unused,butthisfieldistypicallysetto0xFFFE. |
+| --- | ------ | -------- | ------------------------------------------ |
+7 8-bit Transmit Thenumberofapplicationtransmissionretriesthatoccur.
+retrycount
+| 7   | 8-bit | Reserved | Unused.                         |
+| --- | ----- | -------- | ------------------------------- |
+| 8   | 8-bit | Delivery | Completelistofdeliverystatuses: |
+0x00=Success
+status
+0x01=MACACKfailure
+0x02=CCA/LBTfailure
+0x03=Indirectmessageunrequested/nospectrum
+available
+0x21=NetworkACKfailure
+0x25=Routenotfound
+0x31=Internalresourceerror
+0x32=Resourceerrorlackoffreebuffers,timers,etc.
+0x74=Datapayloadtoolarge
+DigiXBee®3802.15.4RFModuleUserGuide 256
+
+Framedescriptions ExtendedTransmitStatus-0x8B
+Offset Size FrameField Description
+0x75=Indirectmessageunrequested
+Refertothetablesbelowforafilteredlistofstatuscodesthat
+areappropriateforspecificdevices.
+9 8-bit Discovery Completelistofdeliverystatuses:
+status 0x00=Nodiscoveryoverhead
+0x02=Routediscovery
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Delivery status codes
+Protocol-specificstatuscodesfollow
+802.15.4
+0x00=Success
+0x01=MACACKFailure
+0x02=CCAfailure
+0x03=Indirectmessageunrequested
+0x21=NetworkACKFailure
+0x31=Internalresourceerror
+0x34=XBee3-NoSecureSessionConnection
+0x35=EncryptionFailure
+0x74=Datapayloadtoolarge
+DigiXBee®3802.15.4RFModuleUserGuide 257
+
+Framedescriptions ReceivePacket-0x90
+Receive Packet - 0x90
+Requestframes:
+n TransmitRequest-0x10
+n ExplicitAddressingCommandRequest-0x11
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithstandardAPIoutput—AO(APIOutput
+Options)=0—receivesanRFdatapacket.
+Typicallythisframeisemittedasaresultofadeviceonthenetworksendingserialdatausing
+the TransmitRequest-0x10 or ExplicitAddressingCommandRequest-0x11 addressedeitheras
+abroadcastorunicasttransmission.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Offset Size FrameField Description
+0 8-bit Start IndicatesthestartofanAPIframe.
+Delimiter
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype ReceivePacket-0x90
+4 64-bit 64-bitsource Thesender's64-bitaddress.
+address Ifthesender's16-bitaddressisused,thenitwillreturnall
+0xFF.
+12 16-bit 16-bitsource Thesender's16-bitnetworkaddress.
+address Ifthesender's64-bitaddressisused,thenitwillbe
+0xFFFE.
+14 8-bit Receive Bitfieldofoptionsthatapplytothereceivedmessage:
+options
+n Bit0:Reserved
+n Bit1:Packetwassentasabroadcast[0x02]
+n Bit2:802.15.4only-Packetwasbroadcastacross
+allPANs [0x04]
+n Bit3:Reserved
+n Bit4:Packetwasreceivedacrossasecuresession
+[0x10]
+n Bit5,6,7:Reserved
+15-n variable Received TheRFpayloaddatathatthedevicereceives.
+data
+DigiXBee®3802.15.4RFModuleUserGuide 258
+
+| Framedescriptions |            |             |     | ReceivePacket-0x90 |
+| ----------------- | ---------- | ----------- | --- | ------------------ |
+| Offset Size       | FrameField | Description |     |                    |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP = 1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Adevicewiththe64-bitaddressof 0013A20041AEB54E sentaunicasttransmissiontoaspecific
+devicewiththepayloadof"TxData".Thefollowingframeisemittedifthedestinationisconfigured
+withAO=0.
+7E0012900013A20041AEB54EFFFEC1547844617461C4
+| Frametype | 64-bitsource | Reserved | Rxoptions | Receiveddata |
+| --------- | ------------ | -------- | --------- | ------------ |
+0x0013A200
+| 0x90 |     | 0xFFFE | 0x00 | 0x547844617461  |
+| ---- | --- | ------ | ---- | --------------- |
+41AEB54E
+| Output |     | Use64-bitaddress | Unicast | "TxData" |
+| ------ | --- | ---------------- | ------- | -------- |
+DigiXBee®3802.15.4RFModuleUserGuide 259
+
+Framedescriptions ExplicitReceiveIndicator-0x91
+| Explicit | Receive | Indicator | - 0x91 |
+| -------- | ------- | --------- | ------ |
+Requestframes:
+n TransmitRequest-0x10
+n ExplicitAddressingCommandRequest-0x11
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithexplicitAPIoutput—AO(APIOutput
+Options)bit1 set—receivesapacket.
+Typicallythisframeisemittedasaresultofadeviceonthenetworksendingserialdatausing
+the TransmitRequest-0x10 or ExplicitAddressingCommandRequest-0x11 addressedeitheras
+abroadcastorunicasttransmission.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+|     | Offset Size | FrameField | Description                    |
+| --- | ----------- | ---------- | ------------------------------ |
+|     | 0 8-bit     | Start      | IndicatesthestartofanAPIframe. |
+Delimiter
+|     | 1 16-bit | Length       | Numberofbytesbetweenthelengthandchecksum. |
+| --- | -------- | ------------ | ----------------------------------------- |
+|     | 3 8-bit  | Frametype    | ExplicitReceiveIndicator-0x91             |
+|     | 4 64-bit | 64-bitsource | Thesender's64-bitaddress.                 |
+address
+Unused,butthisfieldistypicallysetto0xFFFE.
+|     | 12 16-bit | Reserved |     |
+| --- | --------- | -------- | --- |
+14 8-bit Source Endpointofthesourcethatinitiatedtransmission.
+endpoint
+15 8-bit Destination Endpointofthedestinationthatthemessageisaddressed
+|     |           | endpoint  | to.                                    |
+| --- | --------- | --------- | -------------------------------------- |
+|     | 16 16-bit | ClusterID | TheClusterIDthattheframeisaddressedto. |
+|     | 18 16-bit | ProfileID | TheProfileIDthatthefameisaddressedto.  |
+20 8-bit Receive Bitfieldofoptionsthatapplytothereceivedmessagefor
+|     |     | options | packetssentusingDigiendpoints(0xDC-0xEE): |
+| --- | --- | ------- | ----------------------------------------- |
+n Bit0:PacketwasAcknowledged[0x01]
+Bit1:Packetwassentasabroadcast[0x02]
+n
+n Bit2:802.15.4only-Packetwasbroadcastacross
+allPANs [0x04]
+n Bit4:Packetwassentacrossasecuresession
+DigiXBee®3802.15.4RFModuleUserGuide 260
+
+| Framedescriptions |            |             | ExplicitReceiveIndicator-0x91 |     |
+| ----------------- | ---------- | ----------- | ----------------------------- | --- |
+| Offset Size       | FrameField | Description |                               |     |
+[0x10]
+|     |     | n Bit5:Reserved |     |     |
+| --- | --- | --------------- | --- | --- |
+Bit6:Reserved
+n
+|     |     | n Bit6,7:DigiMeshdeliverymethod |     |     |
+| --- | --- | ------------------------------- | --- | --- |
+l b’00=<invalidoption>
+l b’01=Point-multipoint[0x40]
+b’10=DirectedBroadcast[0x80]
+l
+b’11=DigiMesh[0xC0]
+l
+NoteOptionvaluesmaybecombined.
+21-n variable Received TheRFpayloaddatathatthedevicereceives.
+data
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP = 1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+64-bitunicast
+Adevicewiththe64-bitaddressof 0013A20087654321 sentaunicasttransmissiontoaspecific
+devicewiththepayloadof"TxData".Thefollowingframeisemittedifthedestinationisconfigured
+withAO>1.
+7E0018910013A20041AEB54EFFFEE8E80011C105C15478446174611C
+| Frame 64-bit | Reserve | Sourc Dest | Cluste    | Rx                   |
+| ------------ | ------- | ---------- | --------- | -------------------- |
+| type source  | d       | eEP EP     | r Profile | options Receiveddata |
+0x91 0x0013A20 0x87BD 0xE8 0xE8 0x0011 0xC10 0xC1 0x5478446174
+0 5 61
+41AEB54E
+| Explicit | Unused | Digi Digi | Data Digi | ACK "TxData" |
+| -------- | ------ | --------- | --------- | ------------ |
+| output   |        | data data | profile   | wassent      |
+in
+DigiMes
+h
+network
+DigiXBee®3802.15.4RFModuleUserGuide 261
+
+Framedescriptions I/OSampleIndicator -0x92
+| I/O Sample | Indicator - | 0x92 |     |
+| ---------- | ----------- | ---- | --- |
+Description
+ThisframetypeisemittedwhenadeviceconfiguredwithstandardAPIoutput—AO(APIOutput
+Options)=0—receivesan I/Osampleframefromaremotedevice. OnlydevicesrunninginAPI
+modewillsendI/Osamplesouttheserialport.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+| Offset | Size  | Field | Description                    |
+| ------ | ----- | ----- | ------------------------------ |
+| 0      | 8-bit | Start | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | --------- | ----------------------------------------- |
+| 3   | 8-bit  | Frametype | I/OSampleIndicator-0x92                   |
+| 4   | 64-bit | 64-bit    | Thesender's64-bitIEEEaddress.             |
+source
+address
+| 12  | 16-bit | Reserved | Unused,buttypically0XFFFE. |
+| --- | ------ | -------- | -------------------------- |
+14 8-bit Receive Bitfieldofoptionsthatapplytothereceivedmessage:
+options
+n Bit0:PacketwasAcknowledged[0x01]
+n Bit1:Packetwassentasabroadcast[0x02]
+Note Optionvaluesmaybecombined.
+15 8-bit Numberof Thenumberofsamplesetsincludedinthepayload.This
+|     |     | samples | fieldtypicallyreports1sample. |
+| --- | --- | ------- | ----------------------------- |
+16 16-bit Digital Bitfieldthat indicateswhichI/Olinesontheremoteare
+|     |     | sample | configuredasdigitalinputsoroutputs,ifany: |
+| --- | --- | ------ | ----------------------------------------- |
+|     |     | mask   | bit0: DIO0                                |
+bit1:DIO1
+bit2:DIO2
+bit3: DIO3
+bit4:DIO4
+bit5:DIO5
+bit6:DIO6
+bit7:DIO7
+bit8:DIO8
+bit9:DIO9
+bit10:DIO10
+bit11:DIO11
+DigiXBee®3802.15.4RFModuleUserGuide 262
+
+Framedescriptions I/OSampleIndicator -0x92
+Frame
+Offset Size Field Description
+bit12:DIO12
+bit13:DIO13
+bit14:DIO14
+bit15:N/A
+Forexample,adigitalchannelmaskof0x002Fmeans
+DIO 0,1,2,3,and5areenabledasdigitalI/O.
+18 8-bit Analog Bitfieldthat indicateswhichI/Olinesontheremoteare
+sample configuredasanaloginput,ifany:
+mask bit0:AD0
+bit1:AD1
+bit2:AD2
+bit3:AD3
+bit7: SupplyVoltage(enabledwithV+command)
+19 16-bit Digital IfthesamplesetincludesanydigitalI/O lines(Digital
+samples(if channelmask>0),thisfieldcontainsamplesforallenabled
+included) digitalI/Olines.Ifnodigitallinesareconfiguredasinputsor
+outputs,thisfieldwillbeomitted.
+DIOlinesthatdonothavesamplingenabledreturn0.Bitsin
+thisfieldarearrangedthesameastheyareintheDigital
+channelmaskfield.
+22 16-bit Analog IfthesamplesetincludesanyanalogI/O lines(Analog
+variable samples(if channelmask>0),eachenabledanaloginputreturnsa16-
+included) bitvalueindicatingtheADCmeasurementofthatinput.
+AnalogsamplesareorderedsequentiallyfromAD0toAD3.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP = 1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+I/Osample
+Adevicewiththe64-bitaddressof 0013A20012345678 isconfiguredtoperiodicallysendI/O
+sampledatatoaparticulardevice.ThedeviceisconfiguredwithDIO3,DIO4,andDIO5configured
+asdigitalI/O,andAD1andAD2configuredasananaloginput.
+Thedestinationwillemitthefollowingframe:
+7E0016920013A20012345678FFFEC1010038060028022500F8E8
+DigiXBee®3802.15.4RFModuleUserGuide 263
+
+| Framedescriptions |         |               |                | I/OSampleIndicator -0x92 |             |
+| ----------------- | ------- | ------------- | -------------- | ------------------------ | ----------- |
+|                   |         |               | Digital Analog |                          | Analo Analo |
+|                   |         | Rx Num        | chann chann    | Digital                  | g g         |
+| Frame 64-bit      | Reserve | option sample | el el          | sample                   | sampl sampl |
+| type source       | d       | s s           | mask mask      | s                        | e1 e2       |
+0x92 0x0013A2 0x87AC 0xC1 0x01 0x0038 0x06 0x0028 0x022 0x00F
+| 00  |     |     |     |     | 5 8 |
+| --- | --- | --- | --- | --- | --- |
+12345678
+| Sampl | Unused | ACK Single       | b'00 b'0110  | b'00   | AD1 AD2   |
+| ----- | ------ | ---------------- | ------------ | ------ | --------- |
+| e     |        | was sample       | 111 AD1      | 101000 | data data |
+|       |        | sentin (typical) | 000 and      | DIO3   |           |
+|       |        | mesh             | DIO3, AD2    | and    |           |
+|       |        |                  | DIO4, enable | DIO5   |           |
+networ
+|     |     | k   | and d  | are    |     |
+| --- | --- | --- | ------ | ------ | --- |
+|     |     |     | DIO5   | HIGH;  |     |
+|     |     |     | enable | DI04is |     |
+|     |     |     | d      | LOW    |     |
+DigiXBee®3802.15.4RFModuleUserGuide 264
+
+| Framedescriptions |            |           |     | RemoteATCommandResponse-0x97 |
+| ----------------- | ---------- | --------- | --- | ---------------------------- |
+| Remote            | AT Command | Response- |     | 0x97                         |
+Requestframe: RemoteATCommandRequest-0x17
+Description
+Thisframetypeisemittedinresponsetoa RemoteATCommandRequest-0x17.Some
+commandssendbackmultipleresponseframes;forexample,the ND command.Referto
+individualATcommanddescriptionsfordetailsonAPIresponsebehavior.
+Thisframeisonlyemittedifthe FrameIDintherequestisnon-zero.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+| Offset | Size  | FrameField | Description                    |     |
+| ------ | ----- | ---------- | ------------------------------ | --- |
+| 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |     |
+Delimiter
+| 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |     |
+| --- | ------ | --------- | ----------------------------------------- | --- |
+| 3   | 8-bit  | Frametype | RemoteATCommandResponse-0x97              |     |
+4 8-bit FrameID Identifiesthedataframeforthehosttocorrelatewithaprior
+request.
+| 5   | 64-bit | 64-bit | Thesender's64-bitaddress. |     |
+| --- | ------ | ------ | ------------------------- | --- |
+source
+address
+13 16-bit Reserved Unused,butthisfieldistypicallysetto0xFFFE.
+|     |     | AT  | ThetwoASCIIcharactersthatidentifythe ATCommand. |     |
+| --- | --- | --- | ----------------------------------------------- | --- |
+15 16-bit
+command
+| 17  | 8-bit | Command | Statuscodeforthehost'srequest: |     |
+| --- | ----- | ------- | ------------------------------ | --- |
+|     |       | status  | 0x00=OK                        |     |
+0x01=ERROR
+0x02=Invalidcommand
+0x03=Invalidparameter
+0x04=Transmissionfailure
+0x0C=Encryptionerror
+18-n variable Parameter Ifthehostrequestedacommandparameterchange,this
+|     |     | value      | fieldwillbeomitted.                            |     |
+| --- | --- | ---------- | ---------------------------------------------- | --- |
+|     |     | (optional) | Ifthehostqueriedacommandbyomittingtheparameter |     |
+valueintherequest,thisfieldwillreturnthevaluecurrently
+setonthedevice.
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+DigiXBee®3802.15.4RFModuleUserGuide 265
+
+| Framedescriptions |     |     |     | RemoteATCommandResponse-0x97 |     |     |
+| ----------------- | --- | --- | --- | ---------------------------- | --- | --- |
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+Setremotecommandparameter
+HostsettheNIstringof aremotedeviceto"Remote"usingaRemoteATCommandRequest-
+0x17.
+Thecorresponding0x97RemoteATCommandResponse withamatchingFrameIDisemittedas
+aresponse:
+7E000F97270013A20012345678127E4E490051
+|           |         |              |          | AT      | Command | Command   |
+| --------- | ------- | ------------ | -------- | ------- | ------- | --------- |
+| Frametype | FrameID | 64-bitsource | Reserved | command | Status  | data      |
+| 0x97      | 0x27    | 0x0013A200   | 0x127E   | 0x4E49  | 0x00    | (omitted) |
+12345678
+| Response | Matches |     | Unused | "NI" | Success | Parameter |
+| -------- | ------- | --- | ------ | ---- | ------- | --------- |
+|          | request |     |        |      |         | changes   |
+returnno
+data
+Transmissionfailure
+HostqueuedthethePANIDchangeofaremotedeviceusinga RemoteATCommandRequest-
+0x17.Duetoexistingnetworkcongestion,thehostwillretryanyfailedattempts.
+Thecorresponding0x97RemoteATCommandResponse withamatchingFrameIDisemittedas
+aresponse:
+7E000F97270013A20012345678FFFE494404EA
+| Frame |         |              |          | AT      | Command | Command   |
+| ----- | ------- | ------------ | -------- | ------- | ------- | --------- |
+| type  | FrameID | 64-bitsource | Reserved | command | Status  | data      |
+| 0x97  | 0x27    | 0x0013A200   | 0xFFFE   | 0x4944  | 0x04    | (omitted) |
+12345678
+| Response | Matches |     | Unused | "ID" | Transmission | Parameter |
+| -------- | ------- | --- | ------ | ---- | ------------ | --------- |
+|          | request |     |        |      | failure      | changes   |
+returnno
+data
+Queryremotecommandparameter
+Querythetemperatureofaremotedevice—TP(ModuleTemperature).
+Thecorresponding0x97RemoteATCommandResponse withamatchingFrameIDisemitted
+withthetemperaturevalueasaresponse:
+7E001197270013A20012345678FFFE545000002FA8
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |     |     | 266 |
+| ----------------------------------- | --- | --- | --- | --- | --- | --- |
+
+| Framedescriptions |          |         |              |            | ExtendedModemStatus-0x98 |         |         |
+| ----------------- | -------- | ------- | ------------ | ---------- | ------------------------ | ------- | ------- |
+|                   | Frame    |         |              |            | AT                       | Command | Command |
+|                   | type     | FrameID | 64-bitsource | Reserved   | command                  | Status  | data    |
+|                   | 0x97     | 0x27    | 0x0013A200   | 0x0013A200 | 0x4944                   | 0x00    | 0x002F  |
+|                   |          |         | 12345678     | 12345678   |                          |         |         |
+|                   | Response | Matches |              | Unused     | "TP"                     | Success | +47°C   |
+request
+| Extended | Modem |     | Status - | 0x98 |     |     |     |
+| -------- | ----- | --- | -------- | ---- | --- | --- | --- |
+Description
+The ExtendedModemStatus-0x98 frameisintendedtoprovideadditionalin-framediagnostic
+informationoverthetraditional ModemStatus-0x8Aframe.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+|     | Offset | Size  | FrameField | Description                    |     |     |     |
+| --- | ------ | ----- | ---------- | ------------------------------ | --- | --- | --- |
+|     | 0      | 8-bit | Start      | IndicatesthestartofanAPIframe. |     |     |     |
+Delimiter
+|     | 1   | 16-bit | Length    | Numberofbytesbetweenthelengthandchecksum. |     |     |     |
+| --- | --- | ------ | --------- | ----------------------------------------- | --- | --- | --- |
+|     | 3   | 8-bit  | Frametype | ExtendedModemStatus-0x98                  |     |     |     |
+4 8-bit Statuscode Refertothetablesbelowforappropriatestatuscodes
+n variable Statusdata Additionalfieldsthatprovideinformationaboutthestatus
+(optional)
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+|     | Secure | Session | status codes |     |     |     |     |
+| --- | ------ | ------- | ------------ | --- | --- | --- | --- |
+When AZ(ExtendedAPIOptions) isconfiguredtooutputextendedsecuresessionstatuses,
+whenever SecureSessionAPIFrames areemitted,theextendedmodemstatuswillprovide
+additionaldetailsabouttheevent.
+|     | Status |             |     | Status    |             |     |     |
+| --- | ------ | ----------- | --- | --------- | ----------- | --- | --- |
+|     | code   | Description |     | data Size | Description |     |     |
+0x3B ASecureSession Address 64-bit Theaddressoftheclientinthesession.
+wasestablishedwith
+|     |     |     |     | Options 8-bit | Sessionoptionssetbytheclient. |     |     |
+| --- | --- | --- | --- | ------------- | ----------------------------- | --- | --- |
+thisnode
+|                                     |     |     |     | Timeout 16-bit | Sessiontimeoutsetbytheclient. |     |     |
+| ----------------------------------- | --- | --- | --- | -------------- | ----------------------------- | --- | --- |
+| DigiXBee®3802.15.4RFModuleUserGuide |     |     |     |                |                               |     | 267 |
+
+Framedescriptions Bluetooth®LowEnergy(LE) UnlockResponse-0xAC
+Status Status
+| code | Description |     | data | Size Description |     |     |
+| ---- | ----------- | --- | ---- | ---------------- | --- | --- |
+0x3C ASecureSession Address 64-bit Theaddressoftheothernodeinthis
+|     | ended |     |        | session.                           |     |     |
+| --- | ----- | --- | ------ | ---------------------------------- | --- | --- |
+|     |       |     | Reason | 8-bit Thereasonthesessionwasended: |     |     |
+0x00-Sessionwasterminatedby
+theothernode
+0x01-SessionTimedout
+0x02-Receivedatransmissionwith
+aninvalidencryptioncounter
+0x03-Encryptioncounteroverflow-
+themaximumnumberof
+transmissionsforasinglesession
+hasbeenreached
+0x04-Remotenodeoutofmemory
+| 0x3D | ASecureSession |     | Address | 64-bit Addressoftheclientnode. |     |     |
+| ---- | -------------- | --- | ------- | ------------------------------ | --- | --- |
+authentication
+|     |     |     | Error | 8-bit Errorthatcausedtheauthenticationtofail. |     |     |
+| --- | --- | --- | ----- | --------------------------------------------- | --- | --- |
+attemptfailed
+SeeSecureSessionResponse-0xAEfora
+listoferrorstatuses.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+SecureSessionestablished
+AdevicehasestablishedasecuresessionwiththelocalnodethathasAZ(ExtendedAPI
+Options) configuredtooutputextendedsecuresessioninformation.Thefollowingframeisemitted
+thatannouncesthesecuresessionestablishment.
+7E000D983B0013A20012345678004650CD
+| Frametype |     | Statuscode |     |     | Statusdata           |     |
+| --------- | --- | ---------- | --- | --- | -------------------- | --- |
+| 0x98      |     | 0x3B       |     |     | n 0x0013A20012345678 |     |
+n 0x00
+n 0x4650
+| Extendedstatus |     | SecureSessionestablished |     |     | n Address |     |
+| -------------- | --- | ------------------------ | --- | --- | --------- | --- |
+n Options
+n Timeout(30min)
+| Bluetooth® | Low | Energy | (LE) Unlock | Response |     | - 0xAC |
+| ---------- | --- | ------ | ----------- | -------- | --- | ------ |
+Requestframe: Bluetooth®LowEnergy(LE) UnlockRequest-0x2C
+DigiXBee®3802.15.4RFModuleUserGuide 268
+
+Framedescriptions UserDataRelayOutput-0xAD
+Description
+Thisframetypeisemittedinresponsetoa Bluetooth®LowEnergy(LE) UnlockRequest-
+0x2C duringamulti-stageBluetoothLE authenticationexchange.
+Thisframe'sformatisidenticaltothatoftheoriginatingrequest.Referto Bluetooth®LowEnergy
+(LE) UnlockRequest-0x2C forinformationontheformattingandproperuseofthisframe.
+| User Data | Relay | Output | - 0xAD |
+| --------- | ----- | ------ | ------ |
+Inputframe: UserDataRelayInput -0x2D
+Description
+Thisframetypeisemittedwhenuserdataisrelayedtotheserialportfromalocalinterface:
+MicroPython(internalinterface),Bluetooth®LowEnergy(LE),ortheserialport.
+ForinformationandexamplesonhowtorelayuserdatausingMicroPython,seeSendandreceive
+UserDataRelayframesintheMicroPythonProgrammingGuide.
+forinformationandexamplesonhowtorelayuserdatausingBluetooth®LE,seeCommunicate
+withaMicropythonapplicationintheXBeeMobileSDKuserguide.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+Frame
+| Offset | Size  | Field | Description                    |
+| ------ | ----- | ----- | ------------------------------ |
+| 0      | 8-bit | Start | IndicatesthestartofanAPIframe. |
+Delimiter
+| 1   | 16-bit | Length | Numberofbytesbetweenthelengthandchecksum. |
+| --- | ------ | ------ | ----------------------------------------- |
+UserDataRelayOutput-0xAD
+| 3   | 8-bit | Frametype |     |
+| --- | ----- | --------- | --- |
+Theintendedinterfaceforthepayloaddata:
+| 4   | 8-bit | Source    |                                       |
+| --- | ----- | --------- | ------------------------------------- |
+|     |       | Interface | 0= Serialport—SPI,orUARTwheninAPImode |
+1=BluetoothLE
+2=MicroPython
+| 5-n | variable | Data | Theuserdatatoberelayed |
+| --- | -------- | ---- | ---------------------- |
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+| Error | cases |     |     |
+| ----- | ----- | --- | --- |
+Errorsarereportedina TransmitStatus-0x89framethatcorrespondswiththeFrameIDofthe
+RelayDataframe:
+DigiXBee®3802.15.4RFModuleUserGuide 269
+
+Framedescriptions SecureSessionResponse-0xAE
+Error
+|     | code Error | Description |     |     |
+| --- | ---------- | ----------- | --- | --- |
+0x7C InvalidInterface Theuserspecifiedadestinationinterfacethatdoesnotexistoris
+unsupported.
+0x7D Interfacenot Thedestinationinterfaceisavalidinterface,butisnotinastatethat
+|     | acceptingframes | canacceptdata. |     |     |
+| --- | --------------- | -------------- | --- | --- |
+Forexample:UARTnotinAPImode,BluetoothLEdoesnothavea
+GATTclientconnected,orbufferqueuesarefull.
+Ifthemessagewasrelayedsuccessfully,nostatuswillbegenerated.
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat. For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+RelayfromBluetoothLE
+AmobilephonesendsaserialdatamessagetotheXBeedevice'sBluetoothLEinterface.The
+messageisflaggedtobesentoutoftheserialportoftheXBeedevice.Thefollowingframeoutputs
+therelayeddata:
+7E000CAD0152656C61792044617461BA
+|        | Frametype | Sourceinterface |        | Data                   |
+| ------ | --------- | --------------- | ------ | ---------------------- |
+|        | 0xAD      | 0x01            |        | 0x52656C61792044617461 |
+|        | Output    | Bluetooth       |        | "RelayData"            |
+| Secure | Session   | Response        | - 0xAE |                        |
+Requestframe: SecureSessionControl-0x2E
+Description
+Thisframetypeisoutputasaresponsetoa SecureSessionControl-0x2Eattempt.Itindicates
+whethertheSecureSessionoperationwassuccessfulornot.
+Format
+Thefollowingtableprovidesthecontentsoftheframe.Fordetailsonframestructure,seeAPI
+frameformat.
+|     | Offset Size | FrameField | Description                    |     |
+| --- | ----------- | ---------- | ------------------------------ | --- |
+|     | 0 8-bit     | Start      | IndicatesthestartofanAPIframe. |     |
+Delimiter
+DigiXBee®3802.15.4RFModuleUserGuide 270
+
+Framedescriptions SecureSessionResponse-0xAE
+Offset Size FrameField Description
+1 16-bit Length Numberofbytesbetweenthelengthandchecksum.
+3 8-bit Frametype SecureSessionResponse-0xAE
+4 8-bit Response Thetypeofresponsetocorrelatewiththeprecedingrequest:
+type 0x00-Loginresponse
+0x01-Logoutresponse
+0x02-ServerTermination
+5 64-bit 64-bitsource The64-bitIEEEaddressoftherespondingdevice.
+address
+13 8-bit Status Typicalstatuses:
+0x00-SRPoperationwassuccessful
+0x01-InvalidPassword-SRPverificationfaileddueto
+mismatchedM1andM2values
+0x02-Sessionrequestwasrejectedastherearetoo
+manyactivesessionsontheserveralready
+0x03-Sessionoptionsortimeoutareinvalid
+0x05-Timedoutwaitingfortheothernodetorespond
+0x06-Couldnotallocatememoryneededfor
+authentication
+0x07-Arequesttoterminateasessioninprogresshas
+beenmade
+0x08-Thereisnopasswordsetontheserver
+0x09-Therewasnoinitialresponsefromtheserver
+0x0A -Datawithintheframeisnotvalidorformatted
+incorrectly
+Atypicalstatuses:
+0x80-Serverreceivedapacketthatwasintendedfora
+clientorvice-versa
+0x81 -ReceivedanSRPpacketwewerenotexpecting
+0x82 -Offsetforasplitvalue(A/B)cameoutoforder
+0x83 -UnrecognizedorinvalidSRPframetype
+0x84 -Authenticationprotocolversionisnotsupported
+0xFF-Anundefinederroroccurred
+EOF 8-bit Checksum 0xFFminusthe8-bitsumofbytesfromoffset3to thisbyte
+(betweenlengthandchecksum).
+Examples
+Eachexampleiswrittenwithoutescapes(AP=1)andallbytesarerepresentedinhexformat.For
+brevity,thestartdelimiter,length,andchecksumfieldshavebeenexcluded.
+SecureSessionLoginattempt
+AclientattemptedtologintoaSecureSessionserver.
+Thefollowing SecureSessionResponse-0xAE isemittedasaresponse:
+7E000BAE000013A200123456780088
+DigiXBee®3802.15.4RFModuleUserGuide 271
+
+Framedescriptions SecureSessionResponse-0xAE
+| Frametype | Responsetype | 64-bitsource | Status |
+| --------- | ------------ | ------------ | ------ |
+| 0x2E      | 0x00         | 0x0013A200   | 0x00   |
+12345678
+| Response | Login |     | success |
+| -------- | ----- | --- | ------- |
+DigiXBee®3802.15.4RFModuleUserGuide 272
+
+| OTA firmware/file | system | upgrades |
+| ----------------- | ------ | -------- |
+Overview 274
+Scheduledupgrades 274
+CreateanOTAupgradeserver 275
+DigiXBee®3802.15.4RFModuleUserGuide 273
+
+OTAfirmware/filesystemupgrades Overview
+Overview
+TheXBee3802.15.4RFModulesupportstwokindsofover-the-airupgrades:
+n Firmwareupgrades:upgradingthefirmwareorbootloadercodeonadeviceremotely.
+n FileSystemupgrades:placingorreplacingtheentirefilesystemonaremotedevice.
+AnOTAupgradeisperformedusingtwoXBeeRFmodules:The clientmoduleisthemodulebeing
+upgraded,andthe servermoduleisconnectedtoanexternalprocessor(the OTAupgrade
+server)andusedtosendtheupgradetotheclient.XCTUandNetworkManagerarecapableof
+actingasanOTAupgradeserver,andaretherecommendedmethodfordistributingOTA
+upgrades.SeeCreateanOTAupgradeserverformoreinformationontheOTAupgradeprotocol.
+Firmware over-the-air upgrades
+AfirmwareOTAupgradeupgradeseitherjusttheapplicationfirmwareorboththeapplication
+firmwareandthebootloaderfirmwareonadevice.OTAfirmwareupgradesmustbetoadifferent
+version,re-installingthesameversionaswhatisalreadyinstalledisnotsupported.
+NotePerforminganOTAupgradewilleraseanyfilesystemorbundledMicroPythoncodeonthe
+targetdevice,eveniftheOTAupgradedoesnotcomplete.
+File system over-the-air upgrades
+AfilesystemOTAupgradeusesthesameprotocolasafirmwareOTAupgrade,butinsteadof
+changingthedevicefirmwareitinstallsanewimagetothetargetmodule'sfilesystem.This
+methoddoesnotallowwritingindividualfiles,onlycopyinganentirefilesystemimageatonce.
+SeeOTAfilesystemupgradesformoreinformationoncreatingandsendingfilesystemimages.
+Scheduled upgrades
+WhenaclienthasfinisheddownloadingthedataforanOTAupgrade,itsendsarequesttothe
+serveraskingwhentoapplytheupgrade.Theservercaninstructtheclienttoupgrade
+immediately,towaitaspecifiedamountoftimebeforeupgrading,ortowaitforafurthercommand
+fromtheservertoupgrade.Ifinstructedtowait,thedevicewillkeepthedownloadedupgradefor
+thespecifiedtimeandthenapplyit.Ifaclientloosestrackoftime—forexample,duetopowerloss—
+itwillattempttore-sendtherequestforanupgradetimetotheserverandresumewaiting.Ifthe
+devicedoesnotreceivearesponsetothisrequestafteranumberofattempts,itappliesthe
+upgradeimmediately.
+NoteSleepingdevicesdonotcounttimetowardstheupgradewhileasleep.Thedelayfora
+scheduledupgradeonasleepingenddeviceshouldbecalculatedonlyconsideringthetimethat
+devicewillbeawake.
+DifferentOTAupgradeservertoolshavevaryinglevelsofsupportforscheduledupgrades.Seethe
+documentationfortheOTAupgradeserveryouareusing,orseeCreateanOTAupgradeserver
+forinformationonhowtoimplementscheduledupgradesonaserver.
+DigiXBee®3802.15.4RFModuleUserGuide 274
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+Create an OTA upgrade server
+ZCL firmware upgrade cluster specification
+Theprocess,format,andcommandsusedforOTAfirmwareupgradesarebasedontheZCLOTA
+UpgradeclusterfromtheZCLspecification.ThespecificationusedisinZigbeedocument07-5123-
+06.Chapter2describesthegeneralformatofZCLcommandsandchapter11describestheOTA
+upgradeclusterindetail.ThespecificationcontainsacompletedescriptionoftheOTAupgrade
+process,andyoushouldreferenceitwhencreatinganOTAupgradeserver.Thisguidefocuseson
+differencesandexamplesspecifictotheXBee3802.15.4RFModule.Whererelevant,wereferto
+theZCLspecificationdocumentbysection,forexample(ZCLSpec§11.2.1).
+Differences from the ZCL specification
+TheOTAupgradeprocessdiffersfromwhatisdescribedintheZCLspecificationinthefollowing
+ways:
+n Setting/queryingOTAclusterattributesandparameters(ZCLSpec§11.10,§11.11)isnot
+supported.
+n TheWAIT_FOR_DATAstatusinanImageBlockResponseCommand(ZCLSpec
+§11.13.8)isnotsupported.
+n DeviceswillnotautomaticallydiscoveranOTAupgradeserveruponjoininganetwork(ZCL
+Spec§11.8).TospecifyanOTAserversetUS(OTAUpgradeServer),orleaveitatits
+defaultvaluetoacceptOTAupgradesfromanyserver.
+n Clientsdonotautomaticallyquerytheserverforanavailableupgrade.Theonlywaytostart
+anOTAupgradeisbysendinganImageNotifycommandfromtheserver.
+OTA files
+UseanOTA filetoperformanOTAupgrade.TheOTAfileformatconsistsofanOTAheader
+describingwhatispresentinthefilefollowedbyoneormoresub-elementscontainingtheupgrade
+data.TheOTAfileformatisdescribedintheZCLSpec§11.4.
+TheOTAfileisincludedalongsideotherfirmwarefilesineachrelease.Thefilewiththe.ota
+extensioncontainstheapplicationfirmwareupdate,andthefilewiththe.otbextensioncontains
+updatesforboththefirmwareandthebootloader.Therecommendedbootloaderversionislistedin
+eachfirmwarerelease'sXMLfile—ifthetargetdevicehasanolderversion,westronglyrecommend
+thatyouperformtheOTAupdateusingthe.otbfile.Updatingadevicewiththesameornewer
+bootloaderversionastherecommendedversionwillnotchangethebootloader,butwillupdatethe
+application.
+OTAheader
+TheOTAheadercontainsinformationabouttheupgradedatacontainedinthefile.AnOTAserver
+needstoparsethisfileinordertogetinformationthatwillberequestedbyafile.TheOTAheader
+formatis(ZCLSpec§11.4.2):
+Offset Length Name Description
+0 4 OTAupgrade UniqueidentifierforanOTAfile-willalwaysbe
+fileidentifier 0x0BEEF11E.
+DigiXBee®3802.15.4RFModuleUserGuide 275
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+Offset Length Name Description
+4 2 OTAheader VersionfortheOTAheaderformat- TheOTAheader
+version versionsupportedbyXBee3firmwaresis0x0100.
+6 2 OTAheader ThelengthinbytesofthisOTAheader.
+length
+8 2 OTAheader Indicateswhatoptionalfieldsarepresent.
+fieldcontrol
+10 2 Manufacturer Themanufacturercodefortheimage.
+code
+12 2 Imagetype Oneoftwovalues:
+n 0x0000forafirmwareupgrade
+n 0x0100forafilesystemupgrade
+14 4 Fileversion Containstheversioninformationforthisupgrade.SeeFile
+versiondefinitionformoreinformationonhowtointerpret
+thisfield.
+NoteItisimportanttoparsethisvaluefromtheOTAfile
+itselfinsteadofinferringitfromthefilename,asthe
+softwarecompatibilitynumberisnotincludedelsewhere.
+18 2 Zigbeestack Thisfieldisnotusedforandcanbeignored.
+version
+20 32 OTAheader Ahuman-readablestringtoidentifytheOTAfile.
+string
+52 4 Totalimage ThetotalsizeoftheOTAfile,includingtheOTAheader.
+size
+NoteThisfieldcontainsincorrectinformationinmostolder
+firmwarefilesandshouldnotbeusedintheupdate
+process.Thetotalsizeofthefileshouldbedetermined
+usinganexternalmethod.
+NoteAllfields—exceptfortheOTAheaderstring—areinlittleendianbyteorder.Optionalfieldsmay
+bepresentattheendoftheOTAheader,theyhavebeenomittedhereastheyarenotusedinthe
+XBee3upgradeprocess.
+Fileversiondefinition
+Thefileversionisa32-bitinteger—sentinlittle-endianbyteorder—containinginformationona
+firmwareversion.Itisdividedintotwofields:
+n Themostsignificantbytecorrespondstothecompatibilitynumberfieldinthefirmware's
+XMLfile—see%C(Hardware/SoftwareCompatibility)—foradescriptionofthecompatibility
+number'seffectonloadingfirmware.
+n TheremainingthreebytesindicatethefirmwareversionasreportedbyVR.
+DigiXBee®3802.15.4RFModuleUserGuide 276
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+Forexample,afileversionof0x0100100Aindicatesthatthesoftwarecompatibilitynumberis1
+andtheversionnumberis100A.0x0200300Bindicatesthatthesoftwarecompatibilitynumberis2
+andtheversionis300B.
+Sub-elements
+AlldataaftertheOTAheaderisorganizedintosub-elements.MostOTAfileswillcontainasingle
+sub-element:theupgradeimage.Sub-elementsarearrangedastag-length-valuetriplets,as
+showninthetablebelow.
+Offset Length Field name Description
+0 2 Sub-element Thetagforthesub-element,inlittle-endianformat.Thisis
+tag usually 0x0000 for'upgradeimage'—thisisthecaseforboth
+firmwareupgradesandfilesystemupgrades.
+2 4 Sub-element Thelengthofthesub-elementdata(n)inlittle-endianformat.
+length
+6 n Sub-element Thedatatobetransferred.Thisiseitherthecontentsofa
+data .gblfirmwareimageorasignedfilesystemimage.
+OTA upgrade process
+TheOTAupgradeprocessisperformedbysendingOTAcommandsbetweentheclientandserver.
+OTAcommandsaresentasexplicitlyaddressedpackets,asdescribedinOTAcommands.
+ToinitiateanOTAupgrade,theupgradeserversendsanImageNotifyCommand,eithertoasingle
+deviceorasabroadcast.Afterthatinitialtransmission,theOTAprocessisdrivenbytheclient—or
+clients,iftheImageNotifycommandissentasabroadcastandacceptedbymultipleclients.The
+clientsendsrequeststotheservertorequesttheimageinformation,downloadit,andrequest
+whentoupgrade.Iftheclientdoesnotreceivearesponsefromtheserver,itretriesitsrequesta
+fewtimesbeforeabortingtheupgrade.Therequestssentbytheclientaredesignedsothatthe
+serverdoesnothavetostoreanystaterelatedtoaclient'supgradeinprogress—itonlyneedsto
+sendtheimagenotifyandrespondtorequestsastheycomein.Theservercanstillobservethese
+requeststotrackthestateofanupgradeifdesired,however—forexample,toreportdownload
+progress.
+ThefollowingdiagramshowsthesequenceoftransmissionsforanOTAupgrade:
+DigiXBee®3802.15.4RFModuleUserGuide 277
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+OTA commands
+AllOTAcommandsaresentasexplicitlyaddressedpacketswiththefollowingaddressinformation:
+n Source/destinationendpoint:0xE8
+n ClusterID: 0x0019
+n ProfileID:0xC105
+Thefirstthreepayloadbytesofthecommandindicatewhatthecommandisandthestructureof
+theremainingdatainthecommand.AllintegervaluesinOTAcommandsarerepresentedusing
+little-endianbyteorder.
+DigiXBee®3802.15.4RFModuleUserGuide 278
+
+DigiXBee®3802.15.4RFModuleUserGuide
+279
+OTAfirmware/filesystemupgrades
+CreateanOTAupgradeserver
+ImageNotifycommand
+(seeZCLSpec§11.13.3)
+TheImageNotifycommandissentbytheservertoalertclientsthatanupgradeisavailableandpromptthemtobegintheupgrade.Thiscommand
+canbesenteitherasabroadcastorasaunicast:
+n Ifsentasaunicast,theclientwillrespondwithaQueryNextImageRequestiftheImageNotifycontainsvalidinformation,andwithadefault
+responseotherwise.
+n Ifsentasabroadcast,allreceivingclientswillexamineanyoptionalfieldsincludedandrespondonlyiftheinformationindicatesanimage
+compatiblewiththatdevice.Onlargenetworks,thequeryjitterparametercanbeusedtomakeonlyapercentageofthosereceivingthe
+commandrespondatatime.
+ZCLcommandformat
+Offset Length FieldName Description
+0 1 Framecontrol Whensendingthiscommand,valuetosetdependsonwhetherthecommandwillbesentasabroadcastor
+aunicast:
+n ifsendingaunicast:setthisfieldto0x09(server-to-clientcommand).
+n ifsendingabroadcast:setthisfieldto0x19(server-to-clientcommand,DefaultResponsedisabled).
+1 1 Sequence AnysequencenumbercanbeusedfortheImageNotify
+number
+2 1 CommandID 0x00forImageNotify
+3 1 Payloadtype Indicateswhichfieldsarepresent:
+0:Nooptionalfields(QueryJitteronly)
+1:QueryJitter,ManufacturerCode
+2:QueryJitter,ManufacturerCode,ImageType
+3:QueryJitter,ManufacturerCode,ImageType,FileVersion
+4 1 Queryjitter Anumber,0-100,mustbesetto100foraunicast.Iflessthan100forabroadcast,theneachreceiving
+devicewillgeneratearandomnumberandonlyrespondtothiscommandifthatgeneratednumberisless
+thanthequeryjitter.
+
+DigiXBee®3802.15.4RFModuleUserGuide
+280
+OTAfirmware/filesystemupgrades
+CreateanOTAupgradeserver
+Offset Length FieldName Description
+5 2 Manufacturer Optional.TheManufacturercodefortheavailableimage,parsedfromtheOTAfileheader.
+code
+7 2 Imagetype Optional.Theimagetypeoftheavailableimage,parsedfromtheOTAfileheader.
+9 4 Newfile Optional.Theversionparsedfromtheavailableimage'sOTAfileheader.
+version
+Example
+Tosendthiscommandfromaserverdevice,usethefollowingExplicitAddressingCommandRequest-0x11:
+7E002111010013A20011223344FFFEE8E80019C105000009010003641E1000000A20000118
+ThepayloadportionoftheAPIframe(startingatoffset23)isshownbelow:
+Frame Sequence Command Payload Manufacturer
+control number ID type Queryjitter code Imagetype Newfileversion
+Data 09 01 00 03 64 1E10 0000 0A200001
+Value 0x09 0x01 0x00 0x03 0x64(100) 0x101E 0x0000 0x0100200A
+Description Image Allfields Clientwill Digi's Firmware Mustmatchvalueinthe
+Notify present alwaysrespond manufacturer upgrade OTAfileheader.
+code 0x01:Software
+compatibilitynumber
+0x00200A:Application
+version
+Additionalerrorcases
+Ifaclientreceivesa unicastImageNotifycommandthatincludesanyoptionalfields—ManufacturerID,ImageType,NewFileVersion—andthose
+fieldsdonotmatchwhattheclientisexpecting,itwillsendadefaultresponsetotheserver.SeeDefaultResponsecommandformoreinformation
+on possibleerrorcases.
+QueryNextImageRequestcommand
+(SeeZCLSpec§11.13.4)
+
+DigiXBee®3802.15.4RFModuleUserGuide TheQueryNextImageRequestcommandissentbytheclienttoaskforinformationonanyavailableOTAUpgrade.Itissentinresponsetoan OTAfirmware/filesystemupgrades
+ImageNotifyfromtheserver.
+ZCLcommandformat
+| Offset Length | FieldName    | Description                                       |
+| ------------- | ------------ | ------------------------------------------------- |
+| 0 1           | Framecontrol | Willbesetto0x01,indicatingaclienttoservercommand. |
+| 1 1           | Sequence     | Sequencenumberchosenbytheclient.                  |
+number
+| 2 1 | CommandID    | 0x01forQueryNextImageRequest.           |
+| --- | ------------ | --------------------------------------- |
+|     | Fieldcontrol | Indicateswhichoptionalfieldsarepresent. |
+3 1
+| 4 2 | Manufacturer | Manufacturercodeoftheclient. |
+| --- | ------------ | ---------------------------- |
+code
+| 6 2 | Imagetype | Imagetypethattheclientisrequesting: |
+| --- | --------- | ----------------------------------- |
+n 0x0000forafirmwareupgrade
+n 0x0100forafilesystemupgrade
+8 4 Currentfile Firmwareversionthatis currentlyrunningontheclient.SeeFileversiondefinitionformoreinformationon
+|     | version | howtointerpretthisfield. |
+| --- | ------- | ------------------------ |
+NoteThecompatibilitynumberreportedinthecurrentfileversionfieldreferstotheinstalledfirmware's
+compatibilitynumber,whichmaybedifferentfromthe%C valueofthedevice.
+CreateanOTAupgradeserver
+| 12 2 | Hardware | Optional.Hardwareversionoftheclient. |
+| ---- | -------- | ------------------------------------ |
+version
+Example
+ThisisanexampleExplicitRxIndicator(0x91)framecontainingaQueryNextImageRequestthatcouldbereceivedbyaserver:
+7E001E910013A20055667788FFFEE8E80019C10501010201001E10000006200001F9
+ThepayloadportionoftheAPIframe(startingatoffset21)isshownbelow:
+281
+
+DigiXBee®3802.15.4RFModuleUserGuide OTAfirmware/filesystemupgrades
+|     | Frame | Sequence |     |     | Manufacturer |     |     |
+| --- | ----- | -------- | --- | --- | ------------ | --- | --- |
+control number CommandID Fieldcontrol code Imagetype Currentversion
+| Data  | 01   | 02   | 01   | 00   | 1E10   | 0000   | 06200001   |
+| ----- | ---- | ---- | ---- | ---- | ------ | ------ | ---------- |
+| Value | 0x01 | 0x02 | 0x01 | 0x00 | 0x101E | 0x0000 | 0x01002006 |
+0x01:Software
+| Description |     |     | QueryNextImage | HWversionnot | Digi's       | Firmware |                      |
+| ----------- | --- | --- | -------------- | ------------ | ------------ | -------- | -------------------- |
+|             |     |     | Request        | present      | manufacturer | upgrade  | compatibilitynumber  |
+|             |     |     |                |              | code         |          | 0x002006:Application |
+version
+QueryNextImageResponsecommand
+(SeeZCLSpec§11.13.5)
+TheQueryNextImageResponsecommandshouldbesentbytheserverwhenitreceivesaQueryNextImagerequest.
+ZCLcommandformat
+| Offset Length | FieldName | Description |     |     |     |     |     |
+| ------------- | --------- | ----------- | --- | --- | --- | --- | --- |
+0 1 Framecontrol Shouldbesetto0x19,indicatingaserver-to-clientcommand.
+Mustmatchthesequencenumberoftherequestthatpromptedthisresponse.
+| 1 1 | Sequence |     |     |     |     |     |     |
+| --- | -------- | --- | --- | --- | --- | --- | --- |
+number
+| 2 1 | CommandID | 0x02forQueryNextImageResponse. |     |     |     |     |     |
+| --- | --------- | ------------------------------ | --- | --- | --- | --- | --- |
+| 3 1 | Status    | Oneofthreevalues:              |     |     |     |     |     |
+CreateanOTAupgradeserver
+n 0x00(SUCCESS):Animageisavailable
+n 0x98(NO_IMAGE_AVAILABLE):Noupgradeimageisavailable
+n 0x7E(NOT_AUTHORIZED):Thisserverisn'tauthorizedtoperformanupgrade
+Remainingfieldsareonlyincludedifthisfieldcontains0x00(SUCCESS).
+4 2 Manufacturer TheManufacturercodefortheavailableimage,parsedfromtheOTAfileheader.Mustmatchthe
+code manufacturingcodefromtheQueryNextImagerequestthatpromptedthisresponse.
+282
+
+DigiXBee®3802.15.4RFModuleUserGuide
+283
+OTAfirmware/filesystemupgrades
+CreateanOTAupgradeserver
+Offset Length FieldName Description
+6 2 Imagetype TheImagefortheavailableimage,parsedfromtheOTAfileheader. Mustmatchthemanufacturingcode
+fromtheQueryNextImagerequestthatpromptedthisresponse.
+8 4 Fileversion Theversionparsedfromtheavailableimage'sOTAfileheader.
+12 4 Imagesize Thesizeinbytesoftheimagethatwillbesentovertheair.ThisshouldbethesizeoftheOTAfile.
+NoteThisfieldishandleddifferentlyiftheclienthasafirmwareversionolderthan200A.SeeDoesthe
+downloadincludetheOTAheader?.
+Example
+AnOTAservercouldrespondtotheQueryNextImageRequestexampleintheprevioussectionusingthefollowing ExplicitAddressingCommand
+Request-0x11:
+7E002411010013A20011223344FFFEE8E80019C1050000190202001E1000000A2000013A9005009D
+ThepayloadportionoftheAPIframe(startingatoffset23)isshownbelow:
+Frame Sequence Command Manufacturer Image
+Control Number ID Status Code Type FileVersion ImageSize
+Data 19 02 02 00 1E10 0000 0A200001 3A900500
+Value 0x19 0x02 0x02 0x00 0x101E 0x0000 0x0100200A 0x0005903A
+(SUCCESS)
+Description Digi's Firmware Mustmatchvalueinthe
+manufacturer upgrade OTAfileheader.
+code 0x01:Software
+compatibilitynumber
+0x00200A:Application
+version
+Thisindicatesthattheserverhasversion 0x0100200Aavailablefortheclienttoupgradeto,andthatthefile'ssizeis0x0005903A(364,6042)bytes.
+
+DigiXBee®3802.15.4RFModuleUserGuide ImageBlockRequestcommand OTAfirmware/filesystemupgrades
+(SeeZCLSpec§11.13.6)
+TheclientsendsImageBlockRequestcommandstotheservertodownloadtheupgradeimagedata.Theclientwillsendrequestsuntilithas
+downloadedtheentireimage,asdeterminedbytheimagesizegivenintheQueryNextImageResponsefromtheserver.
+ZCLcommandformat
+| Offset Length | FieldName    | Description                                       |
+| ------------- | ------------ | ------------------------------------------------- |
+| 0 1           | Framecontrol | Willbesetto0x01,indicatingaclienttoservercommand. |
+| 1 1           | Sequence     | Sequencenumberchosenbytheclient.                  |
+number
+| 2 1 | CommandID | 0x03forImageBlockRequest. |
+| --- | --------- | ------------------------- |
+3 1 Fieldcontrol Indicateswhichoptionalfieldsarepresent.NooptionalfieldsarecurrentlyusedbytheXBee3802.15.4RF
+Module.
+| 4 2 | Manufacturer | Themanufacturercodeoftheimagebeingdownloaded. |
+| --- | ------------ | --------------------------------------------- |
+code
+| 6 2 | Imagetype   | Theimagetypeoftheimagebeingdownloaded.                   |
+| --- | ----------- | -------------------------------------------------------- |
+| 8 4 | Fileversion | Theversionnumberofthefilebeingdownloaded.                |
+|     | Fileoffset  | Theoffsetatwhichtobeginthedata,fromthestartoftheOTAfile. |
+12 4
+NoteThisfieldishandleddifferentlyiftheclienthasafirmwareversionolderthan200A.SeeDoesthe
+downloadincludetheOTAheader?
+CreateanOTAupgradeserver
+13 1 Maximumdata Themaximumnumberofbytesofimagedatatheservermayincludeinitsresponse.
+size
+NoteOptionalfieldshavebeenomitted hereastheyarenotusedbytheXBee3802.15.4RFModule.
+Example
+ThisisanexampleExplicitReceiveIndicator-0x91containinganImageBlockRequestthatcouldbereceivedbyaserver:
+284
+
+DigiXBee®3802.15.4RFModuleUserGuide 7E002511010013A20011223344FFFEE8E80019C1050000011203001E1000000A2000013412000063CA OTAfirmware/filesystemupgrades
+ThepayloadportionoftheAPIframe(startingatoffset21)isshownbelow:
+|     | Frame Sequence | Command | Field | Manufacturer | Image |     |     | Maximum |     |
+| --- | -------------- | ------- | ----- | ------------ | ----- | --- | --- | ------- | --- |
+control number ID control code type Currentversion Fileoffset datasize
+| Data | 01 12 | 03  | 00  | 1E10 | 0000 | 0A200001 | 34120000 | 63  |     |
+| ---- | ----- | --- | --- | ---- | ---- | -------- | -------- | --- | --- |
+Value 0x01 0x12 0x01 0x00 0x101E 0x0000 0x0100200A 0x00001234 0x63
+0x01:Software
+| Description |     | ImageBlock | Nooptional | Digi's       | Firmware |               |     |     |     |
+| ----------- | --- | ---------- | ---------- | ------------ | -------- | ------------- | --- | --- | --- |
+|             |     | Request    | fields     | manufacturer | upgrade  | compatibility |     |     |     |
+|             |     |            | present    | code         |          | number        |     |     |     |
+0x00200A:
+Application
+version
+Theclientisrequestingupto0x63bytesofdata,startingfromoffset0x1234.
+ImageBlockResponsecommand
+(SeeZCLSpec§11.13.8)
+TheImageBlockResponseisgeneratedbytheOTAservertosendthedataaskedforinanImageBlockRequest.
+ZCLcommandformat
+| Offset Length | FieldName    | Description                                          |     |     |     |     |     |     | CreateanOTAupgradeserver |
+| ------------- | ------------ | ---------------------------------------------------- | --- | --- | --- | --- | --- | --- | ------------------------ |
+| 0 1           | Framecontrol | Shouldbesetto0x19indicatingaserver-to-clientcommand. |     |     |     |     |     |     |                          |
+1 1 Sequence Mustmatchthesequencenumberoftherequestthatpromptedthisresponse.
+number
+| 2 1 | CommandID | 0x05forImageBlockResponse. |     |     |     |     |     |     |     |
+| --- | --------- | -------------------------- | --- | --- | --- | --- | --- | --- | --- |
+Status Thisfieldhasoneoftwovalues,anddeterminesthestructureoftheremainingfields:
+| 3 1 |     |     |     |     |     |     |     |     |     |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+285
+
+DigiXBee®3802.15.4RFModuleUserGuide
+286
+OTAfirmware/filesystemupgrades
+CreateanOTAupgradeserver
+Offset Length FieldName Description
+n 0x00(SUCCESS):Imagedataisavailable.Theremainingfieldsmustbeincluded.
+n 0x95(ABORT):Instructstheclienttoabortthedownload.Theremainingfieldsmustnotbeincluded.
+NoteThe0x97(WAIT_FOR_DATA)status(seeZCLSpec§11.13.8.1)isnotsupported.
+4 2 Manufacturer TheManufacturercodefortheavailableimage,parsedfromtheOTAfileheader.Mustmatchthe
+code manufacturingcodefromtherequestthatpromptedthisresponse.
+6 2 Imagetype TheImagefortheavailableimage,parsedfromtheOTAfileheader. Mustmatchthemanufacturingcode
+fromtherequestthatpromptedthisresponse.
+8 4 Fileversion Theversionparsedfromtheavailableimage'sOTAfileheader.Mustmatchtheversionnumberfromthe
+requestthatpromptedthisresponse.
+12 4 Fileoffset TheoffsetintotheOTAfilewherethedatabegins.Mustmatchtheoffsetfromtherequestthatpromptedthis
+response.
+NoteThisfieldishandleddifferentlyiftheclienthasafirmwareversionolderthan200A.SeeDoesthe
+downloadincludetheOTAheader?
+16 1 Datasize Thenumberofbytesofdataincludedinthisblock.Thiscanbeanynumberlessthanorequaltothe
+maximumdatasizevalueintherequestthatpromptedthisresponse.
+17 n Imagedata Imagedatastartingfromthegivenoffset.Thelengthofthisfieldisdeterminedbythevalueinthepreceding
+field(DataSize).
+Example
+AnOTAservercouldrespondtotheImageBlockRequestexampleintheprevioussectionusingthefollowing ExplicitAddressingCommand
+Request-0x11:
+7E002811010013A20011223344FFFEE8E80019C1050000191205001E1000000A2000013412000003696D67D3
+ThepayloadportionoftheAPIframe(startingatoffset23)isshownbelow:
+
+DigiXBee®3802.15.4RFModuleUserGuide OTAfirmware/filesystemupgrades
+|     | Frame Sequence | Command |     | Manufacturer | Image |     |     | Data Image |
+| --- | -------------- | ------- | --- | ------------ | ----- | --- | --- | ---------- |
+control number ID Status code type Fileversion Fileoffset size data
+| Data        | 19 12     | 05       | 00        | 1E10         | 0000     | 0A200001      | 34120000   | 03 696d67 |
+| ----------- | --------- | -------- | --------- | ------------ | -------- | ------------- | ---------- | --------- |
+|             |           |          |           |              |          | 0x0100200A    |            | 696d      |
+| Value       | 0x19 0x12 | 0x05     | 0x00      | 0x101E       | 0x0000   |               | 0x00001234 | 0x03      |
+|             |           |          | (SUCCESS) |              |          |               |            | 67        |
+| Description |           | Image    |           | Digi's       | Firmware | 0x01:         |            |           |
+|             |           | Block    |           | manufacturer | upgrade  | Software      |            |           |
+|             |           | Response |           | code         |          | compatibility |            |           |
+number
+0x00200A:
+Application
+version
+Thisresponsecontainsthreebytesofdatastartingatoffset0x1234.Thedatasizevalueinthisexampleisverysmall—threebytes—forsimplicity;
+sinceanysizelessthanorequaltotheclient'srequestedmaximumisallowedthisisavalidframe,butsmallerimageblockswillincreasethetime
+theOTAupgradetakes.
+UpgradeEndRequestcommand
+(SeeZCLSpec§11.13.9)
+TheUpgradeEndRequestcommandissentbytheclientwhenitfinishesadownload,whethersuccessfullyornot.
+ZCLcommandformat
+| Offset Length | FieldName | Description |     |     |     |     |     |     |
+| ------------- | --------- | ----------- | --- | --- | --- | --- | --- | --- |
+CreateanOTAupgradeserver
+| 0 1 | Framecontrol | Willbesetto0x01,indicatingaclienttoservercommand. |     |     |     |     |     |     |
+| --- | ------------ | ------------------------------------------------- | --- | --- | --- | --- | --- | --- |
+| 1 1 | Sequence     | Sequencenumberchosenbytheclient.                  |     |     |     |     |     |     |
+number
+| 2 1 | CommandID | 0x06forUpgradeEndRequest.                        |     |     |     |     |     |     |
+| --- | --------- | ------------------------------------------------ | --- | --- | --- | --- | --- | --- |
+| 3 1 | Status    | Oneoffourvaluesindicatingthestatusofthedownload. |     |     |     |     |     |     |
+287
+
+DigiXBee®3802.15.4RFModuleUserGuide Offset Length FieldName Description OTAfirmware/filesystemupgrades
+n 0x00(SUCCESS):Theclientsuccessfullydownloadedandverifiedtheimage.
+n 0x96(INVALID_IMAGE):Theclientabortedthedownloadbecausethedownloadedimagewas
+invalidorcorrupted.
+n 0x95(ABORT):Theclientabortedthedownloadforanotherreason.
+n 0x99(REQUIRE_MORE_IMAGE):Thedownloadcompleted,butadditionalfilesareneededforthe
+upgrade.ThisstatusisnotusedbytheXBee3802.15.4RFModule.
+Thevalueofthisfielddetermineswhatresponsetheservershouldsend.Ifthestatusis0x00(SUCCESS),
+theservershouldrespondwithanUpgradeEndResponsecommand.Otherwise,theservershouldrespond
+withaDefaultResponsecommandwiththeSUCCESSstatus.
+| 4 2 | Manufacturer | Themanufacturercodeoftheimagebeingdownloaded. |     |     |     |     |     |     |
+| --- | ------------ | --------------------------------------------- | --- | --- | --- | --- | --- | --- |
+code
+| 6 2 | Imagetype   | Theimagetype oftheimagebeingdownloaded. |     |     |     |     |     |     |
+| --- | ----------- | --------------------------------------- | --- | --- | --- | --- | --- | --- |
+| 8 4 | Fileversion | Theversionoftheimagebeingdownloaded     |     |     |     |     |     |     |
+Exampe
+ThisisanexampleExplicitReceiveIndicator-0x91containinganUpgradeEndRequestthatcouldbereceivedbyaserver:
+7E001E910013A20055667788FFFEE8E80019C10501019506001E1000000A2000015D
+ThepayloadportionoftheAPIframe(startingatoffset21)isshownbelow:
+|       | Frame   | Sequence |           |        | Manufacturer |           |             | CreateanOTAupgradeserver |
+| ----- | ------- | -------- | --------- | ------ | ------------ | --------- | ----------- | ------------------------ |
+|       | control | number   | CommandID | Status | code         | Imagetype | Fileversion |                          |
+| Data  | 01      | 95       | 06        | 00     | 1E10         | 0000      | 0A200001    |                          |
+| Value | 0x01    | 0x95     | 0x06      | 0x00   | 0x101E       | 0x0000    | 0x0100200A  |                          |
+(SUCCESS)
+Description UpgradeEnd Digi's Firmware 0x01:Softwarecompatibility
+|     |     |     | Request |     | manufacturercode | upgrade | number |     |
+| --- | --- | --- | ------- | --- | ---------------- | ------- | ------ | --- |
+288
+
+DigiXBee®3802.15.4RFModuleUserGuide OTAfirmware/filesystemupgrades
+|     | Frame   | Sequence |           |        | Manufacturer |           |             |
+| --- | ------- | -------- | --------- | ------ | ------------ | --------- | ----------- |
+|     | control | number   | CommandID | Status | code         | Imagetype | Fileversion |
+0x00200A:Application
+version
+Theclienthascompletedthedownloadofversion0x0100200A.TheservershouldrespondwithanUpgradeEndResponsecommand.
+UpgradeEndResponsecommand
+(SeeZCLSpec§11.13.9.6)
+TheUpgradeEndResponsecommandissentbytheserverwhenitreceivesanUpgradeEndRequestwiththeSUCCESSstatus.Thiscommand
+instructsthedevicetoperformtheupgrade,andcanbeusedtoscheduleanupgradeforalatertime.AnUpgradeEndResponsecanalsobesent
+withoutarequestfromaclientiftheclientiswaitingforanupgrade—scheduledbyapreviousUpgradeEndResponse—tochangethetimetowaitfor
+thatupgrade.
+ZCLcommandformat
+| Offset Length | FieldName    | Description                                          |     |     |     |     |     |
+| ------------- | ------------ | ---------------------------------------------------- | --- | --- | --- | --- | --- |
+| 0 1           | Framecontrol | Shouldbesetto0x19indicatingaserver-to-clientcommand. |     |     |     |     |     |
+1 1 Sequence IfthiscommandissentinresponsetoanUpgradeEndrequest,thesequencenumbershouldmatchtheone
+|     | number    | fromthatrequest.           |     |     |     |     |     |
+| --- | --------- | -------------------------- | --- | --- | --- | --- | --- |
+| 2 1 | CommandID | 0x07forUpgradeEndResponse. |     |     |     |     |     |
+Manufacturer
+3 2 TheManufacturercodefortheavailableimage,parsedfromtheOTAfileheader.Mustmatchthe
+code manufacturercodefromtherequestthatpromptedthisresponse. CreateanOTAupgradeserver
+5 2 Imagetype TheImagefortheavailableimage,parsedfromtheOTAfileheader. Mustmatchtheimagetypefromthe
+requestthatpromptedthisresponse.
+7 4 Fileversion Theversionparsedfromtheavailableimage'sOTAfileheader.Mustmatchtheversionnumberfromthe
+requestthatpromptedthisresponse.
+11 4 Currenttime Thecurrenttime,usedforscheduledupgrades.SeeScheduleanupgradeformoreinformation.
+15 4 Upgradetime Thescheduledupgradetime,usedforscheduledupgrades.SeeScheduleanupgradeformoreinformation.
+289
+
+DigiXBee®3802.15.4RFModuleUserGuide Iftheupgradeshouldbeperformedimmediatelyandnotscheduledforalatertime,theCurrentTimeandUpgradeTimefieldsshouldbesettothe OTAfirmware/filesystemupgrades
+samevaluelessthan0xFFFFFFFF.
+Example
+AnOTAservercouldrespondtotheImageBlockRequestexampleintheprevioussectionusingthefollowing ExplicitAddressingCommand
+Request-0x11:
+7E002711010013A20011223344FFFEE8E80019C10500001995071E1000000A2000010000000000000000D4
+ThepayloadportionoftheAPIframe(startingatoffset23)isshownbelow:
+|     | Frame Sequence |     | Manufacturer |     |     |     |     |
+| --- | -------------- | --- | ------------ | --- | --- | --- | --- |
+control number CommandID code Imagetype Fileversion Currenttime Upgradetime
+| Data | 19 95 | 07  | 1E10 | 0000 | 0A200001 | 000000 | 00000000 |
+| ---- | ----- | --- | ---- | ---- | -------- | ------ | -------- |
+Value 0x19 0x95 0x07 0x101E 0x0000 0x0100200A 0x00000000 0x00000000
+0x01:Software
+| Description |     | UpgradeEnd | Digi's       | Firmware |                      |     |     |
+| ----------- | --- | ---------- | ------------ | -------- | -------------------- | --- | --- |
+|             |     | Response   | manufacturer | upgrade  | compatibilitynumber  |     |     |
+|             |     |            | code         |          | 0x00200A:Application |     |     |
+version
+Withthecurrenttimeandupgradetimebothsetto0,thedevicewillrebootandinstalltheupgradeimmediately.
+DefaultResponsecommand
+(SeeZCLSpec§2.5.12)
+ADefaultResponsecommandissentwhenaresponseisneededbutthereisnoothercommandframesuitedtotheresponse. CreateanOTAupgradeserver
+DuringtheOTAUpgradeprocess,theclientwillsendadefaultresponsewithanerrorstatusifitreceivesaninvalidcommandfromtheserver.The
+onlytimetheserverneedstosendadefaultresponseiswhenitreceivesanUpgradeEndRequestwithanerrorstatus;theserverrespondswitha
+defaultresponsewithstatus0x00(SUCCESS)statustoindicatethattherequestwasreceived.
+290
+
+DigiXBee®3802.15.4RFModuleUserGuide ZCLcommandformat OTAfirmware/filesystemupgrades
+| Offset Length | FieldName    | Description                     |
+| ------------- | ------------ | ------------------------------- |
+| 0 1           | Framecontrol | Ifcommandissentbytheclient:0x10 |
+Ifcommandissentbytheserver:0x18
+MustmatchthesequencenumberofthecommandthatpromptedthisDefaultResponse.
+| 1 1 | Sequencenumber |                         |
+| --- | -------------- | ----------------------- |
+| 2 1 | CommandID      | 0x0BforDefaultResponse. |
+3 1 (Source)commandidentifier ThecommandIDofthecommandthatpromptedthisDefaultResponse.
+4 1 Statuscode Astatuscodeindicatingsuccessoranerror.Afulllistofstatuscodes,seeZCLSpec§2.6.3.
+Errormessagessentbytheclient
+Theclientwillsendadefaultresponsetotheserverwhenanerroroccurs.Thesignificanceofthestatuscodeinthismessagedependsonwhat
+servercommandpromptedthedefaultresponse.TheHandlingErrorCasessectionofeachcommand'ssectionintheZCLspecificationcontains
+detailedinformationonwhaterrorsacommandcanproduce.Someerrorsthatcanbesentbytheclientarelistedbelow:
+SourceCommand
+| Identifier | Status | Description |
+| ---------- | ------ | ----------- |
+0x80(MALFORMED_ EitheroneoftheerrorsformZCLSpec§11.13.3.5.1,ormanufacturercodeorimagetypeisnot
+|     | COMMAND) | valid. |
+| --- | -------- | ------ |
+0x00
+| (ImageNotify) | 0x70(REQUEST_ | OTAUpgradeshavebeendisabledonthisdevice. |
+| ------------- | ------------- | ---------------------------------------- |
+DENIED)
+CreateanOTAupgradeserver
+|     | 0x8A(DUPLICATE_ | Thenewversionisnotvalid: |
+| --- | --------------- | ------------------------ |
+EXISTS)
+n Forfirmwareupgrades,thenewfirmwareversionmustbedifferentthanwhatisinstalledon
+thedevice.Upgradestothesameversionarenotsupported.
+n Forfilesystemupgrades,theversionindicateswhatfirmwareversiontheimagesupports.It
+mustmatchthecurrentlyinstalledfirmware.
+MakesurethefirmwareversionintheImageNotifyisbeingparsedfromtheOTAheaderinthe
+upgradeimage.
+291
+
+DigiXBee®3802.15.4RFModuleUserGuide SourceCommand OTAfirmware/filesystemupgrades
+| Identifier | Status | Description |     |     |     |
+| ---------- | ------ | ----------- | --- | --- | --- |
+Firmwareisincompatiblewiththeclient's%C(HardwareCompatibility)value.
+0x85(INVALID_
+FIELD)
+0x02 0x80(MALFORMED_ Theformatofthecommandis invalid(seeZCLSpec§11.13.5.5).
+| (QueryNextImage | COMMAND) |     |     |     |     |
+| --------------- | -------- | --- | --- | --- | --- |
+Response)
+0x89 Theimageistoolargefortheclienttostore.
+(INSUFFICIENT_
+SPACE)
+0x05 0x80(MALFORMED_ Theformatofthecommandisinvalid(SeeZCLSpec§11.13.8.5).
+| (ImageBlock | COMMAND) |     |     |     |     |
+| ----------- | -------- | --- | --- | --- | --- |
+Response)
+0x07 0x80(MALFORMED_ Theformatofthecommandisinvalid(SeeZCLSpec§11.13.9.9).
+| (UpgradeEnd | COMMAND) |     |     |     |     |
+| ----------- | -------- | --- | --- | --- | --- |
+Response)
+Example
+AfterunicastinganImageNotifycommandtoaclient,theservermayreceivethefollowingExplicitReceiveIndicator-0x91framecontaininga
+DefaultResponse:
+7E0017910013A20055667788FFFEE8E80019C10501100C0B008AA1
+ThepayloadportionoftheAPIframe(startingatoffset21)isshownbelow:
+CreateanOTAupgradeserver
+Framecontrol Sequencenumber CommandID Sourcecommandidentifier Status
+| Data        | 10   | 0C   | 0B              | 00          | 8A                     |
+| ----------- | ---- | ---- | --------------- | ----------- | ---------------------- |
+| Value       | 0x10 | 0x0C | 0x0C            | 0x00        | 0x8A(DUPLICATE_EXISTS) |
+| Description |      |      | DefaultResponse | ImageNotify |                        |
+292
+
+DigiXBee®3802.15.4RFModuleUserGuide Thesourcecommandidentifierfieldindicatesthattheerrorisinresponsetoanimagenotify,andthesequencenumberwillmatchthatoftheImage OTAfirmware/filesystemupgrades
+Notifycommandsentbytheserver.Accordingtothetableabove,aDUPLICATE_EXISTSstatusforanImageNotifymeansthatthefirmwareversion
+isinvalid—thedeviceisalreadyrunningthefirmwareversionthattheserveristryingtosend.
+Whentheserverneedstosendadefaultresponse,itcandosousingan ExplicitAddressingCommandRequest-0x11.Forexample,tosenda
+DefaultResponsewithaSUCCESSstatusinresponsetoanUpgradeEndRequest:
+7E001911010013A20011223344FFFEE8E80019C105000018410B060078
+ThepayloadportionoftheAPIframe(startingatoffset23)isshownbelow:
+Framecontrol Sequencenumber CommandID Sourcecommandidentifier Status
+| Data        | 18   | 41   | 0B              | 06                 | 00            |
+| ----------- | ---- | ---- | --------------- | ------------------ | ------------- |
+| Value       | 0x18 | 0x41 | 0x0B            | 0x06               | 0x00(SUCCESS) |
+| Description |      |      | DefaultResponse | UpgradeEndResponse |               |
+CreateanOTAupgradeserver
+293
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+Handlingunrecognizedcommands
+IftheserverreceivesacommandwithanunrecognizedcommandID,itshouldrespondwitha
+defaultresponsewithstatus0x81(UNSUP_CLUSTER_COMMAND).
+| Schedule | an upgrade |     |     |
+| -------- | ---------- | --- | --- |
+ThecurrenttimeandupgradetimefieldsoftheUpgradeEndResponsecommandcanbeusedto
+scheduleanupgradeforsometimeinthefuture.Thetimecanfortheupgradecanbescheduledin
+severalways:
+| Currenttime | Upgradetime    |                                  |     |
+| ----------- | -------------- | -------------------------------- | --- |
+| value       | value          | Effect                           |     |
+| 0x00000000- | Equaltocurrent | Thedevicewillupgradeimmediately. |     |
+| 0xFFFFFFFE  | time           |                                  |     |
+0x00000000 0x00000001- Delayedupgrade:thedevicewillupgradeafterthenumberof
+|     | 0xFFFFFFFE | secondsindicatedbytheupgradetimevalue. |     |
+| --- | ---------- | -------------------------------------- | --- |
+0x00000001- Anyvalue Scheduledupgrade:thedevicewilldeterminehowlongto
+0xFFFFFFFE greaterthan waitbysubtractingcurrenttimefromupgradetime,andwait
+(Currenttime
+|               | currenttimeand | thatlongbeforeupgrading. |     |
+| ------------- | -------------- | ------------------------ | --- |
+| inseconds     | lessthan       |                          |     |
+| sincemidnight | 0xFFFFFFFF     |                          |     |
+| Jan1,2000)    | (Intended      |                          |     |
+upgradetimein
+secondssince
+midnightJan1,
+2000)
+Any 0xFFFFFFFF Promptedupgrade:Thedevicewillnotupgrade,andwillwait
+indefinitelytoreceiveanotherUpgradeEndResponsewith
+theserver.Thesecondupgradeendresponsecanschedule
+anupgradewithanyoftheabovemethods.
+NoteWhenperformingascheduledupgrade,werecommendthattheOTAupgradeserver
+continuetomonitorforandrespondtoOTAcommandsuntilafterthetimetheupgradeismeantto
+beapplied.Iftheclientlosespowerwhilewaitingtoapplyascheduledupgrade,itwillsendanother
+UpgradeEndRequesttotheserverwhenitregainspowerinanattempttoresumetheschedule.If
+theclientdoesnotreceivearesponsefromtheserverafterafewtries,itappliestheupgrade
+withoutconfirmationfromtheserver.
+| Scheduled | upgrades | on sleeping | devices |
+| --------- | -------- | ----------- | ------- |
+Toscheduleanupgrade,anXBee3802.15.4RFModulemakesuseofinternalsoftwaretimers,
+whichonlycounttimewhilethedeviceisawake.Soasleepingdevicetakessignificantlylongerto
+applythescheduledupgradethananon-sleepingdevice.Considerthislimitationwhenscheduling
+anupgradeonasleepingdevice.
+Formulaforestimatingwhenasleepingdevicewillapplyanupgrade
+upgrade_delay=numberofsecondstheupgradewasscheduledfor(upgradeTime-currentTime
+fieldsintheUpgradeEndResponseframe)
+DigiXBee®3802.15.4RFModuleUserGuide 294
+
+OTAfirmware/filesystemupgrades CreateanOTAupgradeserver
+sleep_time= amountoftimethedeviceisestimatedtobeasleep(SPforanasynchronous
+sleepingdevice)
+wake_time= amountoftimethedeviceisestimatedtobeawake(ST foranasynchronoussleeping
+device)
+total_time=sleep_time+wake_time
+expected_upgrade_delay=upgrade_delay*(total_time/wake_time)
+Asynchronouscyclicsleepscheduledupgrades
+Adevicethatisconfiguredforasynchronouscyclicsleepwillonlybeawakeforafewmilliseconds
+atatime,thereforewedonotrecommendthatyouscheduleanupgradeforasleepingnodewith
+thisconfiguration.However,ifthedeviceisconfiguredtoalwaysstayawakefor STtimethenthe
+scheduledupgradecanbeestimatedbyusingtheaboveformula—wherewake_time= STand
+sleep_time= SP.Youcanconfigureadevicetoalwaysstayawakefor STbysetting SObit8to
+one—forexample, SO=0x80).
+Pinsleepscheduledupgrades
+Sincethedeviceonlycountstimewhileitisawake,schedulinganupgradeonapinsleeping
+devicemaybeunpredictable.However,ifapinsleepingdevicehaspredictablesleeppatternsitis
+possibletoestimatewhenascheduledupgradewillbeapplied.Thesleepestimateformulacanbe
+appliedtoapinsleepingdevicetoestimatewhenitwillapplytheupgrade.
+Aggressivelysleepingdevices
+Ifadeviceisasynchronouslysleeping,andkeepingitawakeforallof STtimeisundesired,then
+werecommendperformingascheduledupgradeinthefollowingmanner:
+1. Configurethesleepingnodeforindirectmessaging:
+a. Configurethesleepingdevicewiththefollowingparameters:
+n CE =0(joinnetwork)
+n DH,DLshouldbesettomatch SH, SLoftheOTAserverdevice
+b. Makesurethat STand SPofthesleepingdeviceandOTAserverradiomatch.
+c. Setallofthetransmitoptionfields oftheAPIframessenttotheOTAserverdeviceto
+0x40.
+2. Downloadthefirmware/filesystemimagetothesleepingdeviceasdescribedinthissection.
+a. WhensendingtheUpgradeEndResponseframesetthe upgradeTimeto
+0xFFFFFFFF—instructingthesleepingdevicetowaitforanotherupgradeendrequest
+beforeapplyingtheupgrade.
+3. Waitforthedesiredamountoftimetopass.
+4. Whenthetimetohavethesleepingdeviceapplyitsupgradehasarrived,sendasecond
+UpgradeEndResponsetothesleepingdevicewiththe currentTimeand upgradeTime
+fieldsbothsetto0x0000.Thiscausesthesleepingdevicetoapplytheupgrade
+immediately.
+Considerations for older firmware versions
+SomechangesneedtobemadetothisOTAupgradeprocessforsomepreviousversionsofthe
+software.
+DigiXBee®3802.15.4RFModuleUserGuide 295
+
+| OTAfirmware/filesystemupgrades |     |     |     | CreateanOTAupgradeserver |
+| ------------------------------ | --- | --- | --- | ------------------------ |
+Allversionsolderthan200A
+n WhenthefirmwareissentovertheairitmustbesentwithoutincludingtheOTAheaderand
+sub-elementtags.SeeDoesthedownloadincludetheOTAheader?
+n Theseolderversionswillnotretryrequests;ifapacketfromtheserverisdropped,youmay
+needtorestarttheupgrade.
+| Does the | download | include the | OTA header? |     |
+| -------- | -------- | ----------- | ----------- | --- |
+MostOTAfilesconsistofanOTAheader,asub-elementtag,andasinglesub-element:The
+upgradeimage.Forfirmwareversions200Aandnewer,theentireOTAfileissenttotheclient
+duringanOTAUpgrade.However,forversionsolderthan200A,onlythecontentsofthefile's
+singlesub-elementshouldbesent—nottheOTAheaderorthesub-elementtag.Thisaffects
+severalfieldsintheupgradeprocess.
+Whendealingwiththesetwomethodsitisusefultoknowthe imageoffsetoftheOTAfile—thatis,
+theoffsetatwhichtheupgradeimagedataactuallybegins.Thiscanbecalculatedbytakingthe
+sizeoftheOTAheader—whichcanbeparsedfromnearthebeginningoftheOTAfile—andadding
+sixbytesforthesub-elementheader:twobytesforthetag,fourbytesforthelength.
+Value
+when
+sending
+|         |       | Valuewhen      | with      |       |
+| ------- | ----- | -------------- | --------- | ----- |
+|         |       | sendingwithout | header    |       |
+|         |       | header         | (200A     |       |
+| Command | Field | (pre-200A)     | andlater) | Notes |
+QueryNext Image Thesizeofthe Thetotal Ineithercase,thisisthetotalnumber
+ofbytesthattheclientneedsto
+| Image | size | upgradeimage | sizeof |     |
+| ----- | ---- | ------------ | ------ | --- |
+Response parsedfromthefirst theOTA download.Thisvalueshouldnever
+|     |     | sub-elementtag's  | file. | bedeterminedbyreadingtheTotal |
+| --- | --- | ----------------- | ----- | ----------------------------- |
+|     |     | lengthvalue,orthe |       | ImageSizefieldfromtheOTA      |
+|     |     | totalsizeoftheOTA |       | header,asthatfieldcontains    |
+incorrectinformationonmostolder
+fileminustheimage
+|             |        | offset.            |           | firmwarefiles. |
+| ----------- | ------ | ------------------ | --------- | -------------- |
+| ImageBlock  | File   | Thisreferstothe    | This      |                |
+|             | offset | offsetfromthestart | refersto  |                |
+|             |        | oftheupgrade       | theoffset |                |
+|             |        | imagedata—addthe   | intothe   |                |
+|             |        | imageoffsettothis  | OTAfile.  |                |
+valuetogetthe
+offsetintotheOTA
+file.
+NoteForcompatibilitywitholderOTAupgradeservers,newerfirmwareversionssupportboth
+methodsforafirmwareupgrade.Filesystemupgradesonlysupportthemethodcorrespondingto
+theinstalledfirmwareversion,asdescribedabove.Werecommendusingthenewermethodwhere
+possibletoensurecompatibilitywithfuturereleases.
+DigiXBee®3802.15.4RFModuleUserGuide 296
+
+OTA file system upgrades
+AfteraFOTAupdate,allfilesystemdataandbundledMicroPythoncodeiserased.Tocontinue
+runningcode,anewfilesystemneedstobesenttothedeviceafterthefirmwareupdateis
+complete.Thissectioncontainsinformationonhowtoupdatethefilesystemofremotedevices
+overtheair.
+OTAfilesystemupdateprocess 298
+OTAfilesystemupdatesusingXCTU 298
+OTAfilesystemupdates:OEM 302
+DigiXBee®3802.15.4RFModuleUserGuide 297
+
+OTAfilesystemupgrades OTAfilesystemupdateprocess
+OTA file system update process
+SinceOTAfilesystemupdatesaresigned,remotedevicesmustbeconfiguredsothattheycan
+validateincomingupdates.TosetupanetworkforOTAfilesystemupdates:
+1. Generateapublic/privateEllipticCurveDigitalSignatureAlgorithm(ECDSA)signingkey
+pair.
+2. Usingthegeneratedpublickey,setFK(FileSystemPublicKey)onalldevicesthatwill
+receiveOTAfilesystemupdates.
+NoteYoucannotsetFKremotely.YoumusteithersetFKbeforetheXBee3802.15.4RFModule
+isdeployed,orelseserialaccesstothedeviceisneededtosetit.
+ToperformanOTAfilesystemupdate:
+1. Onalocaldevice,createacopyofthefilesystemthatyouwanttosendovertheair.
+2. CreateanOTAfilesystemimage,signedusingtheprivatekeygeneratedpreviously.
+3. PerformanOTAupdateusingthecreatedOTAfile.
+NoteThelocaldeviceusedtocreatethefilesystemimagemusthavethesamefirmwareversion
+installedasthetargetdeviceorthefilesystemwillberejected.UseVR(FirmwareVersion)to
+checktheversionnumberonboththestagingandtargetdevices.
+YoucanperformallofthesestepsautomaticallythroughXCTUormanuallyusingothertools.
+OTA file system updates using XCTU
+UsethefollowingstepstoperformafilesystemupdateOTA usingXCTU:
+1. Generateapublic/privatekeypair
+2. SetthepublickeyontheXBeedevice
+3. CreatetheOTAfilesystemimage
+4. PerformtheOTAfilesystemupdate
+Generate a public/private key pair
+XCTUprovidesanECDSAkeypairgeneratorthatyoucanusetostoreapublic/privatekeypairin
+.pemfiles.ToaccesstheGeneratefilesystemkeypairdialog:
+1. OpentheFileSystemManagerdialogbox.
+2. ClickKeysasshownbelow.
+DigiXBee®3802.15.4RFModuleUserGuide 298
+
+OTAfilesystemupgrades OTAfilesystemupdatesusingXCTU
+3. ClickGenerateintheGeneratefilesystemkeypairdialog.
+4. Saveboththekeysinasafelocationandclosethedialogbox.
+Set the public key on the XBee device
+1. OpentheconfigurationviewofthetargetdeviceinXCTUandgototheFileSystem
+category.
+2. IntheFileSystemPublicKeyrow,clickConfigure.
+DigiXBee®3802.15.4RFModuleUserGuide 299
+
+OTAfilesystemupgrades OTAfilesystemupdatesusingXCTU
+3. IntheConfigureFileSystemPublicKeydialogbox,clickBrowseandchoosethe.pemfile
+thatyousavedthepublickeyinto.Oncethisisdone,theHEXvalueofthepublickeyis
+visibleunderthePublickeysectiononthedialogboxasshown.
+4. ClickOKtoensurethatthekeygetswrittenintothedevice.
+NoteThiscanbeonlybedonelocally.XBeefirmwareDOESNOTsupportremotelysettingthefile
+systempublickeyatthistime.
+Create the OTA file system image
+TocreatetheOTAfilesystemimage:
+1. OpentheFileSystemManagerdialogbox.
+2. OpenaconnectiononthedevicethatyouwanttogeneratetheOTAfilesystemimagefrom.
+3. ClickFSImage.
+4. IntheGenerateasignedfilesystemimagewindowthatdisplays,clickBrowseandchoose
+the.pemfilethattheprivatekeywasstoredin.
+5. OncethepathshowsuponthePrivateKeyfilefield,clickSavetoassignthe.fs.otaan
+appropriatefilenameandlocation.
+6. Savethefile.
+DigiXBee®3802.15.4RFModuleUserGuide 300
+
+OTAfilesystemupgrades OTAfilesystemupdatesusingXCTU
+YouwillbepromptedwithaFilesystemimagesuccessfullysaveddialogboxifthefilewas
+successfullygenerated.
+Perform the OTA file system update
+1. Toaddthetargetdevice,clickDiscoverradiosinthesamenetworkfromthesource
+device.
+2. EnterConfigurationmodeontheremotedevice.
+3. ClickthedownarrownexttotheUpdatebuttonandchooseUpdateFileSystem.
+DigiXBee®3802.15.4RFModuleUserGuide 301
+
+OTAfilesystemupgrades OTAfilesystemupdates:OEM
+4. ChoosetheOTAfilesystemimage(.fs.ota)thatthetargetnodeneedstobeupdatedto.
+5. ClickOpen.
+Oncethefilesystemimageiscompletelytransferredandmountedontheremotedevice,XCTU
+informsyouthatthefilesystemhasbeenupdatedsuccessfully.
+OTA file system updates: OEM
+UsethefollowingstepstoperformafilesystemupdateOTA usingOEM tools:
+DigiXBee®3802.15.4RFModuleUserGuide 302
+
+OTAfilesystemupgrades OTAfilesystemupdates:OEM
+1. Generateapublic/privatekeypair
+2. SetthepublickeyontheXBee3device
+3. CreatetheOTAfilesystemimage
+4. PerformtheOTAfilesystemupdate
+| Generate | a public/private |     | key | pair |
+| -------- | ---------------- | --- | --- | ---- |
+GenerateECDSAsigningkeysusingsecp256r1curveparameters(alsoknownasprime256v1or
+NISTP-256).
+Togenerateapublic/privatekeypairusingOpenSSL,runthefollowingcommand:
+opensslecparam-nameprime256v1-genkey-outformpem-outkeypair.pem
+Toextracttheprivatekeyfromthekeypairgeneratedabove:
+opensslpkcs8-topk8-informpem-inpair.pem-outformpem-nocrypt-outprivate.pem
+Toextractthepublickeyfromthekeypairgeneratedabove:
+opensslec-inkeypair.pem-pubout-outpublic.pem
+| Set the | public key | on the | XBee | 3 device |
+| ------- | ---------- | ------ | ---- | -------- |
+ThepublickeysgeneratedbyXCTUandOpenSSLarestoredin*.pemfiles.Thesefilesneedtobe
+parsedtogetthevaluetousewhensettingFK.Toparseapublickeyfile,run:
+opensslasn1parse-inpublic.pem-dump
+Thecommandwillproducesomethinglikethefollowingoutput:
+| 0:d=0 hl=2l=                           | 89cons:SEQUENCE  |     |                 |                  |
+| -------------------------------------- | ---------------- | --- | --------------- | ---------------- |
+| 2:d=1 hl=2l=                           | 19cons:SEQUENCE  |     |                 |                  |
+| 4:d=2 hl=2l=                           | 7prim:OBJECT     |     | :id-ecPublicKey |                  |
+| 13:d=2 hl=2l=                          | 8prim:OBJECT     |     | :prime256v1     |                  |
+| 23:d=1 hl=2l=                          | 66prim:BITSTRING |     |                 |                  |
+| 0000-00049550aa55b6f5-5d994dd815d17157 |                  |     |                 | ...P.U..].M...qW |
+| 0010-5180d514ec1f6a15-51a2c4b80f77108a |                  |     |                 | Q.....j.Q....w.. |
+| 0020-33a380074740148b-5ca74c7802fc4d82 |                  |     |                 | 3...G@..\.Lx..M. |
+| 0030-904b399862a11d97-6e78fb546206d241 |                  |     |                 | .K9.b...nx.Tb..A |
+0040-c73b
+Thepublickeyshouldbe65byteslong-itistheBITSTRINGvalueattheend,withtheleading00
+omitted;inthiscase:
+049550aa55b6f55d994dd815d171575180d514ec1f6a1551a2c4b80f77108a33a380074740148b5ca74c780
+2fc4d82904b399862a11d976e78fb546206d241c73b
+| Create | the OTA file | system | image |     |
+| ------ | ------------ | ------ | ----- | --- |
+YoucancreateafilesystemimageoutsideofXCTUusinganyutilitythatcanperformECDSA
+signing.TheseinstructionsshowhowtodosousingOpenSSL.TocreateanOTAfilesystem
+image,usethefollowingsteps.
+DigiXBee®3802.15.4RFModuleUserGuide 303
+
+OTAfilesystemupgrades OTAfilesystemupdates:OEM
+Createastagedfilesystem
+Inordertocreateausablefilesystemimage,firstcreatea'staged'copyofthefilesystemyouwant
+tosendonalocaldevice.
+UsetheFScommandorMicroPythontoloadallofthefilesthatyouwanttosendontothelocal
+stagingdevice.
+NoteThestagingdevicemusthavethesamefirmwareversioninstalledasthetargetdeviceorthe
+filesystemwillberejected.UsetheVRcommandtochecktheversionnumberonboththestaging
+andtargetdevices.
+Downloadthefilesystemimage
+RunthecommandATFSGET/sys/xbfs.bintodownloadanimageofthefilesystemfromthe
+stagingdevice.ThefileistransferredusingtheYMODEMprotocol.SeeFilesystemformore
+informationondownloadingfilesusingFSGET.
+Padthefilesystemimage
+Thefilesystemimagemustbeamultipleof2048byteslongbeforeitissigned.Usinghexediting
+software,add0xFFbytestotheendofthedownloadedimageuntilsizeofthefileisamultipleof
+2048(0x800inhex).
+Calculatetheimagesignature
+Oncetheimagehasbeenpaddedtoamultipleof2048bytes,itisreadytobesigned.TheECDSA
+signatureshouldbecalculatedusingSHA256asthehashalgorithm.
+Assumingapublic/privatekeypairhasbeengeneratedasdescribedinGenerateapublic/private
+keypair,thattheprivatekeyisnamedprivate.pem,andthatthepaddedimageisnamedxbfs.bin;
+thiscanbedoneusingOpenSSLwiththefollowingcommand:
+openssldgst-sha256-signprivate.pem-binary-outsig.binxbfs.bin
+sig.binwillcontainthesignaturefortheimage.
+Appendthecalculatedsignaturetotheimage
+Thesignatureshouldbebetween70and72bytes,anditshouldbeappendedtothepadded
+image.
+CreatetheOTAfile
+PuttheimageintoanOTAfilethatfollowstheformatspecifiedinZigBeeDocument095264r23.
+Thefileshouldconsistof:
+n AnOTAheader
+n Anupgradeimagesub-elementtag
+n Thepadded,signedimagedata
+TheOTAfilemustbeginwithanOTAheader.SeeOTAheaderforinformationontheformatofthe
+header.Theimagetypeshouldbe0x0100forafilesystemimageupgrade.
+Thesub-elementtagshouldcomebeforetheimagedata.Thesub-elementtagfollowstheformat
+describedinsection6.3.3ofZigBeeDocument095264r23.Itconsistsof6bytes:thefirst2bytes
+arethetagidandshouldbesetto0x0000.Thenext4bytescontainthelengthofthefilesystem
+imageinlittle-endianformat.
+DigiXBee®3802.15.4RFModuleUserGuide 304
+
+GeneralPurposeFlashMemory OTAfilesystemupdates:OEM
+Perform the OTA file system update
+TheprocessforperforminganOTAfilesystemupdateisthesameastheprocessforperforminga
+FOTAupgrade,asdescribedinOTAfirmware/filesystemupgrades.Notethatthedatathatgoesin
+theimageblocksstartsatthebeginningoftheimagedata,aftertheOTAheaderandsub-element
+tag.
+General Purpose Flash Memory
+GeneralPurposeFlashMemory 306
+AccessGeneralPurposeFlashMemory 306
+GeneralPurposeFlashMemorycommands 307
+PossibleErrorsReturnedfromGPMCommands 313
+Updatethefirmwareover-the-air 314
+DigiXBee®3802.15.4RFModuleUserGuide 305
+
+| GeneralPurposeFlashMemory |         |       |        | GeneralPurposeFlashMemory |
+| ------------------------- | ------- | ----- | ------ | ------------------------- |
+| General                   | Purpose | Flash | Memory |                           |
+XBee3802.15.4RFModuleprovides2202048-byteblocksofflashmemorythatanapplication
+canreadandwriteto.Thismemoryprovidesanon-volatiledatastorageareathatanapplication
+usesformanypurposes.Somecommonusesofthisdatastorageinclude:
+n Storingloggedsensordata
+n Bufferingfirmwareupdatedataforahostmicrocontroller
+n Storingandretrievingdatatablesneededforcalculationsperformedbyahost
+microcontroller
+TheGeneralPurposeMemory(GPM)isalsousedtostoreafirmwareupdatefileforover-the-air
+firmwareupdatesofthedeviceitself.
+CAUTION! GeneralPurposeMemoryrequiresusageofthesamememoryspaceasthe
+filesystem.InordertouseGPMusersmustissueamasseraseGPMcommandbefore
+beingallowedtomodifyflashwithGPMcommands.Makesuretobackupanynecessary
+filesbeforeerasingflash.
+TheusageofsleepduringaGPMupdateisunsupported.Usersarerecommendedtoturnoffsleep
+onthetargetdevice,performtheupdate,andthenswitchsleepbackontoavoiddatalossand
+increasetheupdatespeed.
+| Access | General | Purpose | Flash Memory |     |
+| ------ | ------- | ------- | ------------ | --- |
+ToaccesstheGPMofatargetnodelocallyorover-the-air,sendcommandstotheMEMORY_
+ACCESSclusterID(0x23)ontheDIGI_DEVICEendpoint(0xE6)ofthetargetnodeusingexplicit
+APIframes.ForadescriptionofExplicitAPIframes,seeFramedescriptions.
+ToissueaGPMcommand,formatthepayloadofanexplicitAPIframeasfollows:
+|     | Byteoffset | Numberof |            |                         |
+| --- | ---------- | -------- | ---------- | ----------------------- |
+|     | inpayload  | bytes    | Fieldname  | Generalfielddescription |
+|     | 0          | 1        | GPM_CMD_ID | SpecificGPMcommandsare  |
+describedindetailinthetopicsthat
+follow.
+|     | 1   | 1   | GPM_OPTIONS   | Command-specificoptions.     |
+| --- | --- | --- | ------------- | ---------------------------- |
+|     | 2   | 2*  | GPM_BLOCK_NUM | Theblocknumberaddressedinthe |
+GPM.
+|     | 4   | 2*  | GPM_START_INDEX | Thebyteindexwithinthe |
+| --- | --- | --- | --------------- | --------------------- |
+addressedGPMblock.
+|     | 6   | 2*  | GPM_NUM_BYTES | ThenumberofbytesintheGPM_ |
+| --- | --- | --- | ------------- | ------------------------- |
+DATAfield,orinthecaseofa
+READ,thenumberofbytes
+requested.
+DigiXBee®3802.15.4RFModuleUserGuide 306
+
+| GeneralPurposeFlashMemory |     |          |           | GeneralPurposeFlashMemorycommands |                         |
+| ------------------------- | --- | -------- | --------- | --------------------------------- | ----------------------- |
+| Byteoffset                |     | Numberof |           |                                   |                         |
+| inpayload                 |     | bytes    | Fieldname |                                   | Generalfielddescription |
+| 8                         |     | varies   | GPM_DATA  |                                   |                         |
+*Specifymulti-byteparameterswithbig-endianbyteordering.
+WhenadevicesendsaGPMcommandtoanotherdeviceviaaunicast,thereceivingdevicesends
+aunicastresponsebacktotherequestingdevice'ssourceendpointspecifiedintherequestpacket.
+Itdoesnotsendaresponseforbroadcastrequests.IfthesourceendpointissettotheDIGI_
+DEVICEendpoint(0xE6)orExplicitAPImodeisenabledontherequestingdevice,thenthe
+requestingnodeoutputsaGPMresponseasanexplicitAPIRXindicatorframe(assumingithas
+APImodeenabled).
+Theformatoftheresponseissimilartotherequestpacket:
+| Byteoffsetin |     | Numberof |            |     |                         |
+| ------------ | --- | -------- | ---------- | --- | ----------------------- |
+| payload      |     | bytes    | Field name |     | Generalfielddescription |
+| 0            |     | 1        | GPM_CMD_ID |     | Thisfieldisthesameasthe |
+requestfield.
+| 1   |     | 1   | GPM_STATUS |     | Statusindicatingwhetherthe |
+| --- | --- | --- | ---------- | --- | -------------------------- |
+commandwassuccessful.
+| 2   |     | 2*  | GPM_BLOCK_NUM |     | Theblocknumberaddressedin |
+| --- | --- | --- | ------------- | --- | ------------------------- |
+theGPM.
+| 4   |     | 2*  | GPM_START_INDEX |     | Thebyteindexwithinthe |
+| --- | --- | --- | --------------- | --- | --------------------- |
+addressedGPMblock.
+| 6   |     | 2*  | GPM_NUM_BYTES |     | Thenumberofbytesinthe |
+| --- | --- | --- | ------------- | --- | --------------------- |
+GPM_DATAfield.
+| 8   |     | varies | GPM_DATA |     |     |
+| --- | --- | ------ | -------- | --- | --- |
+*Specifymulti-byteparameterswithbig-endianbyteordering.
+| General | Purpose | Flash | Memory | commands |     |
+| ------- | ------- | ----- | ------ | -------- | --- |
+ThissectionprovidesinformationaboutcommandsthatinteractwithGPM:
+| PLATFORM_INFO_REQUEST |     |     |     | (0x00) |     |
+| --------------------- | --- | --- | --- | ------ | --- |
+APLATFORM_INFO_REQUESTframecanbesenttoquerydetailsoftheGPMstructure.
+| Fieldname     |     |     | Command-specificdescription               |     |     |
+| ------------- | --- | --- | ----------------------------------------- | --- | --- |
+| GPM_CMD_ID    |     |     | ShouldbesettoPLATFORM_INFO_REQUEST(0x00). |     |     |
+| GPM_OPTIONS   |     |     | Thisfieldisunusedforthiscommand.Setto0.   |     |     |
+| GPM_BLOCK_NUM |     |     | Thisfieldisunusedforthiscommand.Setto0.   |     |     |
+DigiXBee®3802.15.4RFModuleUserGuide 307
+
+GeneralPurposeFlashMemory GeneralPurposeFlashMemorycommands
+Fieldname Command-specificdescription
+GPM_START_INDEX Thisfieldisunusedforthiscommand.Setto0.
+GPM_NUM_BYTES Thisfieldisunusedforthiscommand.Setto0.
+GPM_DATA Nodatabytesshouldbespecifiedforthiscommand.
+PLATFORM_INFO (0x80)
+WhenaPLATFORM_INFO_REQUESTcommandrequesthasbeenunicasttoanode,thatnode
+sendsaresponseinthefollowingformattothesourceendpointspecifiedintherequestingframe.
+Fieldname Command-specificdescription
+GPM_CMD_ID ShouldbesettoPLATFORM_INFO(0x80).
+GPM_STATUS Indicatessuccessif0.Otherwise,anerroroccurred(see
+PossibleErrorsReturnedfromGPMCommands).
+GPM_BLOCK_NUM IndicatesthenumberofGPMblocksavailable.
+GPM_START_INDEX Indicatesthesize,inbytes,ofaGPMblock.
+GPM_NUM_BYTES ThenumberofbytesintheGPM_DATAfield.Forthis
+command,thisfieldwillbesetto0.
+GPM_DATA Nodatabytesarespecifiedforthiscommand.
+Example
+APLATFORM_INFO_REQUESTsenttoadevicewithaserialnumberof0x0013a200407402AC
+shouldbeformattedasfollows(spacesaddedtodelineatefields):
+7E001C11010013A200407402ACFFFEE6E60023C10500000000000000000000
+24
+Assumingalltransmissionsweresuccessful,thefollowingAPIpacketswouldbeoutputthesource
+node'sserialinterface:
+7E00078B01FFFE00000076
+7E001A910013A200407402ACFFFEE6E60023C105C18000007702000000EB
+ERASE (0x01)
+TheERASEcommanderases(writesallbitstobinary1)oneoralloftheGPMflashblocks.You
+canalsousetheERASEcommandtoeraseallblocksoftheGPMbysettingtheGPM_NUM_
+BYTESfieldto0.
+Fieldname Command-specificdescription
+GPM_CMD_ID ShouldbesettoERASE(0x01).
+GPM_OPTIONS TherearecurrentlynooptionsdefinedfortheERASE
+command.Setthisfieldto0.
+DigiXBee®3802.15.4RFModuleUserGuide 308
+
+GeneralPurposeFlashMemory GeneralPurposeFlashMemorycommands
+Fieldname Command-specificdescription
+GPM_BLOCK_NUM SettotheindexoftheGPMblockthatshouldbeerased.When
+erasingallGPMblocks,thisfieldisignored(setto0).
+GPM_START_INDEX TheERASEcommandonlyworksoncompleteGPMblocks.
+ThecommandcannotbeusedtoerasepartofaGPMblock.
+ForthisreasonGPM_START_INDEXisunused(setto0).
+GPM_NUM_BYTES SettingGPM_NUM_BYTESto0hasaspecialmeaning.It
+indicatesthateveryflashblockintheGPMshouldbeerased
+(notjusttheonespecifiedwithGPM_BLOCK_NUM).Inall
+othercases,theGPM_NUM_BYTESfieldshouldbesettothe
+GPMflashblocksize.
+GPM_DATA Nodatabytesarespecifiedforthiscommand.
+ERASE_RESPONSE (0x81)
+WhenanERASEcommandrequesthasbeenunicasttoanode,thatnodesendsaresponseinthe
+followingformattothesourceendpointspecifiedintherequestingframe.
+Fieldname Command-specificdescription
+GPM_CMD_ID ShouldbesettoERASE_RESPONSE(0x81).
+GPM_STATUS Indicatessuccessif0.Otherwise,anerroroccurred(see
+PossibleErrorsReturnedfromGPMCommands).
+GPM_BLOCK_NUM Matchestheparameterpassedintherequestframe.
+GPM_START_INDEX Matchestheparameterpassedintherequestframe.
+GPM_NUM_BYTES ThenumberofbytesintheGPM_DATAfield.Forthis
+command,thisfieldwillbesetto0.
+GPM_DATA Nodatabytesarespecifiedforthiscommand.
+Example
+Toeraseflashblock42ofatargetradiowithserialnumberof0x0013a200407402acformatan
+ERASEpacketasfollows(spacesaddedtodelineatefields):
+7E001C11010013A200407402ACFFFEE6E60023C10500000100002A0000
+0800F1
+Assumingalltransmissionsweresuccessful,thefollowingAPIpacketswouldbeoutputthesource
+node'sserialinterface:
+7E00078B01FFFE00000076
+7E001A910013A200407402ACFFFEE6E60023C105C18100002A0000000039
+WRITE (0x02) and ERASE_THEN_WRITE (0x03)
+TheWRITEcommandwritesthespecifiedbytestotheGPMlocationspecified.Beforewriting
+bytestoaGPMblockitisimportantthatthebyteshavebeenerasedpreviously.TheERASE_
+THEN_WRITEcommandperformsanERASEoftheentireGPMblockspecifiedwiththeGPM_
+DigiXBee®3802.15.4RFModuleUserGuide 309
+
+| GeneralPurposeFlashMemory |     | GeneralPurposeFlashMemorycommands |
+| ------------------------- | --- | --------------------------------- |
+BLOCK_NUMfieldpriortodoingaWRITE.WRITEcommandscannotindexpasttheendofaGPM
+blockboundary.
+| Fieldname  | Command-specificdescription                |     |
+| ---------- | ------------------------------------------ | --- |
+| GPM_CMD_ID | ShouldbesettoWRITE(0x02)orERASE_THEN_WRITE |     |
+(0x03).
+GPM_OPTIONS Therearecurrentlynooptionsdefinedforthiscommand.Set
+thisfieldto0.
+| GPM_BLOCK_NUM | SettotheindexoftheGPMblockthatshouldbewritten. |     |
+| ------------- | ---------------------------------------------- | --- |
+GPM_START_INDEX SettothebyteindexwithintheGPMblockwherethegivendata
+shouldbewritten.
+GPM_NUM_BYTES SettothenumberofbytesspecifiedintheGPM_DATAfield.
+OnlyoneGPMblockcanbeoperatedonpercommand.Forthis
+reason,GPM_START_INDEX+GPM_NUM_BYTEScannotbe
+greaterthantheGPMblocksize.Thenumberofbytessentin
+anexplicitAPIframe(includingtheGPMcommandfields)
+cannotexceedthemaximumpayloadsizeofthedevice.The
+maximumpayloadsizecanbequeriedwiththeNPcommand.
+| GPM_DATA        | Thedatatobewritten. |                   |
+| --------------- | ------------------- | ----------------- |
+| WRITE _RESPONSE | (0x82) and          | ERASE_THEN_WRITE_ |
+RESPONSE (0x83)
+WhenaWRITEorERASE_THEN_WRITEcommandrequesthasbeenunicasttoanode,that
+nodesendsaresponseinthefollowingformattothesourceendpointspecifiedintherequesting
+frame.
+| Fieldname  | Command-specificdescription                    |     |
+| ---------- | ---------------------------------------------- | --- |
+| GPM_CMD_ID | ShouldbesettoWRITE_RESPONSE(0x82)orERASE_THEN_ |     |
+WRITE_RESPONSE(0x83)
+GPM_STATUS Indicatessuccessif0.Otherwise,anerroroccurred(seePossible
+ErrorsReturnedfromGPMCommands).
+| GPM_BLOCK_NUM   | Matchestheparameterpassedintherequestframe |     |
+| --------------- | ------------------------------------------ | --- |
+| GPM_START_INDEX | Matchestheparameterpassedintherequestframe |     |
+GPM_NUM_BYTES ThenumberofbytesintheGPM_DATAfield.Forthiscommand,
+thisfieldwillbesetto0
+| GPM_DATA | Nodatabytesarespecifiedforthesecommands |     |
+| -------- | --------------------------------------- | --- |
+Example
+Towrite15bytesofincrementingdatatoflashblock22ofatargetradiowithserialnumberof
+0x0013a200407402acaWRITEpacketshouldbeformattedasfollows(spacesaddedtodelineate
+fields):
+DigiXBee®3802.15.4RFModuleUserGuide 310
+
+GeneralPurposeFlashMemory GeneralPurposeFlashMemorycommands
+7E002B11010013A200407402ACFFFEE6E60023C10500C0020000160000000F
+0102030405060708090A0B0C0D0E0FC5
+Assumingalltransmissionsweresuccessfulandthatflashblock22waspreviouslyerased,the
+followingAPIpacketswouldbeoutputthesourcenode'sserialinterface:
+7E00078B01FFFE00000076
+READ (0x04)
+YoucanusetheREADcommandtoreadthespecifiednumberofbytesfromtheGPMlocation
+specified.DatacanbequeriedfromonlyoneGPMblockpercommand.
+Fieldname Command-specificdescription
+GPM_CMD_ID ShouldbesettoREAD(0x04).
+GPM_OPTIONS Therearecurrentlynooptionsdefinedforthiscommand.Setthis
+fieldto0.
+GPM_BLOCK_NUM SettotheindexoftheGPMblockthatshouldberead.
+GPM_START_INDEX SettothebyteindexwithintheGPMblockwherethegivendata
+shouldberead.
+GPM_NUM_BYTES Settothenumberofdatabytestoberead.OnlyoneGPMblock
+canbeoperatedonpercommand.Forthisreason,GPM_START_
+INDEX+GPM_NUM_BYTEScannotbegreaterthantheGPM
+blocksize.ThenumberofbytessentinanexplicitAPIframe
+(includingtheGPMcommandfields)cannotexceedthemaximum
+payloadsizeofthedevice.Youcanquerythemaximumpayload
+sizewiththeNPATcommand.
+GPM_DATA Nodatabytesshouldbespecifiedforthiscommand.
+READ_RESPONSE (0x84)
+WhenaREADcommandrequesthasbeenunicasttoanode,thatnodesendsaresponseinthe
+followingformattothesourceendpointspecifiedintherequestingframe.
+Fieldname Command-specificdescription
+GPM_CMD_ID ShouldbesettoREAD_RESPONSE(0x84).
+GPM_STATUS Indicatessuccessif0.Otherwise,anerroroccurred(see
+PossibleErrorsReturnedfromGPMCommands).
+GPM_BLOCK_NUM Matchestheparameterpassedintherequestframe.
+GPM_START_INDEX Matchestheparameterpassedintherequestframe.
+GPM_NUM_BYTES ThenumberofbytesintheGPM_DATAfield.
+GPM_DATA ThebytesreadfromtheGPMblockspecified.
+DigiXBee®3802.15.4RFModuleUserGuide 311
+
+| GeneralPurposeFlashMemory |     | GeneralPurposeFlashMemorycommands |
+| ------------------------- | --- | --------------------------------- |
+Example
+Toread15bytesofpreviouslywrittendatafromflashblock22ofatargetradiowithserialnumber
+of0x0013a200407402acaREADpacketshouldbeformattedasfollows(spacesaddedto
+delineatefields):
+7E001C11010013A200407402ACFFFEE6E60023C10500C0040000160000000F
+3B
+Assumingalltransmissionsweresuccessfulandthatflashblock22waspreviouslywrittenwith
+incrementingdata,thefollowingAPIpacketswouldbeoutputthesourcenode'sserialinterface:
+7E00078B01FFFE00000076
+7E0029910013A200407402ACFFFEE6E60023C105C1840000160000000F
+0102030405060708090A0B0C0D0E0FC3
+| FIRMWARE_VERIFY | (0x05) and | FIRMWARE_VERIFY_AND_ |
+| --------------- | ---------- | -------------------- |
+INSTALL (0x06)
+UsetheFIRMWARE_VERIFYandFIRMWARE_VERIFY_AND_INSTALLcommandswhen
+remotelyupdatingfirmwareonadevice.Formoreinformationaboutfirmwareupdates,see
+Updatethefirmwareover-the-air.ThesecommandscheckiftheGPMcontainsavalidover-the-air
+updatefile.FortheFIRMWARE_VERIFY_AND_INSTALLcommand,iftheGPMcontainsavalid
+firmwareimage,itwillsendaGPMresponseandthenthedeviceresetsandbeginsusingthenew
+firmware.
+| Fieldname  | Command-specificdescription                   |     |
+| ---------- | --------------------------------------------- | --- |
+| GPM_CMD_ID | ShouldbesettoFIRMWARE_VERIFY(0x05)orFIRMWARE_ |     |
+VERIFY_AND_INSTALL(0x06)
+| GPM_OPTIONS     | Reserved.Setto0.                        |     |
+| --------------- | --------------------------------------- | --- |
+| GPM_BLOCK_NUM   | Thisfieldisunusedforthiscommand.Setto0. |     |
+| GPM_START_INDEX | Thisfieldisunusedforthiscommand.Setto0. |     |
+| GPM_NUM_BYTES   | Thisfieldisunusedforthiscommand.Setto0. |     |
+| GPM_DATA        | Thisfieldisunusedforthiscommand         |     |
+NoteThetargetdevicewillbeunabletoreceiveRFpacketsforashortperiodoftime(aroundhalfa
+second)whileverifyingthefirmwareafterreceivingeitherofthesecommands.
+| FIRMWARE_VERIFY_RESPONSE |     | (0x85) |
+| ------------------------ | --- | ------ |
+WhenaFIRMWARE_VERIFYcommandrequesthasbeenunicasttoanode,thatnodesendsa
+responseinthefollowingformattothesourceendpointspecifiedintherequestingframe.
+| Fieldname  | Command-specificdescription                       |     |
+| ---------- | ------------------------------------------------- | --- |
+| GPM_CMD_ID | ShouldbesettoFIRMWARE_VERIFY_RESPONSE(0x85)       |     |
+| GPM_STATUS | Indicatessuccessif0.Otherwise,anerroroccurred(see |     |
+DigiXBee®3802.15.4RFModuleUserGuide 312
+
+GeneralPurposeFlashMemory PossibleErrorsReturnedfromGPMCommands
+| Fieldname |     | Command-specificdescription |     |     |
+| --------- | --- | --------------------------- | --- | --- |
+PossibleErrorsReturnedfromGPMCommands).
+| GPM_BLOCK_NUM   |     | Thisfieldisunusedforthiscommand.Setto0. |     |        |
+| --------------- | --- | --------------------------------------- | --- | ------ |
+| GPM_START_INDEX |     | Thisfieldisunusedforthiscommand.Setto0. |     |        |
+| GPM_NUM_BYTES   |     | Thisfieldisunusedforthiscommand.Setto0. |     |        |
+| GPM_DATA        |     | Thisfieldisunusedforthiscommand         |     |        |
+| FIRMWARE_VERIFY |     | _AND_INSTALL_RESPONSE                   |     | (0x86) |
+WhenaFIRMWARE_VERIFY_AND_INSTALLcommandrequesthasbeenunicasttoanode,that
+nodesendsaresponseinthefollowingformattothesourceendpointspecifiedintherequesting
+frame.
+NoteIfthefirmwareimageisvalid,afterthatnodesendstheresponsethedevicewillresetand
+beginusingthenewfirmware.
+| Fieldname  |     | Command-specificdescription               |     |     |
+| ---------- | --- | ----------------------------------------- | --- | --- |
+| GPM_CMD_ID |     | ShouldbesettoFIRMWARE_VERIFY_AND_INSTALL_ |     |     |
+RESPONSE(0x86).
+GPM_STATUS Indicatessuccessif0.Otherwise,anerroroccurred(seePossible
+ErrorsReturnedfromGPMCommands).
+| GPM_BLOCK_NUM   |     | Thisfieldisunusedforthiscommand.Setto0. |     |     |
+| --------------- | --- | --------------------------------------- | --- | --- |
+| GPM_START_INDEX |     | Thisfieldisunusedforthiscommand.Setto0. |     |     |
+| GPM_NUM_BYTES   |     | Thisfieldisunusedforthiscommand.Setto0. |     |     |
+| GPM_DATA        |     | Thisfieldisunusedforthiscommand.        |     |     |
+Example
+ToverifyafirmwareimagepreviouslyloadedintotheGPMonatargetdevicewithserialnumber
+0x0013a200407402ac,formataFIRMWARE_VERIFYpacketasfollows(spacesaddedto
+delineatefields):
+7E001C11010013A200407402ACFFFEE6E60023C10500000500000000000000
+1F
+Assumingalltransmissionsweresuccessfulandthatthefirmwareimagepreviouslyloadedintothe
+GPMisvalid,thefollowingAPIpacketswouldbeoutputthesourcenode'sserialinterface:
+7E00078B01FFFE00000076
+7E001A910013A200407402ACFFFEE6E60023C105C185000000000000005F
+| Possible | Errors Returned | from GPM | Commands |     |
+| -------- | --------------- | -------- | -------- | --- |
+BelowarelistedpossibleerrorsthatmayreturnfromsendingaGPM command:
+DigiXBee®3802.15.4RFModuleUserGuide 313
+
+GeneralPurposeFlashMemory Updatethefirmwareover-the-air
+|     | ReturnCode | Description |
+| --- | ---------- | ----------- |
+|     | 0x00       | Success     |
+Generalcommandfailures
+|     | 0x01 | Generalfailure                                   |
+| --- | ---- | ------------------------------------------------ |
+|     | 0x02 | Badpayloadlength                                 |
+|     | 0x03 | Triedtoaccessmemoryblockbeyondthemaxavailable    |
+|     | 0x04 | Attemptedtoread/writeacrossablockboundary        |
+|     | 0x05 | Attemptedtoread/writewithavalidfilesystemmounted |
+|     | 0x06 | UnrecognizedGPM command                          |
+|     | 0x07 | GPM iscurrentlybusyexecutinganotherGPM command   |
+Erasecommandfailures
+|     | 0x10 | Flasheraseoperationfailed |
+| --- | ---- | ------------------------- |
+Writecommandfailures
+|     | 0x20 | Flashwriteoperationfailed |
+| --- | ---- | ------------------------- |
+0x21 FlashwritewouldhavecreatedavalidFSheader.Writingafilesystem
+intoGPM isdisallowedduetosecurityconcerns.
+Readcommandfailures
+|     | 0x30 | Flashreadoperationfailed                           |
+| --- | ---- | -------------------------------------------------- |
+|     | 0x31 | Triedtoreadmorethancanbetransmittedinasinglepacket |
+|     | 0x32 | Couldn'tgetabuffertosendreadupdates                |
+Verifyandinstallfailures
+|        | 0x40         | Firmwareverifyoperationfailed              |
+| ------ | ------------ | ------------------------------------------ |
+|        | 0x41         | Thegivenimageisnotcompatiblewiththisdevice |
+|        | 0x42         | Thegivenimageappearscorruptedorinvalid     |
+|        | 0x50         | Firmwareinstalloperationfailed             |
+| Update | the firmware | over-the-air                               |
+TheXBee3802.15.4RFModulesupportsfirmwareover-the-air(FOTA)updates.Toperforman
+FOTAupdate,thedevicetobeupdatedmustbeassociatedandcommunicablewithanetwork.In
+thissection,thenodeperformingtheupdateisconsideredtheserverandthenodebeingupdated
+istheclient.
+Thissectionprovidesinstructiononhowtoupdateyourfirmwareusingwiredupdatesandover-
+the-airupdates.
+DigiXBee®3802.15.4RFModuleUserGuide 314
+
+GeneralPurposeFlashMemory Updatethefirmwareover-the-air
+| Over-the-air | firmware | updates |     |     |
+| ------------ | -------- | ------- | --- | --- |
+ThereareafewwaystouseGPMcommandstoupdateamodule.Oneistosendcommandsover
+theairtoaremotemodule.Anotheristosendcommandsthatareaddressedtothelocalmodule.A
+thirdwayistouseBluetooth®tosendremoteframesviaaGATTconnectionwithmodulesthat
+supportBluetoothLowEnergy(LE).
+Theover-the-airfirmwareupdatemethodprovidedisarobustandversatiletechniquethatyoucan
+tailortomanydifferentnetworksandapplications.OTA updatesarereliableandminimize
+disruptionofnormalnetworkoperations.
+Inthefollowingsections,werefertothenodethatwillbeupdatedasthetargetnode.Wereferto
+thenodeprovidingtheupdateinformationasthesourcenode.Inmostapplicationsthesource
+nodeislocallyattachedtoacomputerrunningupdatesoftware.
+Therearethreephasesoftheover-the-airupdateprocess:
+1. Distributethenewapplication
+2. Verifythenewapplication
+3. Installtheapplication
+| Distribute | the new | application |     |     |
+| ---------- | ------- | ----------- | --- | --- |
+Thefirstphaseofperforminganover-the-airupdateonadeviceistransferringthenewfirmware
+filetothetargetnode.Loadthenewfirmwareimageinthetargetnode'sGPMpriortoinstallation.
+XBee3802.15.4RFModulesuseaaGeckoBootloader(.gbl)fileforbothserialandover-the-air
+firmwareupdates.ThesefirmwarefilesareavailableontheDigiSupportwebsiteandviaXCTU.
+Sendthecontentsofthe.gblfiletothetargetdeviceusinggeneralpurposememoryWRITE
+commands.ErasetheentireGPMpriortobeginninganuploadofan.gblfile.Thecontentsofthe
+.gblfileshouldbestoredinorderintheappropriateGPMmemoryblocks.Thenumberofbytesthat
+aresentinanindividualGPMWRITEframeisflexibleandcanbecateredtotheuserapplication.
+Example
+Theexamplefirmwareversionhasan.gblfileof55,141bytesinlength.Basedonnetworktraffic,
+wedeterminethatsendinga128bytepacketevery30secondsminimizesnetworkdisruption.For
+thisreason,youwoulddivideandaddressthe.gblasfollows:
+| GPM_BLOCK_NUM |     | GPM_START_INDEX | GPM_NUM_BYTES | .gblbytes  |
+| ------------- | --- | --------------- | ------------- | ---------- |
+| 0             |     | 0               | 128           | 0to127     |
+| 0             |     | 128             | 128           | 128to255   |
+| 0             |     | 256             | 128           | 256to383   |
+| --            |     | --              | --            | --         |
+| 0             |     | 1920            | 128           | 1920to2047 |
+| 1             |     | 0               | 128           | 2048to2175 |
+| 1             |     | 128             | 128           | 2176to2303 |
+| --            |     | --              | --            | --         |
+DigiXBee®3802.15.4RFModuleUserGuide 315
+
+GeneralPurposeFlashMemory Updatethefirmwareover-the-air
+| GPM_BLOCK_NUM | GPM_START_INDEX | GPM_NUM_BYTES | .gblbytes    |
+| ------------- | --------------- | ------------- | ------------ |
+| --            | --              | --            | --           |
+| 26            | 1536            | 128           | 54784to54911 |
+| 26            | 1664            | 128           | 54912to55039 |
+| 26            | 1792            | 101           | 55040to55140 |
+Install the application
+Whentheentire.gblfileisuploadedtotheGPMofthetargetnode,youcanissueaFIRMWARE_
+VERIFY_AND_INSTALLcommand.Oncethetargetreceivesthecommanditverifiesthe.gblfile
+loadedintheGPM.Ifitisvalid,thenthedeviceinstallsthenewfirmware.Thisinstallationprocess
+cantakeuptoeightseconds.Duringtheinstallationthedeviceisunresponsivetobothserialand
+RFcommunication.Tocompletetheinstallation,thetargetmoduleresets.ATparametersettings
+whichhavenotbeenwrittentoflashusingtheWRcommandwillbelost.
+Importantconsiderations
+WriteallparameterswiththeWRcommandbeforeperformingafirmwareupdate.
+BecauseexplicitAPITxframescanbeaddressedtoalocalnode(accessibleviatheSPIorUART)
+oraremotenode(accessibleovertheRFport)thesameprocesscanbeusedtoupdatefirmware
+onadeviceineithercase.
+| Verify the new application |     |     |     |
+| -------------------------- | --- | --- | --- |
+Foranuploadedapplicationtofunctioncorrectly,everysinglebytefromthe.gblfilemustbe
+properlytransferredtotheGPM.Toguaranteethatthisisthecase,GPMVERIFYfunctionsexistto
+ensurethatallbytesareproperlyinplace.TheFIRMWARE_VERIFYfunctionreportswhetheror
+nottheuploadeddataisvalid.TheFIRMWARE_VERIFY_AND_INSTALLcommandreportsifthe
+uploadeddataisinvalid.Ifthedataisvalid,itbeginsinstallingtheapplication.Noinstallationtakes
+placeoninvaliddata.
+DigiXBee®3802.15.4RFModuleUserGuide 316

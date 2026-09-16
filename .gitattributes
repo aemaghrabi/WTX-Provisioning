@@ -1,0 +1,17 @@
+# Normalize line endings so Studio regenerations on different OSes don't produce noise diffs
+* text=auto
+
+*.c       text eol=lf
+*.h       text eol=lf
+*.ld      text eol=lf
+*.cmake   text eol=lf
+*.txt     text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+*.slcp    text eol=lf
+*.slps    text eol=lf
+*.pintool text eol=lf
+
+*.pdf     binary
+*.png     binary
+*.jpg     binary

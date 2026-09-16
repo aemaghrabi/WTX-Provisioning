@@ -1,0 +1,39 @@
+# Silicon Labs Project Configuration Tools: slcp, v0, Component selection file.
+project_name: xbee_provision
+label: xbee_provision
+description: |
+  This example project shows an empty configuration that can be used as a starting point to add components and functionality.
+category: Example|Platform
+filter:
+- name: Device Type
+  value: [SoC]
+- name: MCU
+  value: [32-bit MCU]
+- name: Project Difficulty
+  value: [Beginner]
+package: platform
+quality: production
+readme:
+- {path: readme.md}
+- {path: readme.md}
+source:
+- {path: app.c}
+include:
+- path: .
+  file_list:
+  - {path: app.h}
+sdk: {vendor: null, id: simplicity_sdk, version: 2025.6.2}
+toolchain_settings: []
+component:
+- {id: EFM32PG28B210F1024IM68}
+- {id: clock_manager}
+- {id: device_init}
+- {id: sl_main}
+- instance: [XBEE]
+  id: uartdrv_eusart
+define:
+- {name: DEBUG_EFM}
+ui_hints:
+  highlight:
+  - {path: readme.md, focus: true}
+
