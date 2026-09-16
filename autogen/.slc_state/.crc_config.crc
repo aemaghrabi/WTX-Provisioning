@@ -5,6 +5,7 @@ sl_clock_manager_tree_config.h=-1947482905
 sl_core_config.h=-2018153270
 sl_device_init_dcdc_config.h=-1223674373
 sl_device_init_emu_config.h=1238190016
+sl_iostream_eusart_VCOM_config.h=76757802
 sl_memory_manager_region_config.h=990835082
 sl_sleeptimer_config.h=847044378
 sl_uartdrv_eusart_XBEE_config.h=455560558

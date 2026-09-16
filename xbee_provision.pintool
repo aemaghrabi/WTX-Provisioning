@@ -4,6 +4,8 @@
     <property object="DefaultMode" propertyId="mode.diagramLocation" value="100, 100"/>
     <property object="EUSART0" propertyId="ABModule.selectedRequirement" value="eusart%T%SL_UARTDRV_EUSART_XBEE%T%sl_uartdrv_eusart_XBEE_config.h"/>
     <property object="EUSART0" propertyId="ABPeripheral.included" value="true"/>
+    <property object="EUSART2" propertyId="ABModule.selectedRequirement" value="eusart%T%SL_IOSTREAM_EUSART_VCOM%T%sl_iostream_eusart_VCOM_config.h"/>
+    <property object="EUSART2" propertyId="ABPeripheral.included" value="true"/>
     <property object="PA00" propertyId="pin.name" value="XBEE_EN_GPIO"/>
     <property object="PA00" propertyId="pin.reserve" value="Reserved"/>
     <property object="PORTIO" propertyId="portio.eusart0.enable.cts" value="Enabled"/>
@@ -14,6 +16,10 @@
     <property object="PORTIO" propertyId="portio.eusart0.location.rts" value="22"/>
     <property object="PORTIO" propertyId="portio.eusart0.location.rx" value="16"/>
     <property object="PORTIO" propertyId="portio.eusart0.location.tx" value="17"/>
+    <property object="PORTIO" propertyId="portio.eusart2.enable.rx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.eusart2.enable.tx" value="Enabled"/>
+    <property object="PORTIO" propertyId="portio.eusart2.location.rx" value="56"/>
+    <property object="PORTIO" propertyId="portio.eusart2.location.tx" value="55"/>
   </mode>
   <modeTransition>
     <property object="RESET &#x2192; DefaultMode" propertyId="modeTransition.source" value="RESET"/>
