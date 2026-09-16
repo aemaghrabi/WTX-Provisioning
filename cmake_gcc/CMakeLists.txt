@@ -22,12 +22,6 @@ target_include_directories(xbee_provision PUBLIC
     ../src/utils/inc
 )
 
-# app.c is compiled in the generated slc OBJECT library, which does not see
-# the include paths above. Expose application layer headers to it as well.
-target_include_directories(slc PUBLIC
-    ../src/utils/inc
-)
-
 target_compile_definitions(xbee_provision PUBLIC
     # Add additional macros here
 )

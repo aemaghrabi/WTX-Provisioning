@@ -1,6 +1,6 @@
 # Simple printf over VCOM
 
-Status: In progress
+Status: Done (verified on target; demo code later removed, see docs/plan/2026-09-17-multi-level-log.md)
 Date: 2026-09-17
 Related history: docs/history/2026-09-17-vcom-printf.md
 
@@ -15,8 +15,8 @@ the base for provisioning debug output:
 The host link is the debugger VCOM for now and an FTDI USB-UART on the same pins later.
 
 ## Background and references
-- `config/sl_iostream_eusart_VCOM_config.h`: EUSART2, 115200 8N1, no flow control, TX PD07,
-  RX PD08, high-frequency mode, RX buffer 32, LF->CRLF conversion enabled, restrict EM for RX = 1.
+- `config/sl_iostream_eusart_VCOM_config.h`: EUSART2, 115200 8N1, no flow control, TX PD08,
+  RX PD07 (swapped by the user in commit dab54ff; originally TX PD07, RX PD08), high-frequency mode, RX buffer 32, LF->CRLF conversion enabled, restrict EM for RX = 1.
 - `autogen/sl_event_handler.c`: `sl_service_init()` calls `sl_iostream_eusart_init_instances()`
   and `sl_iostream_set_console_instance()`. SDK `sl_iostream_uart.c:283` sets the VCOM stream as
   the system default stream.
@@ -111,7 +111,7 @@ resolved to SYSRTC. It makes the config state the choice. Implementation is appl
 - LFRCO accuracy is lower than LFXO. That is fine for a debug heartbeat. For accurate long
   timeouts later, enable LFXO in Studio if the board has a 32.768 kHz crystal.
 - Output before `sl_service_init()` is lost. Log from `app_init()` onward only.
-- Future FTDI link: same pins (PD07 MCU TX -> FTDI RX, PD08 MCU RX <- FTDI TX), common GND,
+- Future FTDI link: same pins (PD08 MCU TX -> FTDI RX, PD07 MCU RX <- FTDI TX), common GND,
   3.3 V logic only. No firmware or config change unless the pins move (then Pin Tool).
 - Files registered only in `CMakeLists.txt` are not in the `.slcp` (see
   `2026-09-17-project-folder-structure.md`).
