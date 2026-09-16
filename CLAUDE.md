@@ -40,7 +40,9 @@ When a task needs such a change, Claude must:
 - `main.c` — application-owned after project creation; keep the `sl_main_init()` /
   `sl_main_process_action()` super-loop structure intact.
 - `cmake_gcc/CMakeLists.txt` — **only** inside the `# Add additional ...` sections, to register
-  new *application* sources, include paths, or defines.
+  new *application* sources, include paths, or defines, and in the
+  `target_include_directories(slc PUBLIC ...)` block that exposes `src/` layer `inc/` paths to
+  `app.c` (compiled in the generated `slc` OBJECT library).
 - `src/**` — new application modules, laid out as described in "Rule: application folder
   structure".
 - `readme.md`, `docs/**`, `CLAUDE.md`, `.gitignore`, `.gitattributes`.
@@ -78,8 +80,11 @@ src/
 - **Includes:** by bare name (`#include "xbee_at.h"`). Each layer's `inc/` is on the include path.
 - **Build registration:** in `cmake_gcc/CMakeLists.txt` only (not the `.slcp`). List every `.c`
   explicitly under `# Add additional sources here` (no `file(GLOB)`). Add a layer's `inc/`
-  under `# Add additional include paths here` when that layer gets its first file. Paths are
-  relative to `cmake_gcc/`, e.g. `../src/services/src/xbee_at.c` and `../src/services/inc`.
+  under `# Add additional include paths here` when that layer gets its first file, and also to
+  the `target_include_directories(slc PUBLIC ...)` block if `app.c` includes that layer's
+  headers (`app.c` is built in the generated `slc` target, which does not inherit the
+  `xbee_provision` include paths). Paths are relative to `cmake_gcc/`, e.g.
+  `../src/services/src/xbee_at.c` and `../src/services/inc`.
 - Empty folders carry a `.gitkeep`. Remove it once the folder holds a real file.
 - Never copy SDK/HAL sources into `src/`.
 
