@@ -60,6 +60,10 @@ relevant plan under `docs/plan/`.
 | --- | --- |
 | `app.c`, `app.h` | Application code (provisioning logic) |
 | `main.c` | Entry point and super loop |
+| `src/app/` | New application modules: provisioning sequencing (`inc/` public headers, `src/` sources) |
+| `src/services/` | New application modules: protocol and feature logic, e.g. XBee AT, NVM storage, reporting |
+| `src/drivers/` | New application modules: board-level wrappers over SDK driver APIs |
+| `src/utils/` | New application modules: hardware-independent helpers |
 | `config/`, `autogen/`, `*.slcp`, `*.slps`, `*.pintool` | Simplicity Studio generated -- **do not edit by hand** |
 | `cmake_gcc/` | CMake build files |
 | `docs/manuals/` | Reference manuals (EFM32PG28, XBee 3 802.15.4) |

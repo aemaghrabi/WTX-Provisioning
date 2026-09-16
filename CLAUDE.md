@@ -41,11 +41,47 @@ When a task needs such a change, Claude must:
   `sl_main_process_action()` super-loop structure intact.
 - `cmake_gcc/CMakeLists.txt` — **only** inside the `# Add additional ...` sections, to register
   new *application* sources, include paths, or defines.
+- `src/**` — new application modules, laid out as described in "Rule: application folder
+  structure".
 - `readme.md`, `docs/**`, `CLAUDE.md`, `.gitignore`, `.gitattributes`.
 
 Application code **may call** HAL/driver APIs (`sl_gpio_*`, `UARTDRV_*`, `sl_sleeptimer_*`, …)
 and **may use** macros from `config/` and `autogen/` (e.g. `XBEE_EN_GPIO_PORT`,
 `sl_uartdrv_eusart_XBEE_handle`). Using them is fine; changing them is not.
+
+## Rule: application folder structure
+
+Every **new** application source and header file goes under `src/`, using the layered layout
+below. Existing files stay where they are: `app.c`, `app.h` and `main.c` remain in the project root,
+and the Studio-owned paths (`config/`, `autogen/`, `cmake_gcc/` generated files, metadata) are not
+moved. Plan: `docs/plan/2026-09-17-project-folder-structure.md`.
+
+```
+src/
+  app/        provisioning sequencing / top-level state machine called from app.c
+    inc/  src/
+  services/   protocol and feature logic (e.g. xbee_at, nvm_store, report)
+    inc/  src/
+  drivers/    board-level wrappers over SDK APIs (e.g. xbee_power on XBEE_EN_GPIO)
+    inc/  src/
+  utils/      hardware-independent helpers (e.g. ring_buffer, crc)
+    inc/  src/
+```
+
+- **Dependency direction:** `app` -> `services` -> `drivers` -> SDK. `utils` may be used by any
+  layer and depends on no project layer. No upward includes.
+- **`inc/` vs `src/`:** `inc/` holds only a module's public header. Private helpers are `static` in
+  the `.c`, or go in a private header next to it in that layer's `src/`.
+- **Naming:** snake_case module files (`xbee_at.c` / `xbee_at.h`). Public symbols are prefixed with
+  the module name (`xbee_at_init()`). Include guards `MODULE_H` (`XBEE_AT_H`). Doxygen file
+  header and 2-space indentation, as in `app.h`.
+- **Includes:** by bare name (`#include "xbee_at.h"`). Each layer's `inc/` is on the include path.
+- **Build registration:** in `cmake_gcc/CMakeLists.txt` only (not the `.slcp`). List every `.c`
+  explicitly under `# Add additional sources here` (no `file(GLOB)`). Add a layer's `inc/`
+  under `# Add additional include paths here` when that layer gets its first file. Paths are
+  relative to `cmake_gcc/`, e.g. `../src/services/src/xbee_at.c` and `../src/services/inc`.
+- Empty folders carry a `.gitkeep`. Remove it once the folder holds a real file.
+- Never copy SDK/HAL sources into `src/`.
 
 ## Rule: never assume, always ask first
 
