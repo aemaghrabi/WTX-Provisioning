@@ -18,8 +18,8 @@
     <property object="PORTIO" propertyId="portio.eusart0.location.tx" value="17"/>
     <property object="PORTIO" propertyId="portio.eusart2.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.eusart2.enable.tx" value="Enabled"/>
-    <property object="PORTIO" propertyId="portio.eusart2.location.rx" value="56"/>
-    <property object="PORTIO" propertyId="portio.eusart2.location.tx" value="55"/>
+    <property object="PORTIO" propertyId="portio.eusart2.location.rx" value="55"/>
+    <property object="PORTIO" propertyId="portio.eusart2.location.tx" value="56"/>
   </mode>
   <modeTransition>
     <property object="RESET &#x2192; DefaultMode" propertyId="modeTransition.source" value="RESET"/>

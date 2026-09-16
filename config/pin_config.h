@@ -83,20 +83,20 @@
 // [EUSART1]$
 
 // $[EUSART2]
-// EUSART2 RX on PD08
+// EUSART2 RX on PD07
 #ifndef EUSART2_RX_PORT                         
 #define EUSART2_RX_PORT                          SL_GPIO_PORT_D
 #endif
 #ifndef EUSART2_RX_PIN                          
-#define EUSART2_RX_PIN                           8
+#define EUSART2_RX_PIN                           7
 #endif
 
-// EUSART2 TX on PD07
+// EUSART2 TX on PD08
 #ifndef EUSART2_TX_PORT                         
 #define EUSART2_TX_PORT                          SL_GPIO_PORT_D
 #endif
 #ifndef EUSART2_TX_PIN                          
-#define EUSART2_TX_PIN                           7
+#define EUSART2_TX_PIN                           8
 #endif
 
 // [EUSART2]$

@@ -95,20 +95,20 @@
 #define SL_IOSTREAM_EUSART_VCOM_PERIPHERAL_NO    2
 #endif
 
-// EUSART2 TX on PD07
+// EUSART2 TX on PD08
 #ifndef SL_IOSTREAM_EUSART_VCOM_TX_PORT         
 #define SL_IOSTREAM_EUSART_VCOM_TX_PORT          SL_GPIO_PORT_D
 #endif
 #ifndef SL_IOSTREAM_EUSART_VCOM_TX_PIN          
-#define SL_IOSTREAM_EUSART_VCOM_TX_PIN           7
+#define SL_IOSTREAM_EUSART_VCOM_TX_PIN           8
 #endif
 
-// EUSART2 RX on PD08
+// EUSART2 RX on PD07
 #ifndef SL_IOSTREAM_EUSART_VCOM_RX_PORT         
 #define SL_IOSTREAM_EUSART_VCOM_RX_PORT          SL_GPIO_PORT_D
 #endif
 #ifndef SL_IOSTREAM_EUSART_VCOM_RX_PIN          
-#define SL_IOSTREAM_EUSART_VCOM_RX_PIN           8
+#define SL_IOSTREAM_EUSART_VCOM_RX_PIN           7
 #endif
 
 
