@@ -30,17 +30,25 @@ firmware is flashed over SWD by production (see [Production use](#production-use
 | --- | --- |
 | MCU | Silicon Labs EFM32PG28B210F1024IM68 (custom board, no Silicon Labs kit) |
 | Radio | Digi XBee 3 802.15.4 RF module |
-| XBee UART | EUSART0, 9600 baud, 8N1, hardware flow control (RTS/CTS) |
+| XBee UART | EUSART0, 9600 baud, 8N1, no flow control |
+| Log UART (VCOM) | EUSART2, 115200 baud, 8N1, no flow control |
 
 | Signal | MCU pin |
 | --- | --- |
 | XBee UART RX (EUSART0 RX) | PB00 |
 | XBee UART TX (EUSART0 TX) | PB01 |
-| XBee UART CTS | PB02 |
-| XBee UART RTS | PB06 |
-| XBee enable (`XBEE_EN_GPIO`) | PA00 |
+| XBee power enable (`XBEE_EN_GPIO`) | PA00 |
+| Log UART TX (EUSART2 TX) | PD08 |
+| Log UART RX (EUSART2 RX) | PD07 |
 
-Reporting interfaces (UART log pins, RTT) are not configured yet: **TBD**.
+`XBEE_EN_GPIO` (PA00) is a push-pull output that drives the load switch supplying the XBee module:
+high powers the module, low removes its supply.
+
+RTS/CTS hardware flow control on the XBee link is currently disabled to simplify bring-up; PB02
+(CTS) and PB06 (RTS) are no longer routed to EUSART0. Restoring it is a Pin Tool and
+`uartdrv_eusart` (`XBEE`) configuration change, not an application change.
+
+Reporting over RTT is not configured yet: **TBD**.
 
 ## Software
 
@@ -48,11 +56,13 @@ Reporting interfaces (UART log pins, RTT) are not configured yet: **TBD**.
 - Bare-metal super loop: `app_init()` once, `app_process_action()` every loop iteration
   (`app.c`)
 - Installed software components: `clock_manager`, `device_init`, `sl_main`,
-  `uartdrv_eusart` (instance `XBEE`)
+  `uartdrv_eusart` (instance `XBEE`), `iostream_eusart` (instance `VCOM`),
+  `iostream_retarget_stdio`
+- Logging: `app_log` (`src/utils/`), levelled `printf` output over the VCOM UART
 
-Planned features will need additional components (for example NVM storage, a logging UART
-instance, RTT). These are added only through Simplicity Studio and will be specified in the
-relevant plan under `docs/plan/`.
+Planned features will need additional components (for example NVM storage and RTT). These are
+added only through Simplicity Studio and will be specified in the relevant plan under
+`docs/plan/`.
 
 ### Repository layout
 

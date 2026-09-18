@@ -132,22 +132,6 @@
 // [I2C0]$
 
 // $[EUSART0]
-// EUSART0 CTS on PB02
-#ifndef EUSART0_CTS_PORT                        
-#define EUSART0_CTS_PORT                         SL_GPIO_PORT_B
-#endif
-#ifndef EUSART0_CTS_PIN                         
-#define EUSART0_CTS_PIN                          2
-#endif
-
-// EUSART0 RTS on PB06
-#ifndef EUSART0_RTS_PORT                        
-#define EUSART0_RTS_PORT                         SL_GPIO_PORT_B
-#endif
-#ifndef EUSART0_RTS_PIN                         
-#define EUSART0_RTS_PIN                          6
-#endif
-
 // EUSART0 RX on PB00
 #ifndef EUSART0_RX_PORT                         
 #define EUSART0_RX_PORT                          SL_GPIO_PORT_B

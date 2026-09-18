@@ -65,7 +65,7 @@
 // <uartdrvFlowControlHw=> nRTS/nCTS hardware handshake
 // <uartdrvFlowControlHwUart=> UART peripheral controls nRTS/nCTS
 // <i> Default: uartdrvFlowControlHwUart
-#define SL_UARTDRV_EUSART_XBEE_FLOW_CONTROL_TYPE uartdrvFlowControlHwUart
+#define SL_UARTDRV_EUSART_XBEE_FLOW_CONTROL_TYPE uartdrvFlowControlNone
 
 // <o SL_UARTDRV_EUSART_XBEE_OVERSAMPLING> Oversampling selection
 // <eusartOVS16=> 16x oversampling
@@ -118,21 +118,7 @@
 #define SL_UARTDRV_EUSART_XBEE_RX_PIN            0
 #endif
 
-// EUSART0 CTS on PB02
-#ifndef SL_UARTDRV_EUSART_XBEE_CTS_PORT         
-#define SL_UARTDRV_EUSART_XBEE_CTS_PORT          SL_GPIO_PORT_B
-#endif
-#ifndef SL_UARTDRV_EUSART_XBEE_CTS_PIN          
-#define SL_UARTDRV_EUSART_XBEE_CTS_PIN           2
-#endif
 
-// EUSART0 RTS on PB06
-#ifndef SL_UARTDRV_EUSART_XBEE_RTS_PORT         
-#define SL_UARTDRV_EUSART_XBEE_RTS_PORT          SL_GPIO_PORT_B
-#endif
-#ifndef SL_UARTDRV_EUSART_XBEE_RTS_PIN          
-#define SL_UARTDRV_EUSART_XBEE_RTS_PIN           6
-#endif
 // [EUSART_SL_UARTDRV_EUSART_XBEE]$
 // <<< sl:end pin_tool >>>
 #endif // SL_UARTDRV_EUSART_XBEE_CONFIG_H

@@ -207,7 +207,8 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
 - **MCU:** EFM32PG28B210F1024IM68 (no board / custom hardware)
 - **SDK:** Simplicity SDK 2025.6.2, import mode `LINK_LIBRARIES` (SDK sources stay in `~/.silabs`)
 - **Tooling:** Simplicity Studio 6, VS Code generator, CMake + Ninja, GCC 12.2.1
-- **Components:** `clock_manager`, `device_init`, `sl_main`, `uartdrv_eusart` (instance `XBEE`)
+- **Components:** `clock_manager`, `device_init`, `sl_main`, `uartdrv_eusart` (instance `XBEE`),
+  `iostream_eusart` (instance `VCOM`), `iostream_retarget_stdio`
 - **Global define:** `DEBUG_EFM`
 - **App model:** bare-metal super loop → `app_init()` once, `app_process_action()` every iteration
 
@@ -217,11 +218,31 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
 | --- | --- | --- |
 | EUSART0 RX | PB00 | `config/sl_uartdrv_eusart_XBEE_config.h` |
 | EUSART0 TX | PB01 | same as above |
-| EUSART0 CTS | PB02 | same as above |
-| EUSART0 RTS | PB06 | same as above |
 | `XBEE_EN_GPIO` | PA00 | Pin Tool custom name → `config/pin_config.h` |
 
-UART: 9600 baud, 8N1, hardware flow control, UARTDRV handle `sl_uartdrv_eusart_XBEE_handle`.
+UART: 9600 baud, 8N1, no flow control, UARTDRV handle `sl_uartdrv_eusart_XBEE_handle`.
+
+`XBEE_EN_GPIO` (PA00) drives the load switch that supplies the XBee module: configure it as a
+push-pull output, drive it high to power the module and low to remove its supply. It is reserved
+in Pin Tool and is not a peripheral route.
+
+RTS/CTS flow control is disabled (`SL_UARTDRV_EUSART_XBEE_FLOW_CONTROL_TYPE` is
+`uartdrvFlowControlNone`) and PB02/PB06 are unrouted, to simplify bring-up
+(`docs/history/2026-09-18-eusart-flow-control-off.md`). With `uartdrvFlowControlNone` the driver
+does not configure the CTS/RTS GPIOs, so the PA00 fallback defines in
+`autogen/sl_uartdrv_init.c` never touch `XBEE_EN_GPIO`. Application code must not assume the XBee
+can throttle the MCU: keep transmissions short and read the RX side promptly. Re-enabling flow
+control is a Pin Tool and `uartdrv_eusart` (`XBEE`) configuration change (PRIME RULE).
+
+### Log interface (from Studio config; read-only here)
+
+| Signal | Pin | Source |
+| --- | --- | --- |
+| EUSART2 TX | PD08 | `config/sl_iostream_eusart_VCOM_config.h` |
+| EUSART2 RX | PD07 | same as above |
+
+UART: 115200 baud, 8N1, no flow control, iostream instance `VCOM`, retargeted stdio. Application
+logging goes through `app_log` (`src/utils/`).
 
 ## Build
 

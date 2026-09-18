@@ -13,7 +13,7 @@
 /// Compile-time minimum level. Log calls below it are removed from the build.
 /// One of APP_LOG_LEVEL_VERBOSE, _INFO, _WARNING, _ERROR, _NONE (no output).
 #ifndef APP_LOG_LEVEL_MIN
-#define APP_LOG_LEVEL_MIN     APP_LOG_LEVEL_INFO
+#define APP_LOG_LEVEL_MIN     APP_LOG_LEVEL_VERBOSE
 #endif
 
 /// 1: colour each line by level with ANSI escape codes. 0: plain text.
