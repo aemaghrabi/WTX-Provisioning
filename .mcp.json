@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "jlink": {
+      "command": "npx",
+      "args": ["-y", "jlink-mcp"],
+      "env": {
+        "PROBE_TYPE": "jlink",
+        "JLINK_DEVICE": "EFM32PG28BxxxF1024",
+        "JLINK_INTERFACE": "SWD",
+        "JLINK_SPEED": "4000"
+      }
+    }
+  }
+}
