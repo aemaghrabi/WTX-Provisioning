@@ -15,16 +15,24 @@
  *
  ******************************************************************************/
 
+#include "app.h"
+#include "xbee_bringup.h"
+
 /***************************************************************************//**
  * Initialize application.
  ******************************************************************************/
 void app_init(void)
 {
+  (void)xbee_bringup_init();
 }
 
 /***************************************************************************//**
  * App ticking function.
+ *
+ * Must return quickly: every wait in the XBee stack is a state machine driven
+ * from here, never a blocking delay.
  ******************************************************************************/
 void app_process_action(void)
 {
+  xbee_bringup_process();
 }

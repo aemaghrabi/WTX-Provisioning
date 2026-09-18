@@ -1,8 +1,14 @@
 # XBee 3 (802.15.4) driver stack: utils, drivers, services
 
-Status: In progress
+Status: Done, pending on-target verification
 Date: 2026-09-18
-Related history: docs/history/2026-09-18-xbee3-driver-stack-phase1.md
+Related history: docs/history/2026-09-18-xbee3-driver-stack-phase1.md through
+docs/history/2026-09-18-xbee3-driver-stack-phase5.md
+
+All five phases are implemented, build without warnings and pass 27 398 host
+assertions. **None of it has been run on hardware.** The on-target checks listed
+under "Verification" below are outstanding for every phase; they are collected in
+docs/history/2026-09-18-xbee3-driver-stack-phase5.md.
 
 ## Goal
 
@@ -282,11 +288,17 @@ tunables gets an `#ifndef`-guarded `<module>_config.h` beside its public header,
   `HV`, `%V`, `TP` and `CK` are read only, `FS` and `FK` have Command mode and local-only rules,
   `%F`, `!C` and `R1` cannot be sent remotely, `CA` needs a write and a reset, and `ND`, `AS` and
   `ED` produce multiple responses.
-- API: `xbee_at_table_find()` by identifier using a binary search over a sorted table,
-  `xbee_at_table_validate_set()` returning `SL_STATUS_PERMISSION` for a read-only command,
-  `SL_STATUS_INVALID_RANGE` out of range and `SL_STATUS_INVALID_PARAMETER` on a wrong length,
-  `xbee_at_table_validate_get()` rejecting write-only and executable commands, and
+- API: `xbee_at_table_find()` by identifier, `xbee_at_table_validate_set()` returning
+  `SL_STATUS_PERMISSION` for a read-only command, `SL_STATUS_INVALID_RANGE` out of range and
+  `SL_STATUS_INVALID_PARAMETER` on a wrong length, `xbee_at_table_validate_get()` rejecting
+  write-only and executable commands, `xbee_at_table_is_remotable()`, and
   `xbee_at_table_count()` with `xbee_at_table_at()` for enumeration.
+- **Revised during phase 2.** The lookup is a linear scan, not the binary search this plan
+  originally called for. Sorting the table by identifier would scramble the categorical grouping
+  and make it much harder to check against the manual, while the scan costs under ten microseconds
+  for all 147 entries on this part and runs at most a few dozen times in a provisioning session.
+  Data accuracy matters more here than the lookup constant. A unit test enforces that every
+  identifier is unique, so the lookup stays unambiguous.
 
 ### services: `xbee_api`
 
@@ -404,6 +416,13 @@ header. Each `.gitkeep` is removed when its folder gets a real file.
 
 ### Host tests
 
+**Revised during phase 3.** The transports are covered too. Their two
+dependencies, the sleeptimer and the UART driver, turned out to be small enough
+to stand in for on the host, so `test/fake_platform.c` provides a virtual clock
+and a byte pipe. That made timeout behaviour, tick counter wrap, frame identifier
+reuse, response matching, guard timing and stream resynchronisation testable
+without hardware, which was worth about a hundred lines of fakes.
+
 A new top-level `test/` folder, built with the host compiler and never part of the target build.
 `test/CMakeLists.txt` compiles one executable per test file with `-Wall -Wextra -Werror -std=c11`
 and registers them with CTest. It needs `SDK_PATH` to find `sl_status.h`. `test/test_util.h`
@@ -461,9 +480,23 @@ operations would pin the device to EM1. `xbee_uart_deinit()` releases them.
 - Command mode is fragile by design: any stray transmitted byte during the guard time restarts it,
   so the facade never transmits while a guard timer runs. The command mode deadline is tracked
   locally from the last accepted command, with a 500 ms safety margin.
-- Manual quirks to re-check during phase 2: the `*X` byte range typo, the `NO` range against its
-  bit field, the `SM` range printed as 0 to 5 while the table lists 6, the unit of `IF`, and the
-  range printed for `$V` to `$Y`.
+- Manual errors confirmed during phase 2 and encoded as decisions in the table and the codec:
+  - `*X` is printed as covering verifier bytes 54 to 95 (line 5537); it is bytes 64 to 95. All four
+    verifier slices are treated as 32 bytes each.
+  - `NO` prints a range of 0 to 1 while listing bits `0x01`, `0x02` and `0x04` (lines 4986 to
+    5004). The bit field is taken as authoritative, so the range is 0 to 7.
+  - `SM` prints a range of 0 to 5 while its value table lists 6, MicroPython sleep (lines 5655 to
+    5676). The table is taken as authoritative.
+  - Frame `0x8B` prints offset 7 twice (lines 8840 to 8843). The delivery status is at offset 8 and
+    the discovery status at offset 9, which makes the frame data seven bytes.
+  - The frame `0x92` example at lines 9118 to 9148 is internally inconsistent: its printed checksum
+    `0xE8` does not verify against its own hex string, and the accompanying field table shows the
+    reserved field as `0x87AC` while the hex holds `0xFFFE`. The field layout itself is consistent
+    and is what the decoder implements and the tests check.
+  - The `0x88` example at lines 8622 to 8630 shows frame identifier `0xA1` in its field table while
+    the hex string carries `0x01`. The hex is self-consistent with its checksum, so it is used.
+  - `DM` documents a range of 0 and 4 to `0x1F`, and `LT` a range of 0 and `0x14` to `0xFF`. The
+    table stores the outer bounds; the gaps are documented in comments but not enforced.
 - `ND`, `AS` and `ED` return multi-line text in Command mode. The parser stores the lines as they
   arrive and leaves field splitting to the application; the documented format is at manual lines
   5008 to 5021.

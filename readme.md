@@ -38,11 +38,20 @@ firmware is flashed over SWD by production (see [Production use](#production-use
 | XBee UART RX (EUSART0 RX) | PB00 |
 | XBee UART TX (EUSART0 TX) | PB01 |
 | XBee power enable (`XBEE_EN_GPIO`) | PA00 |
+| XBee reset (`XBEE_nRESET`) | PB03 |
+| XBee sleep status (`XBEE_nSLEEP_Status`) | PB04 |
+| XBee sleep request (`XBEE_SLEEPRQ`) | PB05 |
 | Log UART TX (EUSART2 TX) | PD08 |
 | Log UART RX (EUSART2 RX) | PD07 |
 
 `XBEE_EN_GPIO` (PA00) is a push-pull output that drives the load switch supplying the XBee module:
 high powers the module, low removes its supply.
+
+`XBEE_nRESET` (PB03) is the module's active-low reset input, driven open drain so the MCU only
+pulls it low and the module pull-up releases it. `XBEE_SLEEPRQ` (PB05) drives the module's
+DTR/SLEEP_RQ input and `XBEE_nSLEEP_Status` (PB04) reads its ON_SLEEP output, high meaning awake.
+Both sleep lines only carry meaning when the module is configured for pin sleep (`SM` 1 or 5,
+`D8`=1, `D9`=1).
 
 RTS/CTS hardware flow control on the XBee link is currently disabled to simplify bring-up; PB02
 (CTS) and PB06 (RTS) are no longer routed to EUSART0. Restoring it is a Pin Tool and
@@ -59,6 +68,18 @@ Reporting over RTT is not configured yet: **TBD**.
   `uartdrv_eusart` (instance `XBEE`), `iostream_eusart` (instance `VCOM`),
   `iostream_retarget_stdio`
 - Logging: `app_log` (`src/utils/`), levelled `printf` output over the VCOM UART
+- XBee stack (implemented, not yet run on hardware; see
+  `docs/plan/2026-09-18-xbee3-driver-stack.md`):
+  - `src/utils/`: `ring_buffer` byte FIFO, `byte_util` big-endian and hexadecimal helpers
+  - `src/drivers/`: `xbee_power` supply switch, `xbee_reset` reset line, `xbee_sleep` sleep
+    request and status lines, `xbee_uart` byte transport over the UARTDRV `XBEE` instance
+  - `src/services/`: `xbee_frame` codec for all 26 documented API frames with a streaming
+    parser, `xbee_at_table` describing all 147 AT commands, `xbee_api` and `xbee_cmd_mode`
+    transports, and `xbee`, the facade that hides which mode the module is in
+  - `src/app/`: `xbee_bringup`, which powers the module, detects its mode and logs what it found
+
+The same application calls work whether the module is in Transparent mode, API mode 1 or API
+mode 2. The facade detects which, on its own, at start-up.
 
 Planned features will need additional components (for example NVM storage and RTT). These are
 added only through Simplicity Studio and will be specified in the relevant plan under
@@ -74,6 +95,7 @@ added only through Simplicity Studio and will be specified in the relevant plan 
 | `src/services/` | New application modules: protocol and feature logic, e.g. XBee AT, NVM storage, reporting |
 | `src/drivers/` | New application modules: board-level wrappers over SDK driver APIs |
 | `src/utils/` | New application modules: hardware-independent helpers |
+| `test/` | Host-side unit tests for the hardware-independent modules |
 | `config/`, `autogen/`, `*.slcp`, `*.slps`, `*.pintool` | Simplicity Studio generated -- **do not edit by hand** |
 | `cmake_gcc/` | CMake build files |
 | `docs/manuals/` | Reference manuals (EFM32PG28, XBee 3 802.15.4) |
@@ -99,6 +121,20 @@ Configurator, component editors, Pin Tool). See `CLAUDE.md` for the full set of 
    ```
 
 3. Output images: `cmake_gcc/build/base/xbee_provision.{out,hex,bin,s37}`
+
+### Host unit tests
+
+Modules that depend on nothing beyond `sl_status.h` and the C standard library are covered by
+tests that build with the host compiler, separately from the firmware image:
+
+```sh
+cmake -S test -B test/build
+cmake --build test/build
+ctest --test-dir test/build --output-on-failure
+```
+
+The test build finds `sl_status.h` through `SDK_PATH`, which it reads from the generated
+`cmake_gcc/xbee_provision.cmake`. Pass `-DSDK_PATH=/path/to/simplicity_sdk` to override it.
 
 ## Production use
 

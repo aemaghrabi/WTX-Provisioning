@@ -14,11 +14,33 @@ include(xbee_provision.cmake)
 
 add_executable(xbee_provision
     # Add additional sources here
+    ../src/app/src/xbee_bringup.c
     ../src/utils/src/app_log.c
+    ../src/utils/src/byte_util.c
+    ../src/utils/src/ring_buffer.c
+    ../src/drivers/src/xbee_power.c
+    ../src/drivers/src/xbee_reset.c
+    ../src/drivers/src/xbee_sleep.c
+    ../src/drivers/src/xbee_uart.c
+    ../src/services/src/xbee.c
+    ../src/services/src/xbee_api.c
+    ../src/services/src/xbee_at_table.c
+    ../src/services/src/xbee_cmd_mode.c
+    ../src/services/src/xbee_frame.c
 )
 
 target_include_directories(xbee_provision PUBLIC
     # Add additional include paths here
+    ../src/utils/inc
+    ../src/drivers/inc
+    ../src/services/inc
+    ../src/app/inc
+)
+
+# app.c is compiled in the generated slc OBJECT library, which does not see
+# the include paths above. Expose the application layer headers to it as well.
+target_include_directories(slc PUBLIC
+    ../src/app/inc
     ../src/utils/inc
 )
 
