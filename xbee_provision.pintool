@@ -10,6 +10,12 @@
     <property object="PA00" propertyId="pin.name" value="XBEE_EN_GPIO"/>
     <property object="PA00" propertyId="pin.reserve" value="Reserved"/>
     <property object="PB02" propertyId="pin.name" value=""/>
+    <property object="PB03" propertyId="pin.name" value="XBEE_nRESET_GPIO"/>
+    <property object="PB03" propertyId="pin.reserve" value="Reserved"/>
+    <property object="PB04" propertyId="pin.name" value="XBEE_nSLEEP_Status_GPIO"/>
+    <property object="PB04" propertyId="pin.reserve" value="Reserved"/>
+    <property object="PB05" propertyId="pin.name" value="XBEE_SLEEPRQ_GPIO"/>
+    <property object="PB05" propertyId="pin.reserve" value="Reserved"/>
     <property object="PB06" propertyId="pin.name" value=""/>
     <property object="PORTIO" propertyId="portio.eusart0.enable.rx" value="Enabled"/>
     <property object="PORTIO" propertyId="portio.eusart0.enable.tx" value="Enabled"/>

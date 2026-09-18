@@ -181,8 +181,26 @@
 
 
 
+#ifndef XBEE_nRESET_GPIO_PORT                   
+#define XBEE_nRESET_GPIO_PORT                    SL_GPIO_PORT_B
+#endif
+#ifndef XBEE_nRESET_GPIO_PIN                    
+#define XBEE_nRESET_GPIO_PIN                     3
+#endif
 
+#ifndef XBEE_nSLEEP_Status_GPIO_PORT            
+#define XBEE_nSLEEP_Status_GPIO_PORT             SL_GPIO_PORT_B
+#endif
+#ifndef XBEE_nSLEEP_Status_GPIO_PIN             
+#define XBEE_nSLEEP_Status_GPIO_PIN              4
+#endif
 
+#ifndef XBEE_SLEEPRQ_GPIO_PORT                  
+#define XBEE_SLEEPRQ_GPIO_PORT                   SL_GPIO_PORT_B
+#endif
+#ifndef XBEE_SLEEPRQ_GPIO_PIN                   
+#define XBEE_SLEEPRQ_GPIO_PIN                    5
+#endif
 
 
 
