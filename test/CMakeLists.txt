@@ -94,3 +94,17 @@ add_module_test(test_xbee_cmd_mode
     "${PROJECT_ROOT}/src/services/src/xbee_cmd_mode.c"
     "${PROJECT_ROOT}/src/utils/src/byte_util.c"
     fake_platform.c)
+
+# The facade decides which transport carries a request and when. Its sequencing
+# is where the defects that reached hardware lived, so it is driven here against
+# a simulated module, with fake_drivers.c standing in for the control lines and
+# the log.
+add_module_test(test_xbee_facade
+    "${PROJECT_ROOT}/src/services/src/xbee.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_api.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_at_table.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_cmd_mode.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_frame.c"
+    "${PROJECT_ROOT}/src/utils/src/byte_util.c"
+    fake_platform.c
+    fake_drivers.c)

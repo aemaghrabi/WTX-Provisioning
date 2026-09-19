@@ -28,6 +28,17 @@
 #define XBEE_PROBE_TIMEOUT_MS  1000U
 #endif
 
+/// Time allowed for a requested Command mode session to open, in milliseconds.
+///
+/// Covers the transport finishing whatever it was doing, then the entry
+/// sequence itself: a guard time of silence, the escape characters, another
+/// guard time and the reply. That is a little over two seconds with the
+/// module's defaults, and the entry is retried within this window if the module
+/// does not answer the first attempt.
+#ifndef XBEE_CMD_SESSION_OPEN_TIMEOUT_MS
+#define XBEE_CMD_SESSION_OPEN_TIMEOUT_MS  10000U
+#endif
+
 /// Time allowed for the module's status line to report it has fallen asleep.
 ///
 /// Covers the module finishing a transmission or reception first

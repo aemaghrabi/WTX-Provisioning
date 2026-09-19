@@ -82,9 +82,20 @@ static bool sleep_requested;
 /// Tick until which the module is still settling after a wake.
 static uint32_t wake_guard_tick;
 
-/// True while the application has asked for every request to go through
-/// Command mode, whatever mode the module was detected in.
-static bool cmd_session_forced;
+/// Progress of a Command mode session the application asked for.
+typedef enum {
+  CMD_SESSION_NONE,      ///< None requested. Routing follows the detected mode.
+  CMD_SESSION_PENDING,   ///< Requested, waiting for the transport to fall idle.
+  CMD_SESSION_ENTERING,  ///< The escape sequence is running.
+  CMD_SESSION_OPEN,      ///< Established.
+} cmd_session_t;
+
+/// Progress of the session, and with it whether requests are forced through
+/// Command mode whatever mode the module was detected in.
+static cmd_session_t cmd_session = CMD_SESSION_NONE;
+
+/// Tick by which a requested session must have opened.
+static uint32_t cmd_session_deadline_tick;
 
 /// Mode a pending xbee_set_mode() is switching to, or XBEE_MODE_AUTO for none.
 static xbee_mode_t pending_mode = XBEE_MODE_AUTO;
@@ -106,6 +117,8 @@ static sl_status_t start_request(xbee_at_req_t *request,
                                  const uint8_t *value,
                                  uint16_t len,
                                  uint32_t timeout_ms);
+
+static void advance_cmd_session(void);
 
 /***************************************************************************//**
  * Report whether a deadline has been reached, tolerating tick counter wrap.
@@ -149,7 +162,7 @@ static bool mode_is_api(xbee_mode_t mode)
  ******************************************************************************/
 static bool use_cmd_transport(void)
 {
-  return (cmd_session_forced || !mode_is_api(detected_mode));
+  return ((cmd_session != CMD_SESSION_NONE) || !mode_is_api(detected_mode));
 }
 
 /***************************************************************************//**
@@ -915,7 +928,7 @@ sl_status_t xbee_init(const xbee_config_t *config)
   user_req = NULL;
   failure_result = SL_STATUS_OK;
   detected_mode = XBEE_MODE_AUTO;
-  cmd_session_forced = false;
+  cmd_session = CMD_SESSION_NONE;
   module_sm = 0U;
   module_d8 = PIN_FUNCTION_ENABLED;
   module_d9 = PIN_FUNCTION_ENABLED;
@@ -998,7 +1011,7 @@ sl_status_t xbee_deinit(void)
 
   state = XBEE_STATE_OFF;
   detected_mode = XBEE_MODE_AUTO;
-  cmd_session_forced = false;
+  cmd_session = CMD_SESSION_NONE;
   info.valid = false;
 
   return SL_STATUS_OK;
@@ -1017,7 +1030,7 @@ sl_status_t xbee_process(void)
   // settled yet and each ignores traffic that is not its own. Once a Command
   // mode session has been forced, only that transport runs: both read from the
   // same receive ring, so the API parser would consume the session's replies.
-  if (!cmd_session_forced
+  if ((cmd_session == CMD_SESSION_NONE)
       && (mode_is_api(detected_mode) || (detected_mode == XBEE_MODE_AUTO))) {
     (void)xbee_api_process();
   }
@@ -1025,14 +1038,7 @@ sl_status_t xbee_process(void)
     (void)xbee_cmd_mode_process();
   }
 
-  // The module closes Command mode on its own after CT with no input
-  // (manual lines 3062 to 3065). If that happens the force is dropped, so a
-  // stalled caller cannot leave the facade talking into a closed session.
-  if (cmd_session_forced
-      && (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE)
-      && (user_req == NULL)) {
-    cmd_session_forced = false;
-  }
+  advance_cmd_session();
 
   if (state == XBEE_STATE_READY) {
     if (user_req != NULL) {
@@ -1419,7 +1425,7 @@ sl_status_t xbee_hw_reset(void)
   detected_mode = XBEE_MODE_AUTO;
   // The reset takes the module out of Command mode, so any forced session is
   // gone with it.
-  cmd_session_forced = false;
+  cmd_session = CMD_SESSION_NONE;
   // The parser goes back to unescaped, because the probe frame that follows is
   // valid in either API mode.
   (void)xbee_api_set_escaped(false);
@@ -1433,34 +1439,78 @@ sl_status_t xbee_hw_reset(void)
  ******************************************************************************/
 sl_status_t xbee_cmd_session_open(void)
 {
-  sl_status_t status;
-
   if (state != XBEE_STATE_READY) {
     return SL_STATUS_NOT_READY;
   }
   if (user_req != NULL) {
     return SL_STATUS_BUSY;
   }
-  if (cmd_session_forced) {
+  if (cmd_session != CMD_SESSION_NONE) {
     return SL_STATUS_INVALID_STATE;
   }
 
-  // The flag goes up first, so that xbee_process() drives the Command mode
-  // transport from the next iteration and stops the API parser competing for
-  // the received bytes.
-  cmd_session_forced = true;
+  cmd_session_deadline_tick = deadline_from_ms(XBEE_CMD_SESSION_OPEN_TIMEOUT_MS);
 
   if (xbee_cmd_mode_is_ready()) {
-    // Already open, because the module was detected in Transparent mode.
+    // Already open: the module was detected in Transparent mode and a session
+    // is still standing.
+    cmd_session = CMD_SESSION_OPEN;
     return SL_STATUS_OK;
   }
 
-  status = xbee_cmd_mode_enter();
-  if (status != SL_STATUS_OK) {
-    cmd_session_forced = false;
-  }
+  // The escape sequence is not sent from here. The transport may still be
+  // finishing something of its own, which after a Transparent mode detection it
+  // usually is: bring-up closes the session it used to read the parameters, and
+  // that exit is still in flight when the facade first reports ready. Entry
+  // needs the transport idle, so xbee_process() starts it once it is, and the
+  // deadline bounds the wait.
+  cmd_session = CMD_SESSION_PENDING;
 
-  return status;
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Advance a requested session. Called from xbee_process().
+ ******************************************************************************/
+static void advance_cmd_session(void)
+{
+  switch (cmd_session) {
+    case CMD_SESSION_PENDING:
+      if (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE) {
+        if (xbee_cmd_mode_enter() == SL_STATUS_OK) {
+          cmd_session = CMD_SESSION_ENTERING;
+        }
+      }
+      break;
+
+    case CMD_SESSION_ENTERING:
+      if (xbee_cmd_mode_is_ready()) {
+        cmd_session = CMD_SESSION_OPEN;
+      } else if (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE) {
+        // The module did not answer the escape sequence. Try again until the
+        // caller's deadline: a repeated attempt costs only another guard time
+        // and the module ignores an unrecognised sequence.
+        cmd_session = CMD_SESSION_PENDING;
+      } else {
+        // Still running.
+      }
+      break;
+
+    case CMD_SESSION_OPEN:
+      // The module leaves Command mode on its own after CT with no input
+      // (manual lines 3062 to 3065), as well as when the session is closed
+      // deliberately. Either way the routing goes back to the detected mode, so
+      // a stalled caller cannot leave the facade talking into a closed session.
+      if ((xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE)
+          && (user_req == NULL)) {
+        cmd_session = CMD_SESSION_NONE;
+      }
+      break;
+
+    case CMD_SESSION_NONE:
+    default:
+      break;
+  }
 }
 
 /***************************************************************************//**
@@ -1468,16 +1518,16 @@ sl_status_t xbee_cmd_session_open(void)
  ******************************************************************************/
 sl_status_t xbee_cmd_session_status(void)
 {
-  if (!cmd_session_forced) {
+  if (cmd_session == CMD_SESSION_NONE) {
     return SL_STATUS_INVALID_STATE;
   }
-  if (xbee_cmd_mode_is_ready()) {
+  if (cmd_session == CMD_SESSION_OPEN) {
     return SL_STATUS_OK;
   }
-  if (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE) {
-    // Entry gave up: the module never answered the escape sequence. The force
-    // is dropped so the caller is not left talking into nothing.
-    cmd_session_forced = false;
+  if (tick_reached(cmd_session_deadline_tick)) {
+    // The module never answered the escape sequence. The request is dropped so
+    // the caller is not left talking into nothing.
+    cmd_session = CMD_SESSION_NONE;
     return SL_STATUS_TIMEOUT;
   }
 
@@ -1489,18 +1539,15 @@ sl_status_t xbee_cmd_session_status(void)
  ******************************************************************************/
 sl_status_t xbee_cmd_session_close(void)
 {
-  sl_status_t status;
-
-  if (!cmd_session_forced) {
+  if (cmd_session == CMD_SESSION_NONE) {
     return SL_STATUS_INVALID_STATE;
   }
   if (user_req != NULL) {
     return SL_STATUS_BUSY;
   }
-  if (!xbee_cmd_mode_is_ready()) {
-    // Nothing to close cleanly: entry never finished, or the module's own
-    // timeout already closed it.
-    cmd_session_forced = false;
+  if (cmd_session != CMD_SESSION_OPEN) {
+    // Never established, so there is nothing for the module to close.
+    cmd_session = CMD_SESSION_NONE;
     return SL_STATUS_OK;
   }
 
@@ -1509,11 +1556,9 @@ sl_status_t xbee_cmd_session_close(void)
   // the generic path would not do, leaving the transport believing a closed
   // session was still open. Leaving Command mode also applies whatever the
   // session staged (manual lines 3101 to 3110), so this is the apply step.
-  status = xbee_cmd_mode_exit(NULL);
-  if (status == SL_STATUS_OK) {
-  }
-
-  return status;
+  // xbee_process() returns the routing to the detected mode once the exit has
+  // finished.
+  return xbee_cmd_mode_exit(NULL);
 }
 
 /***************************************************************************//**
@@ -1521,7 +1566,7 @@ sl_status_t xbee_cmd_session_close(void)
  ******************************************************************************/
 bool xbee_cmd_session_is_open(void)
 {
-  return cmd_session_forced;
+  return (cmd_session != CMD_SESSION_NONE);
 }
 
 /***************************************************************************//**

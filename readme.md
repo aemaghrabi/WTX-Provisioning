@@ -156,7 +156,10 @@ Configurator, component editors, Pin Tool). See `CLAUDE.md` for the full set of 
 ### Host unit tests
 
 Modules that depend on nothing beyond `sl_status.h` and the C standard library are covered by
-tests that build with the host compiler, separately from the firmware image:
+tests that build with the host compiler, separately from the firmware image. The XBee facade is
+covered too: `test/fake_drivers.c` stands in for the control lines and the log, and
+`test/test_xbee_facade.c` drives the real facade against a simulated module that requires a guard
+time before the escape sequence and answers both AT text and API frames.
 
 ```sh
 cmake -S test -B test/build

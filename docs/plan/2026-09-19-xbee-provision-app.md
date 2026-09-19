@@ -3,7 +3,8 @@
 Status: Done, pending on-target verification
 Date: 2026-09-19
 Related history: docs/history/2026-09-19-xbee-provision-app-phase1.md through
-docs/history/2026-09-19-xbee-provision-app-phase4.md
+docs/history/2026-09-19-xbee-provision-app-phase4.md, then
+docs/history/2026-09-19-cmd-session-open-after-transparent-bringup.md
 
 All four phases are implemented, build without warnings and pass the host tests.
 **None of it has been run on hardware.** The on-target checks listed under
@@ -23,6 +24,10 @@ Departures from the plan as written, all recorded in the phase histories:
   product, which is the header's purpose.
 - The per-entry mismatch record was not needed. The audit only has to decide
   whether to provision at all; the write set is computed from the defaults.
+- The facade did get host tests after all, against a simulated module. The plan
+  said its routing would be checked by static review, which proved insufficient:
+  a defect stopped provisioning running on a Transparent mode module, and the
+  suite exists now because of it.
 
 ## Context
 
