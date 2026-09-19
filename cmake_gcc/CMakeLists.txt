@@ -15,6 +15,7 @@ include(xbee_provision.cmake)
 add_executable(xbee_provision
     # Add additional sources here
     ../src/app/src/xbee_bringup.c
+    ../src/app/src/xbee_dump.c
     ../src/app/src/xbee_provision.c
     ../src/app/src/xbee_provision_table.c
     ../src/utils/src/app_log.c
@@ -52,12 +53,21 @@ target_compile_definitions(xbee_provision PUBLIC
     # reports what it is, writing nothing, which is the build to use when a
     # board will not talk at all.
     XBEE_APP=XBEE_APP_PROVISION
+    # Compile the human-readable AT command names, so the parameter dump can
+    # print "CH (Operating Channel)" rather than "CH". Roughly 2 kB of flash.
+    #
+    # This macro changes the layout of xbee_at_entry_t: it adds a name member
+    # under an #if (src/services/inc/xbee_at_table.h). It must therefore be
+    # defined on both targets below or on neither, or the two would disagree
+    # about the size of the structure without any diagnostic.
+    XBEE_AT_TABLE_NAMES=1
 )
 
 # app.c is compiled in the generated slc OBJECT library, which does not inherit
 # the definitions above, so the application selection is given to it as well.
 target_compile_definitions(slc PUBLIC
     XBEE_APP=XBEE_APP_PROVISION
+    XBEE_AT_TABLE_NAMES=1
 )
 
 target_compile_options(xbee_provision PUBLIC

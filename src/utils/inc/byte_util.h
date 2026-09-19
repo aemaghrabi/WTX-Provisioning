@@ -90,6 +90,33 @@ sl_status_t byte_util_hex_encode(const uint8_t *in,
                                  uint16_t cap);
 
 /***************************************************************************//**
+ * Format bytes as hexadecimal text for a log line, abbreviated when long.
+ *
+ * Unlike byte_util_hex_encode() this never fails: every outcome is a string the
+ * caller can print. The caller provides the buffer rather than this returning a
+ * shared one, so that two values can appear side by side in one call.
+ *
+ * At most @p max_bytes bytes are encoded; an ellipsis follows when the value is
+ * longer. The buffer therefore has to hold 2 * max_bytes + 4 characters for the
+ * longest result.
+ *
+ * @param[out] out       Destination text buffer, may be NULL.
+ * @param[in]  cap       Capacity of out in bytes, including the terminator.
+ * @param[in]  in        Source bytes, may be NULL when len is 0.
+ * @param[in]  len       Number of source bytes.
+ * @param[in]  max_bytes Bytes to encode before abbreviating.
+ *
+ * @return @p out, or the literal "(empty)" when there is nothing to print, or
+ *         the literal "(unprintable)" when out is NULL or too small. Never
+ *         NULL.
+ ******************************************************************************/
+const char *byte_util_hex_text(char *out,
+                               uint16_t cap,
+                               const uint8_t *in,
+                               uint16_t len,
+                               uint16_t max_bytes);
+
+/***************************************************************************//**
  * Decode ASCII hexadecimal text into bytes.
  *
  * An optional "0x" or "0X" prefix is accepted and skipped. An odd number of

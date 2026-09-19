@@ -13,6 +13,9 @@
 /// Bits shifted per hexadecimal digit.
 #define BYTE_UTIL_BITS_PER_DIGIT   4U
 
+/// Characters an abbreviated value ends with, excluding the terminator.
+#define BYTE_UTIL_ELLIPSIS_LEN     3U
+
 /// Uppercase digit table.
 static const char hex_digits[16] = {
   '0', '1', '2', '3', '4', '5', '6', '7',
@@ -143,6 +146,51 @@ sl_status_t byte_util_hex_encode(const uint8_t *in,
   out[in_len * BYTE_UTIL_DIGITS_PER_BYTE] = '\0';
 
   return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Format bytes as hexadecimal text for a log line, abbreviated when long.
+ ******************************************************************************/
+const char *byte_util_hex_text(char *out,
+                               uint16_t cap,
+                               const uint8_t *in,
+                               uint16_t len,
+                               uint16_t max_bytes)
+{
+  uint16_t shown = (len > max_bytes) ? max_bytes : len;
+  uint32_t needed;
+
+  if ((in == NULL) || (len == 0U)) {
+    return "(empty)";
+  }
+  if (out == NULL) {
+    return "(unprintable)";
+  }
+
+  // Widened so that a large length cannot wrap the capacity check.
+  needed = ((uint32_t)shown * BYTE_UTIL_DIGITS_PER_BYTE) + 1U;
+  if (shown < len) {
+    needed += BYTE_UTIL_ELLIPSIS_LEN;
+  }
+  if (needed > (uint32_t)cap) {
+    return "(unprintable)";
+  }
+
+  if (byte_util_hex_encode(in, shown, out, cap) != SL_STATUS_OK) {
+    return "(unprintable)";
+  }
+
+  if (shown < len) {
+    // The capacity was checked with the ellipsis included, so this fits.
+    uint16_t at = (uint16_t)(shown * BYTE_UTIL_DIGITS_PER_BYTE);
+
+    out[at] = '.';
+    out[at + 1U] = '.';
+    out[at + 2U] = '.';
+    out[at + 3U] = '\0';
+  }
+
+  return out;
 }
 
 /***************************************************************************//**

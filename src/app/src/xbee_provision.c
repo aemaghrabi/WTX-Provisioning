@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "sl_sleeptimer.h"
@@ -16,6 +17,7 @@
 #include "byte_util.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
+#include "xbee_dump.h"
 #include "xbee_provision_config.h"
 #include "xbee_provision_table.h"
 #include "xbee_provision.h"
@@ -106,11 +108,15 @@ _Static_assert(XBEE_PROV_SB == 0U,
 /// and the terminator.
 #define VALUE_TEXT_CAP  ((LOG_VALUE_MAX_BYTES * 2U) + 4U)
 
+/// Characters needed for a command name: two characters and the terminator.
+#define CMD_TEXT_CAP  3U
+
 /// Where the sequence has got to.
 typedef enum {
   PROV_IDLE,       ///< Not started.
   PROV_BRINGUP,    ///< Waiting for the facade to find and read the module.
   PROV_OPEN,       ///< Opening the Command mode session.
+  PROV_DUMP,       ///< Logging every parameter the module will report.
   PROV_AUDIT,      ///< Reading the module's configuration to compare it.
   PROV_RESTORE,    ///< Restoring the module's defaults.
   PROV_WRITE,      ///< Writing the parameters that deviate from the default.
@@ -184,52 +190,54 @@ static uint32_t deadline_from_ms(uint32_t ms)
 
 /***************************************************************************//**
  * Two command characters as text, for the log.
- ******************************************************************************/
-static const char *command_name(uint16_t command)
-{
-  static char name[4];
-
-  if (xbee_at_id_to_str(command, name, sizeof(name)) != SL_STATUS_OK) {
-    name[0] = '?';
-    name[1] = '\0';
-  }
-
-  return name;
-}
-
-/***************************************************************************//**
- * A parameter value as hexadecimal text, abbreviated when it is long.
  *
  * The caller provides the buffer rather than this returning a shared one,
- * because two values are printed side by side when a read does not match what
- * was configured.
+ * because two command names could otherwise appear in one call and collide.
  *
- * @param[out] text Destination, at least VALUE_TEXT_CAP characters.
- * @param[in]  value Value bytes, may be NULL when len is 0.
- * @param[in]  len   Value length.
+ * @param[out] text    Destination, at least CMD_TEXT_CAP characters.
+ * @param[in]  command Packed command characters.
  *
- * @return @p text, or a literal when there is nothing to print.
+ * @return @p text, or a literal when the identifier cannot be written out.
  ******************************************************************************/
-static const char *value_text(char *text, const uint8_t *value, uint16_t len)
+static const char *command_name(char *text, uint16_t command)
 {
-  uint16_t shown = (len > LOG_VALUE_MAX_BYTES) ? LOG_VALUE_MAX_BYTES : len;
-
-  if ((value == NULL) || (len == 0U)) {
-    return "(empty)";
-  }
-
-  if (byte_util_hex_encode(value, shown, text, VALUE_TEXT_CAP) != SL_STATUS_OK) {
-    return "(unprintable)";
-  }
-  if (shown < len) {
-    // The capacity allows for the ellipsis, so this always fits.
-    text[shown * 2U] = '.';
-    text[(shown * 2U) + 1U] = '.';
-    text[(shown * 2U) + 2U] = '.';
-    text[(shown * 2U) + 3U] = '\0';
+  if (xbee_at_id_to_str(command, text, CMD_TEXT_CAP) != SL_STATUS_OK) {
+    return "?";
   }
 
   return text;
+}
+
+/***************************************************************************//**
+ * A parameter value as text for the log, masked when it is a credential.
+ *
+ * @param[out] text    Destination, at least VALUE_TEXT_CAP characters.
+ * @param[in]  command Packed command characters.
+ * @param[in]  value   Value bytes, may be NULL when len is 0.
+ * @param[in]  len     Value length.
+ *
+ * @return @p text, or a literal when there is nothing to print or the value
+ *         must not be logged.
+ ******************************************************************************/
+static const char *value_text(char *text,
+                              uint16_t command,
+                              const uint8_t *value,
+                              uint16_t len)
+{
+  if (xbee_dump_is_secret(command)) {
+    // The key, the Secure Session material and the Bluetooth SRP material never
+    // reach the log. Only their width does, which says whether one is set.
+    int written = snprintf(text, VALUE_TEXT_CAP, "(%u bytes, not logged)",
+                           (unsigned)len);
+
+    if ((written <= 0) || (written >= (int)VALUE_TEXT_CAP)) {
+      return "(not logged)";
+    }
+    return text;
+  }
+
+  return byte_util_hex_text(text, VALUE_TEXT_CAP, value, len,
+                            LOG_VALUE_MAX_BYTES);
 }
 
 /***************************************************************************//**
@@ -325,6 +333,7 @@ static bool start_next_read(uint16_t from)
   uint16_t i;
 
   for (i = from; i < table_count; i++) {
+    char name[CMD_TEXT_CAP];
     sl_status_t status;
 
     if (!is_readable(table[i].command)) {
@@ -336,7 +345,7 @@ static bool start_next_read(uint16_t from)
     status = xbee_at_get(table[i].command, &req);
     if (status != SL_STATUS_OK) {
       APP_LOG_ERROR("could not ask for %s, status 0x%04X",
-                    command_name(table[i].command), (unsigned)status);
+                    command_name(name, table[i].command), (unsigned)status);
       close_session(verifying ? XBEE_PROV_RESULT_FAIL_VERIFY
                                    : XBEE_PROV_RESULT_FAIL_AUDIT);
       return true;
@@ -364,6 +373,7 @@ static bool start_next_write(uint16_t from)
 
   for (i = from; i < table_count; i++) {
     const xbee_at_entry_t *entry = xbee_at_table_find(table[i].command);
+    char name[CMD_TEXT_CAP];
     char text[VALUE_TEXT_CAP];
     sl_status_t status;
 
@@ -376,14 +386,15 @@ static bool start_next_write(uint16_t from)
     status = xbee_at_set(table[i].command, table[i].value, table[i].len, &req);
     if (status != SL_STATUS_OK) {
       APP_LOG_ERROR("could not send %s, status 0x%04X",
-                    command_name(table[i].command), (unsigned)status);
+                    command_name(name, table[i].command), (unsigned)status);
       close_session(XBEE_PROV_RESULT_FAIL_WRITE);
       return true;
     }
 
     APP_LOG_INFO("writing %s = %s",
-                 command_name(table[i].command),
-                 value_text(text, table[i].value, table[i].len));
+                 command_name(name, table[i].command),
+                 value_text(text, table[i].command,
+                            table[i].value, table[i].len));
     table_index = i;
     req_active = true;
     return true;
@@ -397,6 +408,7 @@ static bool start_next_write(uint16_t from)
  ******************************************************************************/
 static void start_restore(bool fallback)
 {
+  char name[CMD_TEXT_CAP];
   uint16_t command;
   sl_status_t status;
 
@@ -415,12 +427,12 @@ static void start_restore(bool fallback)
   status = xbee_at_exec_timeout(command, &req, XBEE_PROV_FLASH_TIMEOUT_MS);
   if (status != SL_STATUS_OK) {
     APP_LOG_ERROR("could not send %s, status 0x%04X",
-                  command_name(command), (unsigned)status);
+                  command_name(name, command), (unsigned)status);
     close_session(XBEE_PROV_RESULT_FAIL_RESTORE);
     return;
   }
 
-  APP_LOG_INFO("restoring defaults with %s", command_name(command));
+  APP_LOG_INFO("restoring defaults with %s", command_name(name, command));
   state = PROV_RESTORE;
   req_active = true;
 }
@@ -451,7 +463,9 @@ static void start_read_pass(void)
 static void handle_read_result(void)
 {
   const xbee_at_entry_t *entry = xbee_at_table_find(table[table_index].command);
-  const char *name = command_name(table[table_index].command);
+  const uint16_t command = table[table_index].command;
+  char cmd[CMD_TEXT_CAP];
+  const char *name = command_name(cmd, command);
   char actual[VALUE_TEXT_CAP];
   char wanted[VALUE_TEXT_CAP];
 
@@ -466,14 +480,16 @@ static void handle_read_result(void)
     mismatch_count++;
     if (verifying) {
       APP_LOG_ERROR("%s reads back as %s, expected %s", name,
-                    value_text(actual, req.value, req.value_len),
-                    value_text(wanted, table[table_index].value, table[table_index].len));
+                    value_text(actual, command, req.value, req.value_len),
+                    value_text(wanted, command, table[table_index].value,
+                               table[table_index].len));
       close_session(XBEE_PROV_RESULT_FAIL_VERIFY);
       return;
     }
     APP_LOG_INFO("%s is %s, configured as %s", name,
-                 value_text(actual, req.value, req.value_len),
-                 value_text(wanted, table[table_index].value, table[table_index].len));
+                 value_text(actual, command, req.value, req.value_len),
+                 value_text(wanted, command, table[table_index].value,
+                            table[table_index].len));
   } else {
     // Matches.
   }
@@ -552,8 +568,10 @@ static void process_request(void)
 
     case PROV_WRITE:
       if (req.result != SL_STATUS_OK) {
+        char name[CMD_TEXT_CAP];
+
         APP_LOG_ERROR("module refused %s, status 0x%04X",
-                      command_name(table[table_index].command),
+                      command_name(name, table[table_index].command),
                       (unsigned)req.result);
         close_session(XBEE_PROV_RESULT_FAIL_WRITE);
         return;
@@ -586,7 +604,11 @@ static void process_request(void)
 }
 
 /***************************************************************************//**
- * Log what bring-up found about the module.
+ * Log the phase marker for a module that answered bring-up.
+ *
+ * The parameters bring-up read are not restated here: the dump that follows
+ * prints every value the module will report, so a line naming a few of them
+ * would only repeat it.
  ******************************************************************************/
 static void report_module(void)
 {
@@ -596,10 +618,7 @@ static void report_module(void)
     return;
   }
 
-  APP_LOG_INFO("module %08lX%08lX, firmware 0x%04X, in %s mode",
-               (unsigned long)module.serial_high,
-               (unsigned long)module.serial_low,
-               (unsigned)module.vr,
+  APP_LOG_INFO("module ready in %s mode",
                (xbee_get_mode() == XBEE_MODE_TRANSPARENT) ? "transparent"
                  : ((xbee_get_mode() == XBEE_MODE_API1) ? "API 1" : "API 2"));
 }
@@ -712,9 +731,31 @@ void xbee_provision_process(void)
       }
 
       APP_LOG_INFO("Command mode session open");
+
+#if XBEE_PROV_DUMP
+      // The verification pass skips the dump: the module has just been written
+      // and the audit that follows checks every value against the header.
+      if (!verifying && (xbee_dump_start() == SL_STATUS_OK)) {
+        state = PROV_DUMP;
+        break;
+      }
+#endif
+
       start_read_pass();
       break;
     }
+
+    case PROV_DUMP:
+      // The dump owns its own request, so req_active stays false and the
+      // provisioning request is untouched throughout this step.
+      xbee_dump_process();
+      if (!xbee_dump_is_finished()) {
+        return;
+      }
+      // A dump that could not finish is a diagnostic, never a provisioning
+      // failure, so the outcome is deliberately not consulted here.
+      start_read_pass();
+      break;
 
     case PROV_CLOSE:
       if (xbee_cmd_session_is_open()) {

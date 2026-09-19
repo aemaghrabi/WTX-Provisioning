@@ -623,7 +623,9 @@ static void adopt_probed_ap(uint8_t ap)
       return;
   }
 
-  APP_LOG_INFO("detected %s mode, AP=%u", mode_name(detected_mode), (unsigned)ap);
+  // AP itself is not restated: the application's parameter dump prints every
+  // value the module reports, and a boot log should not carry one twice.
+  APP_LOG_INFO("detected %s mode", mode_name(detected_mode));
   begin_read_params();
 }
 

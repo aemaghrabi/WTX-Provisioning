@@ -9,6 +9,7 @@
 
 #include "app_log.h"
 #include "xbee.h"
+#include "xbee_dump.h"
 #include "xbee_uart.h"
 #include "xbee_bringup.h"
 
@@ -16,6 +17,7 @@
 typedef enum {
   BRINGUP_IDLE,     ///< Not started.
   BRINGUP_WAITING,  ///< The facade is probing and reading parameters.
+  BRINGUP_DUMPING,  ///< Logging every parameter the module will report.
   BRINGUP_PASSED,   ///< The module answered and was read.
   BRINGUP_FAILED,   ///< It did not.
 } bringup_state_t;
@@ -73,7 +75,13 @@ static void on_modem_status(xbee_modem_status_t status, void *user)
 }
 
 /***************************************************************************//**
- * Log everything bring-up learned about the module.
+ * Log what bring-up learned that the parameter dump does not print.
+ *
+ * The parameters bring-up read are deliberately not restated here: the dump
+ * that follows prints every value the module will report, and a boot log should
+ * not carry the same value twice. What stays is the phase marker, the judgement
+ * about the output options, and the serial link counters, which are driver
+ * statistics rather than module parameters.
  ******************************************************************************/
 static void report_success(void)
 {
@@ -86,13 +94,6 @@ static void report_success(void)
   }
 
   APP_LOG_INFO("module ready in %s mode", mode_name(xbee_get_mode()));
-  APP_LOG_INFO("serial number %08lX%08lX",
-               (unsigned long)info.serial_high,
-               (unsigned long)info.serial_low);
-  APP_LOG_INFO("firmware 0x%04X, hardware 0x%04X",
-               (unsigned)info.vr, (unsigned)info.hv);
-  APP_LOG_INFO("max payload %u bytes, output options %u",
-               (unsigned)info.np, (unsigned)info.ao);
   // The module ships with AO set to 2, which emits the legacy receive frames
   // rather than the modern ones.
   if (info.ao == 2U) {
@@ -176,13 +177,25 @@ void xbee_bringup_process(void)
   // status changes still reach their callbacks.
   (void)xbee_process();
 
+  if (state == BRINGUP_DUMPING) {
+    // The dump must not drive the facade itself, which is why this branch sits
+    // below the xbee_process() call above and above the guard below.
+    xbee_dump_process();
+    if (xbee_dump_is_finished()) {
+      state = BRINGUP_PASSED;
+    }
+    return;
+  }
+
   if (state != BRINGUP_WAITING) {
     return;
   }
 
   if (xbee_is_ready()) {
-    state = BRINGUP_PASSED;
     report_success();
+    // A dump that cannot start is a diagnostic gap, not a bring-up failure.
+    state = (xbee_dump_start() == SL_STATUS_OK) ? BRINGUP_DUMPING
+                                                : BRINGUP_PASSED;
     return;
   }
 
@@ -194,6 +207,9 @@ void xbee_bringup_process(void)
 
 /***************************************************************************//**
  * Report whether the sequence has finished.
+ *
+ * False while the parameter dump is still running, so a caller that waits for
+ * this sees a complete log before it acts.
  ******************************************************************************/
 bool xbee_bringup_is_finished(void)
 {

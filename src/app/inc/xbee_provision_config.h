@@ -749,6 +749,17 @@
 
 /// @}
 
+/// 1: log every parameter the module will report before the audit pass.
+/// 0: leave it out.
+///
+/// The dump is a diagnostic: it makes a boot log answer "what is on this
+/// module" without anyone opening a terminal. It only reads, so it costs no
+/// flash cycle, and it can never fail a provisioning run. It adds roughly 1.3
+/// seconds to the boot and about 5 kB of log output.
+#ifndef XBEE_PROV_DUMP
+#define XBEE_PROV_DUMP  1
+#endif
+
 /*
  * Commands deliberately absent from this header, and why.
  *

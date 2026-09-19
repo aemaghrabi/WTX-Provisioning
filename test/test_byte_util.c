@@ -202,6 +202,64 @@ static void test_be_to_u64(void)
 }
 
 /***************************************************************************//**
+ * Log formatting covers the degenerate cases and abbreviates long values.
+ *
+ * These are the exact shapes the provisioning log and the parameter dump print,
+ * so a value that would corrupt a log line fails here instead.
+ ******************************************************************************/
+static void test_hex_text(void)
+{
+  // Two per byte, an ellipsis and the terminator, as the callers size it.
+  enum { CAP = (16 * 2) + 4 };
+  const uint8_t key[16] = {
+    0x3FU, 0x7AU, 0x2CU, 0x91U, 0xD4U, 0xE6U, 0xB0U, 0x85U,
+    0xF1U, 0xA3U, 0x9CU, 0x72U, 0xD8U, 0xE4U, 0x0BU, 0x56U
+  };
+  const uint8_t one[1] = { 0x0CU };
+  uint8_t wide[65];
+  char text[CAP];
+  uint16_t i;
+
+  for (i = 0U; i < (uint16_t)sizeof(wide); i++) {
+    wide[i] = (uint8_t)i;
+  }
+
+  // CH, the operating channel, one byte.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, one, 1U, 16U), "0C");
+
+  // Exactly the abbreviation threshold: no ellipsis.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, key, 16U, 16U),
+                     "3F7A2C91D4E6B085F1A39C72D8E40B56");
+
+  // FK, the 65-byte file system public key: abbreviated with an ellipsis.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, wide, 65U, 16U),
+                     "000102030405060708090A0B0C0D0E0F...");
+
+  // A set response carries no value at all.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, NULL, 0U, 16U), "(empty)");
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, key, 0U, 16U), "(empty)");
+
+  // No buffer, and a buffer too small for the value or for the ellipsis.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(NULL, CAP, key, 16U, 16U),
+                     "(unprintable)");
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, 4U, key, 16U, 16U),
+                     "(unprintable)");
+  // 16 bytes need 32 digits plus the terminator; 32 characters is one short.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, 32U, key, 16U, 16U),
+                     "(unprintable)");
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, 33U, key, 16U, 16U),
+                     "3F7A2C91D4E6B085F1A39C72D8E40B56");
+  // Abbreviating 4 of 16 bytes needs 8 digits, the ellipsis and the terminator.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, 11U, key, 16U, 4U),
+                     "(unprintable)");
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, 12U, key, 16U, 4U),
+                     "3F7A2C91...");
+
+  // A zero threshold abbreviates everything away, and still terminates.
+  TEST_ASSERT_EQ_STR(byte_util_hex_text(text, CAP, key, 16U, 0U), "...");
+}
+
+/***************************************************************************//**
  * Encode and decode are inverses over every byte value.
  ******************************************************************************/
 static void test_hex_round_trip(void)
@@ -234,6 +292,7 @@ int main(void)
   TEST_RUN(test_hex_decode);
   TEST_RUN(test_hex_to_scalar);
   TEST_RUN(test_be_to_u64);
+  TEST_RUN(test_hex_text);
   TEST_RUN(test_hex_round_trip);
 
   return TEST_SUMMARY();
