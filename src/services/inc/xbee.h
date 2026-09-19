@@ -317,6 +317,25 @@ sl_status_t xbee_at_queue_set(uint16_t command,
 sl_status_t xbee_at_exec(uint16_t command, xbee_at_req_t *request);
 
 /***************************************************************************//**
+ * Run a command that takes no parameter, allowing it longer to answer.
+ *
+ * For the commands that work on flash and can take far longer than an ordinary
+ * parameter access: writing the configuration, and restoring defaults. The
+ * manual warns that nothing may be sent to the module between the write command
+ * and its reply (manual lines 7093 to 7095), so giving up early and moving on is
+ * exactly what must not happen.
+ *
+ * @param[in]     command    Packed command characters.
+ * @param[in,out] request    Request tracking the answer.
+ * @param[in]     timeout_ms How long to wait, 0 for the ordinary timeout.
+ *
+ * @return As xbee_at_exec().
+ ******************************************************************************/
+sl_status_t xbee_at_exec_timeout(uint16_t command,
+                                 xbee_at_req_t *request,
+                                 uint32_t timeout_ms);
+
+/***************************************************************************//**
  * Report whether a request has finished, either way.
  *
  * @param[in] request Request to inspect.
@@ -451,6 +470,66 @@ sl_status_t xbee_set_frame_callback(xbee_frame_cb_t callback, void *user);
  ******************************************************************************/
 sl_status_t xbee_set_modem_status_callback(xbee_modem_status_cb_t callback,
                                            void *user);
+
+/***************************************************************************//**
+ * Force every request through a Command mode session.
+ *
+ * Command mode is reachable from every operating mode (manual line 3041), so
+ * this works whether the module was detected in Transparent mode or in an API
+ * mode. Until the session is closed, every xbee_at_* call travels as AT text
+ * rather than as an API frame.
+ *
+ * This exists for configuration work. In Command mode a parameter write is
+ * staged and does not take effect until the session ends (manual lines 3101 to
+ * 3110), so a batch of writes can include ones that would otherwise break the
+ * link under the caller, such as AP or BD, and a write to flash can commit them
+ * all at once.
+ *
+ * Returns at once. Drive xbee_process() and poll xbee_cmd_session_status().
+ *
+ * @return SL_STATUS_OK once the session is open or the entry sequence has
+ *         started,
+ *         SL_STATUS_NOT_READY if the module is not ready,
+ *         SL_STATUS_BUSY if a request is in flight,
+ *         SL_STATUS_INVALID_STATE if a session is already forced,
+ *         or the transport error.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_open(void);
+
+/***************************************************************************//**
+ * Progress of the forced session.
+ *
+ * @return SL_STATUS_OK when the session is open and a request may be issued,
+ *         SL_STATUS_IN_PROGRESS while the entry sequence runs,
+ *         SL_STATUS_TIMEOUT if the module never answered the escape sequence,
+ *         in which case the session is no longer forced,
+ *         SL_STATUS_INVALID_STATE if no session was requested.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_status(void);
+
+/***************************************************************************//**
+ * Close the forced session and return to the detected mode.
+ *
+ * Sends the exit command, which applies everything the session staged. Returns
+ * at once; drive xbee_process() until xbee_cmd_session_is_open() is false.
+ *
+ * @return SL_STATUS_OK once the exit has started, or once it was found that
+ *         there was nothing left to close,
+ *         SL_STATUS_INVALID_STATE if no session is forced,
+ *         SL_STATUS_BUSY if a request is in flight,
+ *         or the transport error.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_close(void);
+
+/***************************************************************************//**
+ * Report whether a forced session is open or being opened.
+ *
+ * Becomes false once the session closes, whether because it was closed, the
+ * entry sequence failed, or the module's own Command mode timeout lapsed.
+ *
+ * @return true while requests are routed through Command mode by force.
+ ******************************************************************************/
+bool xbee_cmd_session_is_open(void);
 
 /***************************************************************************//**
  * Reset the module with its reset line and run bring-up again.

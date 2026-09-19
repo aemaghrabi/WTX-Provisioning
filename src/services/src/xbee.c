@@ -82,6 +82,10 @@ static bool sleep_requested;
 /// Tick until which the module is still settling after a wake.
 static uint32_t wake_guard_tick;
 
+/// True while the application has asked for every request to go through
+/// Command mode, whatever mode the module was detected in.
+static bool cmd_session_forced;
+
 /// Mode a pending xbee_set_mode() is switching to, or XBEE_MODE_AUTO for none.
 static xbee_mode_t pending_mode = XBEE_MODE_AUTO;
 
@@ -131,6 +135,21 @@ static uint32_t deadline_from_ms(uint32_t ms)
 static bool mode_is_api(xbee_mode_t mode)
 {
   return ((mode == XBEE_MODE_API1) || (mode == XBEE_MODE_API2));
+}
+
+/***************************************************************************//**
+ * Report whether requests currently travel over the Command mode transport.
+ *
+ * True in Transparent mode, where there is no alternative, and whenever the
+ * application has forced a session open. Command mode is reachable from every
+ * operating mode (manual line 3041), so forcing it is legitimate in an API mode
+ * too, and provisioning depends on it: only in Command mode does a parameter
+ * write wait for the session to end before it applies (manual lines 3101 to
+ * 3110).
+ ******************************************************************************/
+static bool use_cmd_transport(void)
+{
+  return (cmd_session_forced || !mode_is_api(detected_mode));
 }
 
 /***************************************************************************//**
@@ -383,7 +402,7 @@ static sl_status_t send_via_cmd_mode(xbee_at_req_t *request)
  ******************************************************************************/
 static sl_status_t dispatch_request(xbee_at_req_t *request)
 {
-  if (mode_is_api(detected_mode)) {
+  if (!use_cmd_transport()) {
     return send_via_api(request);
   }
 
@@ -421,7 +440,7 @@ static void poll_request(xbee_at_req_t *request)
     return;
   }
 
-  if (mode_is_api(detected_mode)) {
+  if (!use_cmd_transport()) {
     const xbee_api_request_t *api = &request->t.api;
 
     if (!xbee_api_request_complete(api)) {
@@ -832,7 +851,8 @@ static sl_status_t submit(uint16_t command,
                           xbee_op_t op,
                           const uint8_t *value,
                           uint16_t len,
-                          xbee_at_req_t *request)
+                          xbee_at_req_t *request,
+                          uint32_t timeout_ms)
 {
   sl_status_t status;
 
@@ -862,11 +882,12 @@ static sl_status_t submit(uint16_t command,
     return status;
   }
 
-  if ((op != XBEE_OP_GET) && (detected_mode != XBEE_MODE_TRANSPARENT)) {
+  if ((op != XBEE_OP_GET) && !use_cmd_transport()) {
     const xbee_at_entry_t *entry = xbee_at_table_find(command);
 
     // Some commands only work from Command mode, whatever AP says
-    // (manual lines 5810 to 5814).
+    // (manual lines 5810 to 5814). A forced session satisfies that, so the
+    // refusal only applies when the request would travel as an API frame.
     if ((entry != NULL)
         && ((entry->flags & XBEE_AT_FLAG_CMD_MODE_ONLY) != 0U)) {
       return SL_STATUS_NOT_SUPPORTED;
@@ -874,8 +895,7 @@ static sl_status_t submit(uint16_t command,
   }
 
   user_req = request;
-  status = start_request(request, command, op, value, len,
-                         XBEE_API_LOCAL_AT_TIMEOUT_MS);
+  status = start_request(request, command, op, value, len, timeout_ms);
   if (status != SL_STATUS_OK) {
     user_req = NULL;
   }
@@ -895,6 +915,7 @@ sl_status_t xbee_init(const xbee_config_t *config)
   user_req = NULL;
   failure_result = SL_STATUS_OK;
   detected_mode = XBEE_MODE_AUTO;
+  cmd_session_forced = false;
   module_sm = 0U;
   module_d8 = PIN_FUNCTION_ENABLED;
   module_d9 = PIN_FUNCTION_ENABLED;
@@ -977,6 +998,7 @@ sl_status_t xbee_deinit(void)
 
   state = XBEE_STATE_OFF;
   detected_mode = XBEE_MODE_AUTO;
+  cmd_session_forced = false;
   info.valid = false;
 
   return SL_STATUS_OK;
@@ -991,13 +1013,25 @@ sl_status_t xbee_process(void)
     return SL_STATUS_OK;
   }
 
-  // Both transports are driven: during detection the mode is not settled yet,
-  // and each ignores traffic that is not its own.
-  if (mode_is_api(detected_mode) || (detected_mode == XBEE_MODE_AUTO)) {
+  // Both transports are driven during detection, because the mode is not
+  // settled yet and each ignores traffic that is not its own. Once a Command
+  // mode session has been forced, only that transport runs: both read from the
+  // same receive ring, so the API parser would consume the session's replies.
+  if (!cmd_session_forced
+      && (mode_is_api(detected_mode) || (detected_mode == XBEE_MODE_AUTO))) {
     (void)xbee_api_process();
   }
-  if (!mode_is_api(detected_mode)) {
+  if (use_cmd_transport()) {
     (void)xbee_cmd_mode_process();
+  }
+
+  // The module closes Command mode on its own after CT with no input
+  // (manual lines 3062 to 3065). If that happens the force is dropped, so a
+  // stalled caller cannot leave the facade talking into a closed session.
+  if (cmd_session_forced
+      && (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE)
+      && (user_req == NULL)) {
+    cmd_session_forced = false;
   }
 
   if (state == XBEE_STATE_READY) {
@@ -1091,7 +1125,7 @@ sl_status_t xbee_get_info(xbee_info_t *out)
  ******************************************************************************/
 sl_status_t xbee_at_get(uint16_t command, xbee_at_req_t *request)
 {
-  return submit(command, XBEE_OP_GET, NULL, 0U, request);
+  return submit(command, XBEE_OP_GET, NULL, 0U, request, XBEE_API_LOCAL_AT_TIMEOUT_MS);
 }
 
 /***************************************************************************//**
@@ -1102,7 +1136,7 @@ sl_status_t xbee_at_set(uint16_t command,
                         uint16_t len,
                         xbee_at_req_t *request)
 {
-  return submit(command, XBEE_OP_SET, value, len, request);
+  return submit(command, XBEE_OP_SET, value, len, request, XBEE_API_LOCAL_AT_TIMEOUT_MS);
 }
 
 /***************************************************************************//**
@@ -1113,7 +1147,7 @@ sl_status_t xbee_at_queue_set(uint16_t command,
                               uint16_t len,
                               xbee_at_req_t *request)
 {
-  return submit(command, XBEE_OP_QUEUE_SET, value, len, request);
+  return submit(command, XBEE_OP_QUEUE_SET, value, len, request, XBEE_API_LOCAL_AT_TIMEOUT_MS);
 }
 
 /***************************************************************************//**
@@ -1140,7 +1174,7 @@ sl_status_t xbee_at_set_u32(uint16_t command,
   // expects, so the value is written right aligned in that width.
   byte_util_write_be32(buf, value);
 
-  return submit(command, XBEE_OP_SET, &buf[4U - width], width, request);
+  return submit(command, XBEE_OP_SET, &buf[4U - width], width, request, XBEE_API_LOCAL_AT_TIMEOUT_MS);
 }
 
 /***************************************************************************//**
@@ -1148,7 +1182,22 @@ sl_status_t xbee_at_set_u32(uint16_t command,
  ******************************************************************************/
 sl_status_t xbee_at_exec(uint16_t command, xbee_at_req_t *request)
 {
-  return submit(command, XBEE_OP_EXEC, NULL, 0U, request);
+  return submit(command, XBEE_OP_EXEC, NULL, 0U, request,
+                XBEE_API_LOCAL_AT_TIMEOUT_MS);
+}
+
+/***************************************************************************//**
+ * Run a command that takes no parameter, allowing it longer to answer.
+ ******************************************************************************/
+sl_status_t xbee_at_exec_timeout(uint16_t command,
+                                 xbee_at_req_t *request,
+                                 uint32_t timeout_ms)
+{
+  if (timeout_ms == 0U) {
+    timeout_ms = XBEE_API_LOCAL_AT_TIMEOUT_MS;
+  }
+
+  return submit(command, XBEE_OP_EXEC, NULL, 0U, request, timeout_ms);
 }
 
 /***************************************************************************//**
@@ -1243,7 +1292,8 @@ sl_status_t xbee_set_mode(xbee_mode_t mode, xbee_at_req_t *request)
     default:                    return SL_STATUS_INVALID_PARAMETER;
   }
 
-  status = submit(XBEE_AT_AP, XBEE_OP_SET, &ap, 1U, request);
+  status = submit(XBEE_AT_AP, XBEE_OP_SET, &ap, 1U, request,
+                  XBEE_API_LOCAL_AT_TIMEOUT_MS);
   if (status != SL_STATUS_OK) {
     return status;
   }
@@ -1367,12 +1417,111 @@ sl_status_t xbee_hw_reset(void)
   info.valid = false;
   failure_result = SL_STATUS_OK;
   detected_mode = XBEE_MODE_AUTO;
+  // The reset takes the module out of Command mode, so any forced session is
+  // gone with it.
+  cmd_session_forced = false;
   // The parser goes back to unescaped, because the probe frame that follows is
   // valid in either API mode.
   (void)xbee_api_set_escaped(false);
   state = XBEE_STATE_RESETTING;
 
   return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Force every request through a Command mode session.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_open(void)
+{
+  sl_status_t status;
+
+  if (state != XBEE_STATE_READY) {
+    return SL_STATUS_NOT_READY;
+  }
+  if (user_req != NULL) {
+    return SL_STATUS_BUSY;
+  }
+  if (cmd_session_forced) {
+    return SL_STATUS_INVALID_STATE;
+  }
+
+  // The flag goes up first, so that xbee_process() drives the Command mode
+  // transport from the next iteration and stops the API parser competing for
+  // the received bytes.
+  cmd_session_forced = true;
+
+  if (xbee_cmd_mode_is_ready()) {
+    // Already open, because the module was detected in Transparent mode.
+    return SL_STATUS_OK;
+  }
+
+  status = xbee_cmd_mode_enter();
+  if (status != SL_STATUS_OK) {
+    cmd_session_forced = false;
+  }
+
+  return status;
+}
+
+/***************************************************************************//**
+ * Progress of the forced session.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_status(void)
+{
+  if (!cmd_session_forced) {
+    return SL_STATUS_INVALID_STATE;
+  }
+  if (xbee_cmd_mode_is_ready()) {
+    return SL_STATUS_OK;
+  }
+  if (xbee_cmd_mode_get_state() == XBEE_CMD_STATE_IDLE) {
+    // Entry gave up: the module never answered the escape sequence. The force
+    // is dropped so the caller is not left talking into nothing.
+    cmd_session_forced = false;
+    return SL_STATUS_TIMEOUT;
+  }
+
+  return SL_STATUS_IN_PROGRESS;
+}
+
+/***************************************************************************//**
+ * Close the forced session.
+ ******************************************************************************/
+sl_status_t xbee_cmd_session_close(void)
+{
+  sl_status_t status;
+
+  if (!cmd_session_forced) {
+    return SL_STATUS_INVALID_STATE;
+  }
+  if (user_req != NULL) {
+    return SL_STATUS_BUSY;
+  }
+  if (!xbee_cmd_mode_is_ready()) {
+    // Nothing to close cleanly: entry never finished, or the module's own
+    // timeout already closed it.
+    cmd_session_forced = false;
+    return SL_STATUS_OK;
+  }
+
+  // The transport's own exit is used rather than an ordinary CN request: it
+  // moves the transport out of the session state, which a command sent through
+  // the generic path would not do, leaving the transport believing a closed
+  // session was still open. Leaving Command mode also applies whatever the
+  // session staged (manual lines 3101 to 3110), so this is the apply step.
+  status = xbee_cmd_mode_exit(NULL);
+  if (status == SL_STATUS_OK) {
+  }
+
+  return status;
+}
+
+/***************************************************************************//**
+ * Report whether a forced session is open or being opened.
+ ******************************************************************************/
+bool xbee_cmd_session_is_open(void)
+{
+  return cmd_session_forced;
 }
 
 /***************************************************************************//**

@@ -359,7 +359,13 @@ typedef struct {
   uint8_t  max_len;        ///< Value width in bytes, or maximum characters.
   uint32_t min;            ///< Smallest permitted value, integer types only.
   uint32_t max;            ///< Largest permitted value, integer types only.
-  uint32_t default_value;  ///< Factory default, unless XBEE_AT_FLAG_NO_DEFAULT.
+  /// Factory default, unless XBEE_AT_FLAG_NO_DEFAULT.
+  ///
+  /// 64 bits wide because IA defaults to 0xFFFFFFFFFFFFFFFF (manual line 6803),
+  /// which a 32-bit field would silently truncate. For a string parameter this
+  /// holds the single default character, and for a byte parameter the default
+  /// is all zero bytes.
+  uint64_t default_value;
 #if XBEE_AT_TABLE_NAMES
   const char *name;        ///< Human-readable name.
 #endif
@@ -455,5 +461,62 @@ sl_status_t xbee_at_table_validate_set(uint16_t id,
  *         command returns false.
  ******************************************************************************/
 bool xbee_at_table_is_remotable(uint16_t id);
+
+/***************************************************************************//**
+ * Report whether a command belongs in a stored configuration.
+ *
+ * True for a command that holds a writable value the module keeps, and whose
+ * factory default the manual states. That excludes commands that only execute
+ * (AC, WR, ND), text subcommands (FS, PY), values that can only be read
+ * (SH, VR, %V), counters that do not survive a reset (EA, EC) and anything
+ * marked as having no meaningful default (IO, CB).
+ *
+ * @param[in] entry Table entry, may be NULL.
+ *
+ * @return true when the command can be provisioned.
+ ******************************************************************************/
+bool xbee_at_table_is_provisionable(const xbee_at_entry_t *entry);
+
+/***************************************************************************//**
+ * Report whether a value is the command's factory default.
+ *
+ * An integer is decoded big-endian and compared numerically, so a value the
+ * module reports without its leading zero bytes still matches. A string matches
+ * when it is the single default character. A byte parameter matches when every
+ * byte is zero, or when it is empty.
+ *
+ * @param[in] entry Table entry, may be NULL.
+ * @param[in] value Value bytes, may be NULL when len is 0.
+ * @param[in] len   Value length.
+ *
+ * @return true when the value equals the documented default. False when the
+ *         entry is NULL or has no documented default.
+ ******************************************************************************/
+bool xbee_at_table_is_default(const xbee_at_entry_t *entry,
+                              const uint8_t *value,
+                              uint16_t len);
+
+/***************************************************************************//**
+ * Compare two values of the same command.
+ *
+ * Integers compare numerically, which matters because Command mode prints a
+ * parameter as hexadecimal without leading zeros, so a two-byte parameter read
+ * back as one byte still equals the two-byte value that was written. Strings
+ * and byte parameters compare exactly.
+ *
+ * @param[in] entry Table entry, may be NULL.
+ * @param[in] a     First value, may be NULL when alen is 0.
+ * @param[in] alen  Length of the first value.
+ * @param[in] b     Second value, may be NULL when blen is 0.
+ * @param[in] blen  Length of the second value.
+ *
+ * @return true when the two describe the same parameter value. False when the
+ *         entry is NULL.
+ ******************************************************************************/
+bool xbee_at_table_values_equal(const xbee_at_entry_t *entry,
+                                const uint8_t *a,
+                                uint16_t alen,
+                                const uint8_t *b,
+                                uint16_t blen);
 
 #endif  // XBEE_AT_TABLE_H

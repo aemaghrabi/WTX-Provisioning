@@ -12,10 +12,12 @@
 /// Longest reply line the transport will assemble, in characters.
 ///
 /// Node Discover prints one short field per line and Version Long prints a few
-/// lines of build information (manual lines 5006 to 5027 and 6963 to 6968), so
-/// this is comfortably above anything the module emits.
+/// lines of build information (manual lines 5006 to 5027 and 6963 to 6968).
+/// The longest single line the module can emit is a read of the File System
+/// Public Key FK, 65 bytes printed as 130 hexadecimal characters (manual lines
+/// 5896 to 5916), so the buffer is sized above that.
 #ifndef XBEE_CMD_MODE_LINE_MAX
-#define XBEE_CMD_MODE_LINE_MAX  128U
+#define XBEE_CMD_MODE_LINE_MAX  160U
 #endif
 
 /// Longest command the transport will build, in characters.

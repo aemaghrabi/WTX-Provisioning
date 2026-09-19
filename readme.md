@@ -16,7 +16,10 @@ The provisioning firmware is responsible for:
 2. **Read and record IDs** -- read device identifiers (for example the XBee 64-bit serial number,
    `SH`/`SL`, and the EFM32 unique ID) and report them to production tooling. Exact list: **TBD**.
 3. **XBee radio configuration** -- put the XBee 3 802.15.4 module into the configuration the main
-   firmware expects, using AT commands, and persist it on the module (`WR`). Parameter set: **TBD**.
+   firmware expects, using AT commands, and persist it on the module (`WR`). Implemented, not yet
+   run on hardware; the parameter set is `src/app/inc/xbee_provision_config.h`, which covers every
+   parameter the module stores and ships holding the factory defaults. See
+   [XBee radio configuration](#xbee-radio-configuration).
 4. **Write MCU NVM data** -- store provisioning data on the EFM32 that the main firmware reads at
    runtime. Data content and storage layout: **TBD**.
 5. **Report the result** -- over a UART log to a PC and via the debugger (RTT). Details: **TBD**.
@@ -76,10 +79,38 @@ Reporting over RTT is not configured yet: **TBD**.
   - `src/services/`: `xbee_frame` codec for all 26 documented API frames with a streaming
     parser, `xbee_at_table` describing all 147 AT commands, `xbee_api` and `xbee_cmd_mode`
     transports, and `xbee`, the facade that hides which mode the module is in
-  - `src/app/`: `xbee_bringup`, which powers the module, detects its mode and logs what it found
+  - `src/app/`: `xbee_bringup`, which powers the module, detects its mode and logs what it found,
+    and `xbee_provision`, which configures the module from a header
+    (see `docs/plan/2026-09-19-xbee-provision-app.md`)
 
 The same application calls work whether the module is in Transparent mode, API mode 1 or API
 mode 2. The facade detects which, on its own, at start-up.
+
+### XBee radio configuration
+
+`src/app/inc/xbee_provision_config.h` holds the configuration the module is provisioned to: one
+macro per parameter the module stores, 108 in all, each preloaded with the manual's factory
+default. Edit the values there; nothing else needs to change.
+
+At boot the provisioning application reads the module's configuration and compares it. If
+everything matches it stops without writing, so a board that has already been provisioned does not
+spend one of the module's 10 000 flash cycles. Otherwise it restores the module's defaults, writes
+only the parameters the header sets away from the default, commits them with a single `WR`, resets
+the module and reads everything back to confirm.
+
+The whole sequence runs inside one Command mode session. Parameters set in Command mode are staged
+until the session ends, so even changes that would otherwise break the serial link, such as `AP` or
+`BD`, can be written safely and applied together at the reset.
+
+Which application runs is chosen by `XBEE_APP` in `cmake_gcc/CMakeLists.txt`:
+`XBEE_APP_PROVISION` (the default) or `XBEE_APP_BRINGUP`, which only detects and reports, writing
+nothing to the module.
+
+The configured values are checked against the AT command table by the host test
+`test_xbee_provision_table`, which also prints exactly which parameters a run would write. A value
+outside the documented range, or a string too long for its command, fails the build rather than the
+board. The UART settings are additionally checked against the generated `XBEE` instance
+configuration at compile time.
 
 Planned features will need additional components (for example NVM storage and RTT). These are
 added only through Simplicity Studio and will be specified in the relevant plan under

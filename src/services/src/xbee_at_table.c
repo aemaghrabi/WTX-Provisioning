@@ -15,6 +15,8 @@
  * lookup constant.
  ******************************************************************************/
 
+#include <string.h>
+
 #include "byte_util.h"
 #include "xbee_at_table.h"
 
@@ -238,8 +240,9 @@ static const xbee_at_entry_t at_table[] = {
   E(XBEE_AT_IO, XBEE_AT_CAT_IO_SAMPLING, BMAP, NODEF, 1, 0U, 0xFFU, 0U, "Digital Output Level"),
 
   // I/O line passing commands, manual lines 6785 to 6925.
-  // All ones disables I/O line passing.
-  E(XBEE_AT_IA, XBEE_AT_CAT_IO_LINE_PASSING, U64, 0, 8, 0U, 0xFFFFFFFFU, 0xFFFFFFFFU, "I/O Input Address"),
+  // All ones disables I/O line passing, which is the factory default
+  // (manual line 6803). The default needs all 64 bits.
+  E(XBEE_AT_IA, XBEE_AT_CAT_IO_LINE_PASSING, U64, 0, 8, 0U, 0xFFFFFFFFU, 0xFFFFFFFFFFFFFFFFULL, "I/O Input Address"),
   E(XBEE_AT_IU, XBEE_AT_CAT_IO_LINE_PASSING, U8,  0, 1, 0U, 1U, 1U, "I/O Output Enable"),
   E(XBEE_AT_T0, XBEE_AT_CAT_IO_LINE_PASSING, U8,  0, 1, 0U, 0xFFU, 0U, "D0 Output Timeout"),
   E(XBEE_AT_T1, XBEE_AT_CAT_IO_LINE_PASSING, U8,  0, 1, 0U, 0xFFU, 0U, "D1 Output Timeout"),
@@ -463,4 +466,134 @@ bool xbee_at_table_is_remotable(uint16_t id)
 
   return ((entry->flags & (XBEE_AT_FLAG_LOCAL_ONLY
                            | XBEE_AT_FLAG_CMD_MODE_ONLY)) == 0U);
+}
+
+/***************************************************************************//**
+ * Report whether a value type is an integer the module stores big-endian.
+ ******************************************************************************/
+static bool type_is_numeric(uint8_t type)
+{
+  return ((type == XBEE_AT_TYPE_U8)
+          || (type == XBEE_AT_TYPE_U16)
+          || (type == XBEE_AT_TYPE_U32)
+          || (type == XBEE_AT_TYPE_U64)
+          || (type == XBEE_AT_TYPE_BITMAP));
+}
+
+/***************************************************************************//**
+ * Report whether a command belongs in a stored configuration.
+ ******************************************************************************/
+bool xbee_at_table_is_provisionable(const xbee_at_entry_t *entry)
+{
+  if (entry == NULL) {
+    return false;
+  }
+
+  // A command that only executes or takes a text subcommand holds no value to
+  // provision.
+  if ((entry->type == XBEE_AT_TYPE_EXEC)
+      || (entry->type == XBEE_AT_TYPE_SUBCOMMAND)) {
+    return false;
+  }
+
+  // Read-only values are reported by the module, never set. Volatile ones do
+  // not survive a reset, so writing them to flash is meaningless. Without a
+  // documented default there is nothing to compare a configured value against.
+  if ((entry->flags & (XBEE_AT_FLAG_READ_ONLY
+                       | XBEE_AT_FLAG_VOLATILE
+                       | XBEE_AT_FLAG_NO_DEFAULT)) != 0U) {
+    return false;
+  }
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Report whether a value is the command's factory default.
+ ******************************************************************************/
+bool xbee_at_table_is_default(const xbee_at_entry_t *entry,
+                              const uint8_t *value,
+                              uint16_t len)
+{
+  if ((entry == NULL) || ((value == NULL) && (len > 0U))) {
+    return false;
+  }
+  if ((entry->flags & XBEE_AT_FLAG_NO_DEFAULT) != 0U) {
+    return false;
+  }
+
+  if (type_is_numeric(entry->type)) {
+    uint64_t scalar = 0U;
+
+    if (byte_util_be_to_u64(value, len, &scalar) != SL_STATUS_OK) {
+      return false;
+    }
+
+    return (scalar == entry->default_value);
+  }
+
+  if (entry->type == XBEE_AT_TYPE_STRING) {
+    // Every string parameter in the table defaults to one character, an ASCII
+    // space (manual lines 4968 to 4970 for NI, and the same for BI, LX, LY, LZ).
+    return ((len == 1U) && ((uint64_t)value[0] == entry->default_value));
+  }
+
+  if (entry->type == XBEE_AT_TYPE_BYTES) {
+    uint16_t i;
+
+    // A byte parameter defaults to all zeros, which for KY, the verifiers and
+    // the file system key means "not set".
+    for (i = 0U; i < len; i++) {
+      if (value[i] != 0U) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+/***************************************************************************//**
+ * Compare two values of the same command.
+ ******************************************************************************/
+bool xbee_at_table_values_equal(const xbee_at_entry_t *entry,
+                                const uint8_t *a,
+                                uint16_t alen,
+                                const uint8_t *b,
+                                uint16_t blen)
+{
+  if (entry == NULL) {
+    return false;
+  }
+  if (((a == NULL) && (alen > 0U)) || ((b == NULL) && (blen > 0U))) {
+    return false;
+  }
+
+  if (type_is_numeric(entry->type)) {
+    uint64_t left = 0U;
+    uint64_t right = 0U;
+
+    // Compared as numbers, not as bytes: Command mode prints a parameter as
+    // hexadecimal with no leading zeros, so a two-byte parameter can come back
+    // in one byte and still hold the value that was written.
+    if (byte_util_be_to_u64(a, alen, &left) != SL_STATUS_OK) {
+      return false;
+    }
+    if (byte_util_be_to_u64(b, blen, &right) != SL_STATUS_OK) {
+      return false;
+    }
+
+    return (left == right);
+  }
+
+  if (alen != blen) {
+    return false;
+  }
+  if (alen == 0U) {
+    return true;
+  }
+
+  return (memcmp(a, b, (size_t)alen) == 0);
 }

@@ -56,6 +56,12 @@ static const char *test_current = "";
 /// Assert that a condition holds.
 #define TEST_ASSERT(cond)  TEST_CHECK_((cond), "%s", #cond)
 
+/// Fail unconditionally with a printf-style explanation.
+///
+/// For a check inside a loop, where naming what failed is far more useful than
+/// the condition that detected it.
+#define TEST_FAIL(...)  TEST_CHECK_(0, __VA_ARGS__)
+
 /// Assert that two unsigned values are equal.
 #define TEST_ASSERT_EQ_UINT(actual, expected)                          \
   do {                                                                 \

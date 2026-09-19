@@ -17,13 +17,35 @@
 
 #include "app.h"
 #include "xbee_bringup.h"
+#include "xbee_provision.h"
+
+/// Configure the XBee module from xbee_provision_config.h, then verify it.
+#define XBEE_APP_PROVISION  1
+
+/// Only detect the module and report what it is, changing nothing.
+#define XBEE_APP_BRINGUP    2
+
+/// Which application runs.
+///
+/// Set it in the "Add additional macros here" section of
+/// cmake_gcc/CMakeLists.txt. Bring-up is the diagnostic build: it is useful
+/// when a board will not talk at all, because it writes nothing to the module.
+#ifndef XBEE_APP
+#define XBEE_APP  XBEE_APP_PROVISION
+#endif
 
 /***************************************************************************//**
  * Initialize application.
  ******************************************************************************/
 void app_init(void)
 {
+#if XBEE_APP == XBEE_APP_PROVISION
+  (void)xbee_provision_init();
+#elif XBEE_APP == XBEE_APP_BRINGUP
   (void)xbee_bringup_init();
+#else
+#error "XBEE_APP must be XBEE_APP_PROVISION or XBEE_APP_BRINGUP."
+#endif
 }
 
 /***************************************************************************//**
@@ -34,5 +56,9 @@ void app_init(void)
  ******************************************************************************/
 void app_process_action(void)
 {
+#if XBEE_APP == XBEE_APP_PROVISION
+  xbee_provision_process();
+#else
   xbee_bringup_process();
+#endif
 }

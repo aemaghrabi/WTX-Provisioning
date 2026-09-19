@@ -3,11 +3,19 @@
  * @brief Unit tests for the xbee_at_table command table.
  ******************************************************************************/
 
+#include <string.h>
+
 #include "test_util.h"
 #include "xbee_at_table.h"
 
 /// Commands the manual documents, counted across its 24 categories.
 #define EXPECTED_COMMAND_COUNT  147U
+
+/// Commands that hold a writable, stored value with a documented default.
+///
+/// This is the set the provisioning configuration header must cover, so it is
+/// pinned here as well as in test_xbee_provision_table.c.
+#define EXPECTED_PROVISIONABLE_COUNT  108U
 
 /***************************************************************************//**
  * The table holds every documented command, and no identifier repeats.
@@ -158,6 +166,13 @@ static void test_known_entries(void)
   TEST_ASSERT(e != NULL);
   TEST_ASSERT_EQ_UINT(e->max_len, 65U);
   TEST_ASSERT((e->flags & XBEE_AT_FLAG_LOCAL_ONLY) != 0U);
+
+  // IA disables I/O line passing with all 64 bits set (lines 6795 to 6803).
+  // The default needs the full width, which a 32-bit field would truncate.
+  e = xbee_at_table_find(XBEE_AT_IA);
+  TEST_ASSERT(e != NULL);
+  TEST_ASSERT_EQ_UINT(e->max_len, 8U);
+  TEST_ASSERT(e->default_value == 0xFFFFFFFFFFFFFFFFULL);
 
   // A command that is not in the manual is not in the table.
   TEST_ASSERT(xbee_at_table_find(XBEE_AT_ID('Z', 'Z')) == NULL);
@@ -367,6 +382,140 @@ static void test_id_helpers(void)
 }
 
 /***************************************************************************//**
+ * Commands that belong in a stored configuration are recognised as such.
+ ******************************************************************************/
+static void test_provisionable(void)
+{
+  uint16_t count = 0U;
+  uint16_t i;
+
+  // Commands that hold a writable, stored value with a documented default.
+  const uint16_t provisionable[] = {
+    XBEE_AT_CH, XBEE_AT_ID_, XBEE_AT_NI, XBEE_AT_MY, XBEE_AT_EE, XBEE_AT_KY,
+    XBEE_AT_AP, XBEE_AT_AO, XBEE_AT_BD, XBEE_AT_CC, XBEE_AT_IA, XBEE_AT_FK,
+    XBEE_AT_SM, XBEE_AT_D8, XBEE_AT_D9, XBEE_AT_LX,
+  };
+  // Read-only values, executable commands, text subcommands, counters that do
+  // not survive a reset, and commands the manual gives no default for.
+  const uint16_t not_provisionable[] = {
+    XBEE_AT_SH, XBEE_AT_SL, XBEE_AT_VR, XBEE_AT_HV, XBEE_AT_NP,  // read only
+    XBEE_AT_WR, XBEE_AT_AC, XBEE_AT_RE, XBEE_AT_FR, XBEE_AT_CN,  // executable
+    XBEE_AT_FS, XBEE_AT_PY,                                      // subcommands
+    XBEE_AT_EA, XBEE_AT_EC,                                      // volatile
+    XBEE_AT_IO, XBEE_AT_CB,                                      // no default
+  };
+
+  for (i = 0U; i < (uint16_t)(sizeof(provisionable) / sizeof(provisionable[0])); i++) {
+    TEST_ASSERT(xbee_at_table_is_provisionable(xbee_at_table_find(provisionable[i])));
+  }
+  for (i = 0U; i < (uint16_t)(sizeof(not_provisionable) / sizeof(not_provisionable[0])); i++) {
+    TEST_ASSERT(!xbee_at_table_is_provisionable(xbee_at_table_find(not_provisionable[i])));
+  }
+
+  TEST_ASSERT(!xbee_at_table_is_provisionable(NULL));
+
+  // The provisionable set is a fixed part of the configuration header, so its
+  // size is pinned here: a table change that alters it must be deliberate.
+  for (i = 0U; i < xbee_at_table_count(); i++) {
+    if (xbee_at_table_is_provisionable(xbee_at_table_at(i))) {
+      count++;
+    }
+  }
+  TEST_ASSERT_EQ_UINT(count, EXPECTED_PROVISIONABLE_COUNT);
+}
+
+/***************************************************************************//**
+ * Factory defaults are recognised across the value types.
+ ******************************************************************************/
+static void test_is_default(void)
+{
+  const xbee_at_entry_t *e;
+  const uint8_t zeros[16] = { 0U };
+  const uint8_t ones[16] = { 0xFFU };
+  uint8_t buf[8];
+
+  // An integer compared numerically: CH defaults to 0x0C.
+  e = xbee_at_table_find(XBEE_AT_CH);
+  buf[0] = 0x0CU;
+  TEST_ASSERT(xbee_at_table_is_default(e, buf, 1U));
+  buf[0] = 0x0DU;
+  TEST_ASSERT(!xbee_at_table_is_default(e, buf, 1U));
+
+  // A wider integer still matches when the leading zero byte is omitted, which
+  // is how Command mode prints it. ID defaults to 0x3332.
+  e = xbee_at_table_find(XBEE_AT_ID_);
+  buf[0] = 0x33U;
+  buf[1] = 0x32U;
+  TEST_ASSERT(xbee_at_table_is_default(e, buf, 2U));
+
+  // AO defaults to 2, and a one-byte read matches the stored default.
+  e = xbee_at_table_find(XBEE_AT_AO);
+  buf[0] = 2U;
+  TEST_ASSERT(xbee_at_table_is_default(e, buf, 1U));
+
+  // The 64-bit default that motivated widening the field.
+  e = xbee_at_table_find(XBEE_AT_IA);
+  (void)memset(buf, 0xFF, sizeof(buf));
+  TEST_ASSERT(xbee_at_table_is_default(e, buf, 8U));
+  buf[7] = 0xFEU;
+  TEST_ASSERT(!xbee_at_table_is_default(e, buf, 8U));
+
+  // A string parameter defaults to a single space.
+  e = xbee_at_table_find(XBEE_AT_NI);
+  TEST_ASSERT(xbee_at_table_is_default(e, (const uint8_t *)" ", 1U));
+  TEST_ASSERT(!xbee_at_table_is_default(e, (const uint8_t *)"node", 4U));
+  TEST_ASSERT(!xbee_at_table_is_default(e, (const uint8_t *)"", 0U));
+
+  // A byte parameter defaults to all zeros: no key set.
+  e = xbee_at_table_find(XBEE_AT_KY);
+  TEST_ASSERT(xbee_at_table_is_default(e, zeros, 16U));
+  TEST_ASSERT(xbee_at_table_is_default(e, NULL, 0U));
+  TEST_ASSERT(!xbee_at_table_is_default(e, ones, 16U));
+
+  // Without a documented default there is nothing to compare against.
+  TEST_ASSERT(!xbee_at_table_is_default(xbee_at_table_find(XBEE_AT_IO), zeros, 1U));
+  TEST_ASSERT(!xbee_at_table_is_default(NULL, zeros, 1U));
+}
+
+/***************************************************************************//**
+ * Values compare numerically for integers and exactly for everything else.
+ ******************************************************************************/
+static void test_values_equal(void)
+{
+  const xbee_at_entry_t *e;
+  const uint8_t padded[2] = { 0x00U, 0x2BU };
+  const uint8_t bare[1] = { 0x2BU };
+  const uint8_t other[1] = { 0x2CU };
+
+  // The case this exists for: Command mode prints a parameter without leading
+  // zeros, so a two-byte value read back in one byte is still the same value.
+  e = xbee_at_table_find(XBEE_AT_CT);
+  TEST_ASSERT(xbee_at_table_values_equal(e, padded, 2U, bare, 1U));
+  TEST_ASSERT(xbee_at_table_values_equal(e, bare, 1U, padded, 2U));
+  TEST_ASSERT(!xbee_at_table_values_equal(e, padded, 2U, other, 1U));
+
+  // An omitted value reads as zero.
+  e = xbee_at_table_find(XBEE_AT_MY);
+  TEST_ASSERT(xbee_at_table_values_equal(e, NULL, 0U, (const uint8_t *)"\0", 1U));
+
+  // Strings compare exactly, including length.
+  e = xbee_at_table_find(XBEE_AT_NI);
+  TEST_ASSERT(xbee_at_table_values_equal(e, (const uint8_t *)"node", 4U,
+                                         (const uint8_t *)"node", 4U));
+  TEST_ASSERT(!xbee_at_table_values_equal(e, (const uint8_t *)"node", 4U,
+                                          (const uint8_t *)"nodes", 5U));
+  TEST_ASSERT(!xbee_at_table_values_equal(e, (const uint8_t *)"node", 4U,
+                                          (const uint8_t *)"Node", 4U));
+
+  // Byte parameters compare exactly too.
+  e = xbee_at_table_find(XBEE_AT_KY);
+  TEST_ASSERT(xbee_at_table_values_equal(e, bare, 1U, bare, 1U));
+  TEST_ASSERT(!xbee_at_table_values_equal(e, bare, 1U, padded, 2U));
+
+  TEST_ASSERT(!xbee_at_table_values_equal(NULL, bare, 1U, bare, 1U));
+}
+
+/***************************************************************************//**
  * Entry point.
  ******************************************************************************/
 int main(void)
@@ -378,6 +527,9 @@ int main(void)
   TEST_RUN(test_validate_get);
   TEST_RUN(test_validate_set);
   TEST_RUN(test_id_helpers);
+  TEST_RUN(test_provisionable);
+  TEST_RUN(test_is_default);
+  TEST_RUN(test_values_equal);
 
   return TEST_SUMMARY();
 }

@@ -15,6 +15,8 @@ include(xbee_provision.cmake)
 add_executable(xbee_provision
     # Add additional sources here
     ../src/app/src/xbee_bringup.c
+    ../src/app/src/xbee_provision.c
+    ../src/app/src/xbee_provision_table.c
     ../src/utils/src/app_log.c
     ../src/utils/src/byte_util.c
     ../src/utils/src/ring_buffer.c
@@ -46,6 +48,16 @@ target_include_directories(slc PUBLIC
 
 target_compile_definitions(xbee_provision PUBLIC
     # Add additional macros here
+    # Which application runs. XBEE_APP_BRINGUP only detects the module and
+    # reports what it is, writing nothing, which is the build to use when a
+    # board will not talk at all.
+    XBEE_APP=XBEE_APP_PROVISION
+)
+
+# app.c is compiled in the generated slc OBJECT library, which does not inherit
+# the definitions above, so the application selection is given to it as well.
+target_compile_definitions(slc PUBLIC
+    XBEE_APP=XBEE_APP_PROVISION
 )
 
 target_compile_options(xbee_provision PUBLIC

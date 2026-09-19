@@ -71,6 +71,17 @@ add_module_test(test_xbee_at_table
     "${PROJECT_ROOT}/src/services/src/xbee_at_table.c"
     "${PROJECT_ROOT}/src/utils/src/byte_util.c")
 
+# The provisioning configuration is checked against the command table, so a
+# value the module would reject fails here rather than on the board.
+add_module_test(test_xbee_provision_table
+    "${PROJECT_ROOT}/src/app/src/xbee_provision_table.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_at_table.c"
+    "${PROJECT_ROOT}/src/utils/src/byte_util.c")
+target_include_directories(test_xbee_provision_table PRIVATE
+    "${PROJECT_ROOT}/src/app/inc"
+    "${PROJECT_ROOT}/src/app/src"
+)
+
 # The transports need a clock and a serial link. fake_platform.c stands in for
 # the sleeptimer and for src/drivers/src/xbee_uart.c, so the request tracking
 # and the Command mode state machine can be driven deterministically.
