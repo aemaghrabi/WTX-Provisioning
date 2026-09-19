@@ -14,6 +14,9 @@ include(xbee_provision.cmake)
 
 add_executable(xbee_provision
     # Add additional sources here
+    ../src/app/src/cli.c
+    ../src/app/src/cli_show.c
+    ../src/app/src/cli_value.c
     ../src/app/src/xbee_bringup.c
     ../src/app/src/xbee_dump.c
     ../src/app/src/xbee_dump_format.c
@@ -21,11 +24,14 @@ add_executable(xbee_provision
     ../src/app/src/xbee_provision_table.c
     ../src/utils/src/app_log.c
     ../src/utils/src/byte_util.c
+    ../src/utils/src/line_edit.c
     ../src/utils/src/ring_buffer.c
+    ../src/drivers/src/console_uart.c
     ../src/drivers/src/xbee_power.c
     ../src/drivers/src/xbee_reset.c
     ../src/drivers/src/xbee_sleep.c
     ../src/drivers/src/xbee_uart.c
+    ../src/services/src/cli_parser.c
     ../src/services/src/xbee.c
     ../src/services/src/xbee_api.c
     ../src/services/src/xbee_at_table.c
@@ -58,7 +64,7 @@ target_compile_definitions(xbee_provision PUBLIC
     # Change it in BOTH this block and the slc one below: app.c is compiled in
     # the generated slc library and does not inherit these definitions, so
     # changing one alone selects one application's init and another's process.
-    XBEE_APP=XBEE_APP_PROVISION
+    XBEE_APP=XBEE_APP_CLI
 
     # Compile the human-readable AT command names, which the parameter dump
     # prints beside each command.
@@ -75,7 +81,7 @@ target_compile_definitions(xbee_provision PUBLIC
 # app.c is compiled in the generated slc OBJECT library, which does not inherit
 # the definitions above, so the application selection is given to it as well.
 target_compile_definitions(slc PUBLIC
-    XBEE_APP=XBEE_APP_PROVISION
+    XBEE_APP=XBEE_APP_CLI
     XBEE_AT_TABLE_NAMES=1
 )
 

@@ -64,6 +64,24 @@ endfunction()
 
 add_module_test(test_ring_buffer "${PROJECT_ROOT}/src/utils/src/ring_buffer.c")
 add_module_test(test_byte_util "${PROJECT_ROOT}/src/utils/src/byte_util.c")
+add_module_test(test_line_edit "${PROJECT_ROOT}/src/utils/src/line_edit.c")
+
+# The console's grammar. The tree in the test mirrors the real one closely
+# enough to cover keywords, arguments, mode filtering and every diagnostic.
+add_module_test(test_cli_parser "${PROJECT_ROOT}/src/services/src/cli_parser.c")
+
+# What the console makes of a value the operator typed. Checked against real
+# command table entries, so the widths and ranges are the firmware's own.
+# XBEE_AT_TABLE_NAMES changes the layout of xbee_at_entry_t, so it has to match
+# the firmware here too.
+add_module_test(test_cli_value
+    "${PROJECT_ROOT}/src/app/src/cli_value.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_at_table.c"
+    "${PROJECT_ROOT}/src/utils/src/byte_util.c")
+target_include_directories(test_cli_value PRIVATE
+    "${PROJECT_ROOT}/src/app/src"
+)
+target_compile_definitions(test_cli_value PRIVATE XBEE_AT_TABLE_NAMES=1)
 add_module_test(test_xbee_frame
     "${PROJECT_ROOT}/src/services/src/xbee_frame.c"
     "${PROJECT_ROOT}/src/utils/src/byte_util.c")
