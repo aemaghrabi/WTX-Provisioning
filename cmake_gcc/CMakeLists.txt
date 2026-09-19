@@ -15,6 +15,8 @@ include(xbee_provision.cmake)
 add_executable(xbee_provision
     # Add additional sources here
     ../src/app/src/xbee_bringup.c
+    ../src/app/src/xbee_dump.c
+    ../src/app/src/xbee_dump_format.c
     ../src/app/src/xbee_provision.c
     ../src/app/src/xbee_provision_table.c
     ../src/utils/src/app_log.c
@@ -50,14 +52,31 @@ target_compile_definitions(xbee_provision PUBLIC
     # Add additional macros here
     # Which application runs. XBEE_APP_BRINGUP only detects the module and
     # reports what it is, writing nothing, which is the build to use when a
-    # board will not talk at all.
+    # board will not talk at all. XBEE_APP_DUMP additionally reads and logs
+    # every readable AT parameter, and also writes nothing.
+    #
+    # Change it in BOTH this block and the slc one below: app.c is compiled in
+    # the generated slc library and does not inherit these definitions, so
+    # changing one alone selects one application's init and another's process.
     XBEE_APP=XBEE_APP_PROVISION
+
+    # Compile the human-readable AT command names, which the parameter dump
+    # prints beside each command.
+    #
+    # This is given to every target on purpose. The macro does not only add
+    # strings: the name member of xbee_at_entry_t is declared inside its #if, so
+    # two translation units built with different values of it disagree about the
+    # size of that struct, and a table entry read across that boundary is
+    # silently misinterpreted. There is no warning for it, so the only safe
+    # setting is one setting.
+    XBEE_AT_TABLE_NAMES=1
 )
 
 # app.c is compiled in the generated slc OBJECT library, which does not inherit
 # the definitions above, so the application selection is given to it as well.
 target_compile_definitions(slc PUBLIC
     XBEE_APP=XBEE_APP_PROVISION
+    XBEE_AT_TABLE_NAMES=1
 )
 
 target_compile_options(xbee_provision PUBLIC

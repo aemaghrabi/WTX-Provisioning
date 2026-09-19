@@ -82,6 +82,18 @@ target_include_directories(test_xbee_provision_table PRIVATE
     "${PROJECT_ROOT}/src/app/src"
 )
 
+# What the parameter dump asks the module for, and how it prints the answer.
+# XBEE_AT_TABLE_NAMES changes the layout of xbee_at_entry_t, so every source in
+# this executable has to be given the same value as the firmware uses.
+add_module_test(test_xbee_dump_format
+    "${PROJECT_ROOT}/src/app/src/xbee_dump_format.c"
+    "${PROJECT_ROOT}/src/services/src/xbee_at_table.c"
+    "${PROJECT_ROOT}/src/utils/src/byte_util.c")
+target_include_directories(test_xbee_dump_format PRIVATE
+    "${PROJECT_ROOT}/src/app/inc"
+)
+target_compile_definitions(test_xbee_dump_format PRIVATE XBEE_AT_TABLE_NAMES=1)
+
 # The transports need a clock and a serial link. fake_platform.c stands in for
 # the sleeptimer and for src/drivers/src/xbee_uart.c, so the request tracking
 # and the Command mode state machine can be driven deterministically.
