@@ -27,9 +27,13 @@
 
 /// Which application runs.
 ///
-/// Set it in the "Add additional macros here" section of
-/// cmake_gcc/CMakeLists.txt. Bring-up is the diagnostic build: it is useful
-/// when a board will not talk at all, because it writes nothing to the module.
+/// Set by XBEE_APP_SELECT in cmake_gcc/CMakeLists.txt, which the "provision"
+/// preset and -DXBEE_APP_SELECT=<value> drive. The unselected application is
+/// not compiled into the image, so a wrong value here is a compile error
+/// below, not an undefined reference at link time.
+///
+/// Bring-up is the diagnostic build: it is useful when a board will not talk
+/// at all, because it writes nothing to the module.
 #ifndef XBEE_APP
 #define XBEE_APP  XBEE_APP_PROVISION
 #endif
@@ -58,7 +62,9 @@ void app_process_action(void)
 {
 #if XBEE_APP == XBEE_APP_PROVISION
   xbee_provision_process();
-#else
+#elif XBEE_APP == XBEE_APP_BRINGUP
   xbee_bringup_process();
+#else
+#error "XBEE_APP must be XBEE_APP_PROVISION or XBEE_APP_BRINGUP."
 #endif
 }

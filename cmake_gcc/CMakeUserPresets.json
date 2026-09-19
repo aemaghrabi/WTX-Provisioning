@@ -1,0 +1,40 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "provision",
+      "displayName": "Configure xbee_provision, provisioning application only",
+      "description": "Standalone provisioning firmware with logs. Inherits the generated project preset, so the generator, the toolchain file and CMAKE_CONFIGURATION_TYPES come from CMakePresets.json and are not restated here. Builds into build-provision/ so the default build/ tree is untouched.",
+      "inherits": "project",
+      "binaryDir": "${sourceDir}/build-provision",
+      "cacheVariables": {
+        "XBEE_APP_SELECT": "PROVISION",
+        "XBEE_LOG_LEVEL": "INFO"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "provision",
+      "displayName": "Build xbee_provision, provisioning application only",
+      "configurePreset": "provision",
+      "configuration": "base",
+      "targets": ["xbee_provision"]
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "provision",
+      "displayName": "Configure and build the standalone provisioning firmware",
+      "steps": [
+        {"type": "configure", "name": "provision"},
+        {"type": "build", "name": "provision"}
+      ]
+    }
+  ]
+}
