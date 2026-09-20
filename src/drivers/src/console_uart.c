@@ -34,11 +34,15 @@
 
 #include "sl_iostream.h"
 #include "sl_iostream_init_eusart_instances.h"
+#include "sl_iostream_uart.h"
 
 #include "console_uart.h"
 
 /// The stream the terminal is on, once init has found it.
 static sl_iostream_t *console_stream;
+
+/// True while the link carries a byte stream rather than console output.
+static bool binary_mode;
 
 /***************************************************************************//**
  * Push buffered output out, mapping the libc result onto a status.
@@ -55,6 +59,7 @@ sl_status_t console_uart_init(void)
   }
 
   console_stream = sl_iostream_VCOM_handle;
+  binary_mode = false;
 
   return SL_STATUS_OK;
 }
@@ -151,4 +156,48 @@ sl_status_t console_uart_flush(void)
   }
 
   return flush_output();
+}
+
+sl_status_t console_uart_set_binary(bool binary)
+{
+  sl_status_t status = SL_STATUS_OK;
+
+  if (console_stream == NULL) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+
+  if (binary) {
+    // Anything a console write left in the libc buffer belongs to the console,
+    // not to the stream that is about to start. Push it out before the change.
+    // Its result is reported but not acted on: the mode change itself cannot
+    // fail, and refusing it because of a stale flush would leave the caller in
+    // a state where every raw write is rejected and nothing says why.
+    status = flush_output();
+  }
+
+  sl_iostream_uart_set_auto_cr_lf(sl_iostream_uart_VCOM_handle, !binary);
+  binary_mode = binary;
+
+  return status;
+}
+
+sl_status_t console_uart_write_raw(const uint8_t *data, uint16_t len)
+{
+  if (len == 0U) {
+    return SL_STATUS_OK;
+  }
+  if (data == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+  if (console_stream == NULL) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+  if (!binary_mode) {
+    // Writing straight to the stream while the console is using stdio would
+    // overtake whatever is sitting in the libc buffer, so it is refused rather
+    // than allowed to reorder output.
+    return SL_STATUS_INVALID_STATE;
+  }
+
+  return sl_iostream_write(console_stream, data, (size_t)len);
 }

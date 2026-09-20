@@ -17,6 +17,7 @@
 
 #include "app.h"
 #include "cli.h"
+#include "xbee_bridge.h"
 #include "xbee_bringup.h"
 #include "xbee_dump.h"
 #include "xbee_provision.h"
@@ -33,6 +34,9 @@
 /// Serve an interactive console on VCOM, with Cisco-style commands.
 #define XBEE_APP_CLI        4
 
+/// Forward bytes between VCOM and the module, interpreting nothing.
+#define XBEE_APP_BRIDGE     5
+
 /// Which application runs.
 ///
 /// Set it in the "Add additional macros here" section of
@@ -42,7 +46,10 @@
 /// a board will not talk at all, because it writes nothing to the module. Dump
 /// reports the module's whole configuration and also writes nothing. The
 /// console is the interactive build: it reads and writes parameters on demand
-/// over VCOM, so it needs no rebuild to change one.
+/// over VCOM, so it needs no rebuild to change one. The bridge is the build
+/// that gets out of the way entirely, so that a tool such as XCTU can reach
+/// the module through this board as if it were wired to it; the console build
+/// reaches the same bridge from its "bridge" command.
 #ifndef XBEE_APP
 #define XBEE_APP  XBEE_APP_CLI
 #endif
@@ -60,8 +67,10 @@ void app_init(void)
   (void)xbee_dump_init();
 #elif XBEE_APP == XBEE_APP_CLI
   (void)cli_init();
+#elif XBEE_APP == XBEE_APP_BRIDGE
+  (void)xbee_bridge_init();
 #else
-#error "XBEE_APP must be XBEE_APP_PROVISION, XBEE_APP_BRINGUP, XBEE_APP_DUMP or XBEE_APP_CLI."
+#error "XBEE_APP must be XBEE_APP_PROVISION, XBEE_APP_BRINGUP, XBEE_APP_DUMP, XBEE_APP_CLI or XBEE_APP_BRIDGE."
 #endif
 }
 
@@ -81,7 +90,9 @@ void app_process_action(void)
   xbee_dump_process();
 #elif XBEE_APP == XBEE_APP_CLI
   cli_process();
+#elif XBEE_APP == XBEE_APP_BRIDGE
+  xbee_bridge_process();
 #else
-#error "XBEE_APP must be XBEE_APP_PROVISION, XBEE_APP_BRINGUP, XBEE_APP_DUMP or XBEE_APP_CLI."
+#error "XBEE_APP must be XBEE_APP_PROVISION, XBEE_APP_BRINGUP, XBEE_APP_DUMP, XBEE_APP_CLI or XBEE_APP_BRIDGE."
 #endif
 }

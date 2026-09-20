@@ -17,6 +17,8 @@ add_executable(xbee_provision
     ../src/app/src/cli.c
     ../src/app/src/cli_show.c
     ../src/app/src/cli_value.c
+    ../src/app/src/xbee_bridge.c
+    ../src/app/src/xbee_bridge_escape.c
     ../src/app/src/xbee_bringup.c
     ../src/app/src/xbee_dump.c
     ../src/app/src/xbee_dump_format.c
@@ -59,7 +61,11 @@ target_compile_definitions(xbee_provision PUBLIC
     # Which application runs. XBEE_APP_BRINGUP only detects the module and
     # reports what it is, writing nothing, which is the build to use when a
     # board will not talk at all. XBEE_APP_DUMP additionally reads and logs
-    # every readable AT parameter, and also writes nothing.
+    # every readable AT parameter, and also writes nothing. XBEE_APP_BRIDGE
+    # forwards bytes between VCOM and the module and interprets none of them,
+    # so a tool such as XCTU can reach the module through this board; the
+    # console build reaches the same bridge from its "bridge" command, so this
+    # value is for the case where the console must not be in the way at all.
     #
     # Change it in BOTH this block and the slc one below: app.c is compiled in
     # the generated slc library and does not inherit these definitions, so

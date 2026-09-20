@@ -35,6 +35,7 @@
 #include "cli_config.h"
 #include "cli_show.h"
 #include "cli_value.h"
+#include "xbee_bridge.h"
 
 /// @name Console modes, used as the parser's visibility mask
 /// @{
@@ -81,6 +82,7 @@ enum {
   CMD_LOG_NONE,
   CMD_XBEE_AT_SET,
   CMD_NO_XBEE_AT,
+  CMD_BRIDGE,
 };
 /// @}
 
@@ -93,6 +95,7 @@ typedef enum {
   CLI_STATE_SET,       ///< One write in flight.
   CLI_STATE_EXEC,      ///< One action in flight, such as WR.
   CLI_STATE_WALK,      ///< "show xbee all" is running.
+  CLI_STATE_BRIDGE,    ///< The bridge owns the link; the console is not here.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -180,6 +183,8 @@ static const cli_node_t no_children[] = {
 };
 
 static const cli_node_t root[] = {
+  { "bridge", "Connect this terminal straight to the XBee module",
+    CLI_NODE_KEYWORD, M_PRIV, CMD_BRIDGE, NULL, 0U },
   { "configure", "Enter configuration mode", CLI_NODE_KEYWORD,
     M_PRIV, CLI_CMD_NONE, configure_children, 1U },
   { "disable", "Leave privileged commands", CLI_NODE_KEYWORD,
@@ -704,6 +709,74 @@ static void leave_config(void)
 }
 
 /***************************************************************************//**
+ * Hand the link to the transparent bridge.
+ *
+ * @return true when the bridge took it, so the prompt waits for the escape
+ *         sequence instead of being printed now.
+ ******************************************************************************/
+static bool cmd_bridge(void)
+{
+  static const xbee_bridge_params_t bridge_params = {
+    .allow_escape = true,
+    .quiesce_facade = true,
+    // The facade already has the receive operations queued. Re-arming them
+    // would abort the ones it is waiting on.
+    .own_transport = false,
+  };
+  sl_status_t status;
+
+  status = xbee_bridge_enter(&bridge_params);
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not start the bridge, status 0x%04X\n",
+                              (unsigned)status);
+    return false;
+  }
+
+  (void)console_uart_puts("Bridging this terminal to the XBee module. "
+                          "Everything you send now reaches it\n"
+                          "unchanged, \"+++\" included.\n");
+  // Control characters are 0x40 below the letter that names them, so the key
+  // the operator has to press comes out of the configured character itself.
+  (void)console_uart_printf("To come back: pause, press Ctrl-%c %u times, "
+                            "then pause again.\n\n",
+                            (char)('@' + (int)XBEE_BRIDGE_ESCAPE_CHAR),
+                            (unsigned)XBEE_BRIDGE_ESCAPE_COUNT);
+
+  state = CLI_STATE_BRIDGE;
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Take the link back from the bridge and report what it carried.
+ ******************************************************************************/
+static void finish_bridge(void)
+{
+  xbee_bridge_stats_t bridge_stats;
+
+  (void)xbee_bridge_leave();
+
+  (void)console_uart_puts("\nBridge closed.\n");
+
+  if (xbee_bridge_get_stats(&bridge_stats) == SL_STATUS_OK) {
+    (void)console_uart_printf("%u bytes sent, %u received, %u dropped, "
+                              "%u overruns\n",
+                              (unsigned)bridge_stats.to_module_bytes,
+                              (unsigned)bridge_stats.to_terminal_bytes,
+                              (unsigned)bridge_stats.dropped_bytes,
+                              (unsigned)bridge_stats.rx_overruns);
+  }
+
+  // Whatever was on the other end had the module to itself and may have
+  // changed its serial mode, so what the console knows about it is no longer
+  // something it can vouch for.
+  (void)console_uart_puts("% The module may have been reconfigured. Use "
+                          "\"reload\" to detect it again.\n");
+
+  back_to_prompt();
+}
+
+/***************************************************************************//**
  * Carry out a matched command.
  *
  * @return true when a request was started, so the prompt must wait for it.
@@ -800,6 +873,10 @@ static bool execute(const cli_parse_result_t *result)
 
     case CMD_NO_XBEE_AT:
       started = cmd_set_at(result->args[0], NULL);
+      break;
+
+    case CMD_BRIDGE:
+      started = cmd_bridge();
       break;
 
     default:
@@ -1167,6 +1244,20 @@ sl_status_t cli_init(void)
 
 void cli_process(void)
 {
+  if (state == CLI_STATE_BRIDGE) {
+    // Nothing else runs while the bridge holds the link. The facade is not
+    // driven, because it and the bridge would drain the same receive ring, and
+    // the terminal is not read here, because every byte on it belongs to the
+    // module now.
+    xbee_bridge_process();
+
+    if (!xbee_bridge_is_active()) {
+      finish_bridge();
+    }
+
+    return;
+  }
+
   // The facade first: it owns the transports, and everything below depends on
   // it having been given a chance to move.
   (void)xbee_process();

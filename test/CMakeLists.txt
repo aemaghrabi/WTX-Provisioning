@@ -82,6 +82,16 @@ target_include_directories(test_cli_value PRIVATE
     "${PROJECT_ROOT}/src/app/src"
 )
 target_compile_definitions(test_cli_value PRIVATE XBEE_AT_TABLE_NAMES=1)
+# The one part of the transparent bridge that is not transparent. Time is a
+# parameter of the detector, so every guard window boundary is reachable here
+# rather than only on a board with a stopwatch.
+add_module_test(test_xbee_bridge_escape
+    "${PROJECT_ROOT}/src/app/src/xbee_bridge_escape.c")
+target_include_directories(test_xbee_bridge_escape PRIVATE
+    "${PROJECT_ROOT}/src/app/inc"
+    "${PROJECT_ROOT}/src/app/src"
+)
+
 add_module_test(test_xbee_frame
     "${PROJECT_ROOT}/src/services/src/xbee_frame.c"
     "${PROJECT_ROOT}/src/utils/src/byte_util.c")
