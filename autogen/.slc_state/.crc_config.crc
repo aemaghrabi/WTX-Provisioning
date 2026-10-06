@@ -1,11 +1,13 @@
 #CRC Codes for initially generated config files -- do not modify!
 dmadrv_config.h=281221886
+nvm3_default_config.h=44458093
 sl_clock_manager_oscillator_config.h=1724090676
 sl_clock_manager_tree_config.h=-1947482905
 sl_core_config.h=-2018153270
 sl_device_init_dcdc_config.h=-1223674373
 sl_device_init_emu_config.h=1238190016
 sl_iostream_eusart_VCOM_config.h=76757802
+sl_memory_manager_config.h=1702148085
 sl_memory_manager_region_config.h=990835082
 sl_sleeptimer_config.h=847044378
 sl_uartdrv_eusart_XBEE_config.h=455560558

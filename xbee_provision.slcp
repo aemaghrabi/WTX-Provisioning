@@ -31,6 +31,8 @@ component:
 - instance: [VCOM]
   id: iostream_eusart
 - {id: iostream_retarget_stdio}
+- {id: nvm3_default}
+- {id: nvm3_default_config}
 - {id: sl_main}
 - instance: [XBEE]
   id: uartdrv_eusart

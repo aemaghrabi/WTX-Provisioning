@@ -5,6 +5,7 @@
 #include "sl_iostream_init_eusart_instances.h"
 #include "sl_uartdrv_instances.h"
 #include "sl_iostream_init_instances.h"
+#include "nvm3_default.h"
 #include "sl_iostream_handles.h"
 
 void sli_driver_permanent_allocation(void)
@@ -26,6 +27,7 @@ void sli_internal_permanent_allocation(void)
 void sl_platform_init(void)
 {
   sl_clock_manager_runtime_init();
+  nvm3_initDefault();
 }
 
 void sli_internal_init_early(void)
