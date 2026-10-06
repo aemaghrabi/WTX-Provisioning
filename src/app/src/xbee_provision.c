@@ -99,6 +99,14 @@ _Static_assert(XBEE_PROV_SB == 0U,
 #define XBEE_PROV_CLOSE_TIMEOUT_MS  15000U
 #endif
 
+/// Most configuration table entries a run can track audit mismatches for.
+///
+/// The table has 108 entries today. A larger table stops the run at the start
+/// rather than going untracked.
+#ifndef XBEE_PROV_MAX_PARAMS
+#define XBEE_PROV_MAX_PARAMS  128U
+#endif
+
 /// Bytes of a parameter value written to the log before it is abbreviated.
 #define LOG_VALUE_MAX_BYTES  16U
 
@@ -159,6 +167,29 @@ static uint16_t table_count;
 
 /// Tick by which the session must have closed.
 static uint32_t close_deadline_tick;
+
+/// True when this module started the facade and must drive it.
+///
+/// False when a host, such as the console, already runs the facade and calls
+/// xbee_process() itself: a second call on the same pass would drain the
+/// receive path twice.
+static bool own_facade;
+
+/// One bit per configuration table index: set when the audit found the module's
+/// value different from the configured one.
+///
+/// The write pass skips a parameter whose configured value is the factory
+/// default in the command table, because the restore has just set it. That is
+/// only right if the table's default is the module's. A parameter the audit saw
+/// differ is written regardless, so a wrong table default costs one redundant
+/// write instead of a failed verification.
+static uint8_t audit_mismatch[(XBEE_PROV_MAX_PARAMS + 7U) / 8U];
+
+/// True once the operator has asked the run to stop before anything is written.
+///
+/// Honoured only at points where no request is in flight, because an
+/// outstanding request has handed the transport a pointer to @ref req.
+static bool abort_requested;
 
 /***************************************************************************//**
  * Report whether a deadline has been reached, tolerating tick counter wrap.
@@ -305,6 +336,23 @@ static void start_commit(void)
 }
 
 /***************************************************************************//**
+ * Record that the audit found table entry @p index different.
+ ******************************************************************************/
+static void mark_mismatch(uint16_t index)
+{
+  // prepare_run() has checked that every index fits.
+  audit_mismatch[index / 8U] |= (uint8_t)(1U << (index % 8U));
+}
+
+/***************************************************************************//**
+ * Report whether the audit found table entry @p index different.
+ ******************************************************************************/
+static bool is_mismatch(uint16_t index)
+{
+  return ((audit_mismatch[index / 8U] & (uint8_t)(1U << (index % 8U))) != 0U);
+}
+
+/***************************************************************************//**
  * Report whether a command's value can be read back from the module.
  ******************************************************************************/
 static bool is_readable(uint16_t command)
@@ -368,8 +416,11 @@ static bool start_next_write(uint16_t from)
     sl_status_t status;
 
     // The module has just been restored, so anything left at its default is
-    // already correct and writing it would only cost time.
-    if (xbee_at_table_is_default(entry, table[i].value, table[i].len)) {
+    // already correct and writing it would only cost time. Unless the audit
+    // saw it differ: then the table's idea of the default may not be the
+    // module's, and only a write makes sure.
+    if (xbee_at_table_is_default(entry, table[i].value, table[i].len)
+        && !is_mismatch(i)) {
       continue;
     }
 
@@ -464,6 +515,9 @@ static void handle_read_result(void)
   } else if (!xbee_at_table_values_equal(entry, req.value, req.value_len,
                                          table[table_index].value, table[table_index].len)) {
     mismatch_count++;
+    if (!verifying) {
+      mark_mismatch(table_index);
+    }
     if (verifying) {
       APP_LOG_ERROR("%s reads back as %s, expected %s", name,
                     value_text(actual, req.value, req.value_len),
@@ -476,6 +530,12 @@ static void handle_read_result(void)
                  value_text(wanted, table[table_index].value, table[table_index].len));
   } else {
     // Matches.
+  }
+
+  if (abort_requested && !verifying) {
+    APP_LOG_WARNING("aborted by the operator during the audit");
+    close_session(XBEE_PROV_RESULT_ABORTED);
+    return;
   }
 
   if (start_next_read((uint16_t)(table_index + 1U))) {
@@ -605,6 +665,47 @@ static void report_module(void)
 }
 
 /***************************************************************************//**
+ * Load the configuration and reset everything a run keeps.
+ *
+ * Shared by both entry points, so a hosted run starts from exactly the state a
+ * run at boot does.
+ *
+ * @return SL_STATUS_OK, or SL_STATUS_INVALID_STATE if the table is empty, in
+ *         which case the run has already been stopped.
+ ******************************************************************************/
+static sl_status_t prepare_run(void)
+{
+  table = xbee_provision_table_get(&table_count);
+  if ((table == NULL) || (table_count == 0U)) {
+    APP_LOG_ERROR("the configuration table is empty");
+    finish(XBEE_PROV_RESULT_FAIL_BRINGUP);
+    return SL_STATUS_INVALID_STATE;
+  }
+  if (table_count > XBEE_PROV_MAX_PARAMS) {
+    APP_LOG_ERROR("the configuration table has %u entries, more than the %u "
+                  "XBEE_PROV_MAX_PARAMS allows",
+                  (unsigned)table_count, (unsigned)XBEE_PROV_MAX_PARAMS);
+    finish(XBEE_PROV_RESULT_FAIL_BRINGUP);
+    return SL_STATUS_WOULD_OVERFLOW;
+  }
+
+  (void)memset(audit_mismatch, 0, sizeof(audit_mismatch));
+  result = XBEE_PROV_RESULT_RUNNING;
+  pending_result = XBEE_PROV_RESULT_RUNNING;
+  req_active = false;
+  verifying = false;
+  restore_fell_back = false;
+  abort_requested = false;
+  written_count = 0U;
+  table_index = 0U;
+
+  APP_LOG_INFO("provisioning %u parameters from the configuration header",
+               (unsigned)table_count);
+
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
  * Start provisioning.
  ******************************************************************************/
 sl_status_t xbee_provision_init(void)
@@ -617,23 +718,12 @@ sl_status_t xbee_provision_init(void)
   };
   sl_status_t status;
 
-  table = xbee_provision_table_get(&table_count);
-  if ((table == NULL) || (table_count == 0U)) {
-    APP_LOG_ERROR("the configuration table is empty");
-    finish(XBEE_PROV_RESULT_FAIL_BRINGUP);
-    return SL_STATUS_INVALID_STATE;
+  own_facade = true;
+
+  status = prepare_run();
+  if (status != SL_STATUS_OK) {
+    return status;
   }
-
-  result = XBEE_PROV_RESULT_RUNNING;
-  pending_result = XBEE_PROV_RESULT_RUNNING;
-  req_active = false;
-  verifying = false;
-  restore_fell_back = false;
-  written_count = 0U;
-  table_index = 0U;
-
-  APP_LOG_INFO("provisioning %u parameters from the configuration header",
-               (unsigned)table_count);
 
   status = xbee_init(&config);
   if (status != SL_STATUS_OK) {
@@ -647,6 +737,50 @@ sl_status_t xbee_provision_init(void)
 }
 
 /***************************************************************************//**
+ * Start provisioning on a facade the caller already runs.
+ ******************************************************************************/
+sl_status_t xbee_provision_start(void)
+{
+  sl_status_t status;
+
+  if ((state != PROV_IDLE) && (state != PROV_DONE)) {
+    return SL_STATUS_INVALID_STATE;
+  }
+  if (!xbee_is_ready()) {
+    return SL_STATUS_NOT_READY;
+  }
+
+  own_facade = false;
+
+  status = prepare_run();
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  // The facade is already ready, so the first pass goes straight on to
+  // opening the session.
+  state = PROV_BRINGUP;
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Ask the run to stop before anything is written.
+ ******************************************************************************/
+sl_status_t xbee_provision_abort(void)
+{
+  if (verifying
+      || ((state != PROV_BRINGUP) && (state != PROV_OPEN)
+          && (state != PROV_AUDIT))) {
+    // The restore has started, or the run is not in a phase that can stop
+    // without leaving the module half configured.
+    return SL_STATUS_INVALID_STATE;
+  }
+
+  abort_requested = true;
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
  * Advance the sequence.
  ******************************************************************************/
 void xbee_provision_process(void)
@@ -655,7 +789,9 @@ void xbee_provision_process(void)
     return;
   }
 
-  (void)xbee_process();
+  if (own_facade) {
+    (void)xbee_process();
+  }
 
   if (req_active) {
     process_request();
@@ -664,6 +800,11 @@ void xbee_provision_process(void)
 
   switch (state) {
     case PROV_BRINGUP:
+      if (abort_requested && !verifying) {
+        APP_LOG_WARNING("aborted by the operator before the session opened");
+        finish(XBEE_PROV_RESULT_ABORTED);
+        return;
+      }
       if (xbee_get_state() == XBEE_STATE_FAILED) {
         APP_LOG_ERROR("module did not answer, status 0x%04X",
                       (unsigned)xbee_get_result());
@@ -712,6 +853,11 @@ void xbee_provision_process(void)
       }
 
       APP_LOG_INFO("Command mode session open");
+      if (abort_requested) {
+        APP_LOG_WARNING("aborted by the operator before the audit");
+        close_session(XBEE_PROV_RESULT_ABORTED);
+        return;
+      }
       start_read_pass();
       break;
     }
@@ -826,6 +972,9 @@ const char *xbee_provision_result_str(xbee_prov_result_t outcome)
       break;
     case XBEE_PROV_RESULT_FAIL_VERIFY:
       text = "a parameter did not read back as written";
+      break;
+    case XBEE_PROV_RESULT_ABORTED:
+      text = "aborted by the operator, nothing written";
       break;
     default:
       text = "unknown";

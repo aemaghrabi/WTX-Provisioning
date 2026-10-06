@@ -94,7 +94,8 @@ static void report_success(void)
   APP_LOG_INFO("max payload %u bytes, output options %u",
                (unsigned)info.np, (unsigned)info.ao);
   // The module ships with AO set to 2, which emits the legacy receive frames
-  // rather than the modern ones.
+  // rather than the modern ones. Provisioning sets it to 0 by default, so 2
+  // here means the module has not been provisioned with that configuration.
   if (info.ao == 2U) {
     APP_LOG_WARNING("output options 2: legacy receive frames are in use");
   }

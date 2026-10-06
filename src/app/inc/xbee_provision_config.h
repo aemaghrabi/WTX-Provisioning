@@ -256,9 +256,11 @@
 #define XBEE_PROV_PL  4U
 #endif
 
-/// CCA Threshold (CA). Range 0 to 0x64. Default 0x41.
+/// CCA Threshold (CA), in -dBm. 0 disables CCA, otherwise 0x28 to 0x64.
+/// Default 0x32 (-50 dBm), as the module reads after a restore; the manual's
+/// command reference says 0x41, its CCA section 0x32.
 #ifndef XBEE_PROV_CA
-#define XBEE_PROV_CA  0x41U
+#define XBEE_PROV_CA  0x32U
 #endif
 
 /// Random Delay Slots (RN). Range 0 to 5. Default 0.
@@ -389,8 +391,15 @@
 #endif
 
 /// API Output Options (AO). Range 0 to 2. Default 2.
+///
+/// 0, the manual's recommendation for new designs, emits received data as the
+/// Receive Packet 0x90 and I/O samples as 0x92, and allows all 15 I/O lines to
+/// be sampled (manual lines 6019 to 6022). 1 emits the Explicit Receive
+/// Indicator 0x91. 2 emits the legacy 0x80/0x81 and 0x82/0x83 frames and is
+/// only needed in a network mixed with S1 or S2C devices (manual lines 3435 to
+/// 3436). The transmit frame type is not affected: the host chooses it.
 #ifndef XBEE_PROV_AO
-#define XBEE_PROV_AO  2U
+#define XBEE_PROV_AO  0U
 #endif
 
 /// Extended API Options (AZ). Range 0 to 0x0A. Default 0.

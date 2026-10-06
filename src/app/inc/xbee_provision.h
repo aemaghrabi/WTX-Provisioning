@@ -17,10 +17,19 @@
  *
  * Both calls return quickly; the sequence is a state machine.
  *
+ * Standalone, at boot, the module starts the facade and drives it:
+ *
  * @code
  * void app_init(void)           { (void)xbee_provision_init(); }
  * void app_process_action(void) { xbee_provision_process(); }
  * @endcode
+ *
+ * Hosted, for example by the console's "xbee provision all", the host already
+ * runs the facade and keeps calling xbee_process() itself. It starts a run with
+ * xbee_provision_start() once the module is ready, calls
+ * xbee_provision_process() on every pass until xbee_provision_is_finished(),
+ * and issues no request of its own in between. xbee_provision_abort() stops a
+ * hosted or standalone run, but only before anything has been written.
  *
  * @note One write to flash per provisioning run, and none at all when the
  *       module already matches. The module's flash supports 10 000 erase and
@@ -47,6 +56,7 @@ typedef enum {
   XBEE_PROV_RESULT_FAIL_COMMIT,          ///< The write to flash failed.
   XBEE_PROV_RESULT_FAIL_RESET,           ///< The module did not come back as configured.
   XBEE_PROV_RESULT_FAIL_VERIFY,          ///< A parameter did not read back as written.
+  XBEE_PROV_RESULT_ABORTED,              ///< Stopped by the operator before anything was written.
 } xbee_prov_result_t;
 
 /***************************************************************************//**
@@ -56,6 +66,36 @@ typedef enum {
  *         prevented it. The failure is logged either way.
  ******************************************************************************/
 sl_status_t xbee_provision_init(void);
+
+/***************************************************************************//**
+ * Start provisioning on a facade the caller already runs.
+ *
+ * Does not call xbee_init(), and xbee_provision_process() then leaves
+ * xbee_process() to the caller. The module must be ready. A run may be started
+ * again once the previous one has finished.
+ *
+ * @return SL_STATUS_OK once the sequence has started,
+ *         SL_STATUS_INVALID_STATE if a run is in progress or the configuration
+ *         table is empty,
+ *         SL_STATUS_NOT_READY if the module is not ready,
+ *         SL_STATUS_WOULD_OVERFLOW if the configuration table has more entries
+ *         than XBEE_PROV_MAX_PARAMS.
+ ******************************************************************************/
+sl_status_t xbee_provision_start(void);
+
+/***************************************************************************//**
+ * Ask the run to stop before anything is written to the module.
+ *
+ * Accepted only while the module is being found, the session opened or the
+ * configuration read. The run does not stop on the spot: a read in flight is
+ * seen through, then the session is closed and the run finishes with
+ * XBEE_PROV_RESULT_ABORTED.
+ *
+ * @return SL_STATUS_OK if the request was accepted,
+ *         SL_STATUS_INVALID_STATE once the restore has started, during the
+ *         verification pass, or when no run is in progress.
+ ******************************************************************************/
+sl_status_t xbee_provision_abort(void);
 
 /***************************************************************************//**
  * Advance the sequence. Call once per super-loop iteration.

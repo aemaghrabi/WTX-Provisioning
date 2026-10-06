@@ -14,6 +14,8 @@
  * Only one request is outstanding at a time, which is what the facade requires.
  * The walk behind "show xbee all" owns its own request while it runs, and the
  * console starts none of its own until the walk reports that it has finished.
+ * "xbee provision all" works the same way: the provisioning engine owns the
+ * facade's one request until it reports that the run has finished.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -36,6 +38,7 @@
 #include "cli_show.h"
 #include "cli_value.h"
 #include "xbee_bridge.h"
+#include "xbee_provision.h"
 
 /// @name Console modes, used as the parser's visibility mask
 /// @{
@@ -83,6 +86,7 @@ enum {
   CMD_XBEE_AT_SET,
   CMD_NO_XBEE_AT,
   CMD_BRIDGE,
+  CMD_XBEE_PROVISION_ALL,
 };
 /// @}
 
@@ -96,6 +100,8 @@ typedef enum {
   CLI_STATE_EXEC,      ///< One action in flight, such as WR.
   CLI_STATE_WALK,      ///< "show xbee all" is running.
   CLI_STATE_BRIDGE,    ///< The bridge owns the link; the console is not here.
+  CLI_STATE_CONFIRM,   ///< At the "[confirm]" prompt before provisioning.
+  CLI_STATE_PROVISION, ///< "xbee provision all" is running.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -162,9 +168,16 @@ static const cli_node_t conf_at_name[] = {
     M_CONF, CLI_CMD_NONE, conf_at_value, 1U },
 };
 
+static const cli_node_t conf_provision_children[] = {
+  { "all", "Every parameter in the provisioning configuration",
+    CLI_NODE_KEYWORD, M_CONF, CMD_XBEE_PROVISION_ALL, NULL, 0U },
+};
+
 static const cli_node_t conf_xbee_children[] = {
   { "at", "Set an AT parameter", CLI_NODE_KEYWORD,
     M_CONF, CLI_CMD_NONE, conf_at_name, 1U },
+  { "provision", "Apply the built-in provisioning configuration",
+    CLI_NODE_KEYWORD, M_CONF, CLI_CMD_NONE, conf_provision_children, 1U },
 };
 
 static const cli_node_t no_at_name[] = {
@@ -206,7 +219,7 @@ static const cli_node_t root[] = {
   { "write", "Save the running configuration", CLI_NODE_KEYWORD,
     M_PRIV, CLI_CMD_NONE, write_children, 1U },
   { "xbee", "XBee module configuration", CLI_NODE_KEYWORD,
-    M_CONF, CLI_CMD_NONE, conf_xbee_children, 1U },
+    M_CONF, CLI_CMD_NONE, conf_xbee_children, 2U },
 };
 
 /// Number of top-level commands.
@@ -262,6 +275,16 @@ static uint32_t password_deadline;
 /// True once a parameter has been written and not yet saved with WR.
 static bool config_dirty;
 
+/// Tick by which the provisioning confirmation must have been answered.
+static uint32_t confirm_deadline;
+
+/// Log level in force before provisioning raised it, restored afterwards.
+static app_log_level_t saved_log_level;
+
+/// True once the operator has been told this run can no longer be stopped,
+/// so that repeated Ctrl-C does not repeat it.
+static bool provision_abort_refused;
+
 // ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
@@ -296,7 +319,8 @@ static bool is_busy(void)
   return ((state == CLI_STATE_GET)
           || (state == CLI_STATE_SET)
           || (state == CLI_STATE_EXEC)
-          || (state == CLI_STATE_WALK));
+          || (state == CLI_STATE_WALK)
+          || (state == CLI_STATE_PROVISION));
 }
 
 /***************************************************************************//**
@@ -777,6 +801,138 @@ static void finish_bridge(void)
 }
 
 /***************************************************************************//**
+ * Compare two strings, ignoring the case of ASCII letters.
+ ******************************************************************************/
+static bool equals_ignore_case(const char *a, const char *b)
+{
+  while ((*a != '\0') && (to_upper(*a) == to_upper(*b))) {
+    a++;
+    b++;
+  }
+
+  return (to_upper(*a) == to_upper(*b));
+}
+
+/***************************************************************************//**
+ * Ask before provisioning, which restores, writes flash and resets the module.
+ *
+ * @return true when the confirmation prompt is now waiting for an answer.
+ ******************************************************************************/
+static bool cmd_provision_all(void)
+{
+  if (!xbee_is_ready()) {
+    (void)console_uart_puts("% The module is not ready. Use \"reload\" first.\n");
+    return false;
+  }
+
+  (void)console_uart_puts("Provisioning restores defaults, writes the module's "
+                          "flash and resets it. Proceed? [confirm]");
+  confirm_deadline = deadline_from_ms(CLI_PASSWORD_TIMEOUT_MS);
+  state = CLI_STATE_CONFIRM;
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Put the log level back to what it was before provisioning raised it.
+ ******************************************************************************/
+static void restore_log_level(void)
+{
+  (void)app_log_set_level(saved_log_level);
+}
+
+/***************************************************************************//**
+ * Start the provisioning run the operator has just confirmed.
+ ******************************************************************************/
+static void start_provision(void)
+{
+  sl_status_t status;
+
+  // The engine reports its progress through the log, which the console keeps
+  // quiet by default. Raise it to INFO for the run, but never lower a level the
+  // operator has chosen. If INFO was compiled out the run still goes ahead, and
+  // only the final result is shown.
+  saved_log_level = app_log_get_level();
+  if (saved_log_level > APP_LOG_LEVEL_INFO) {
+    (void)app_log_set_level(APP_LOG_LEVEL_INFO);
+  }
+
+  status = xbee_provision_start();
+  if (status != SL_STATUS_OK) {
+    restore_log_level();
+    (void)console_uart_printf("%% Could not start provisioning, status 0x%04X\n",
+                              (unsigned)status);
+    back_to_prompt();
+    return;
+  }
+
+  provision_abort_refused = false;
+  state = CLI_STATE_PROVISION;
+}
+
+/***************************************************************************//**
+ * Report how the provisioning run ended and return to the prompt.
+ ******************************************************************************/
+static void finish_provision(void)
+{
+  xbee_prov_result_t outcome = xbee_provision_get_result();
+
+  restore_log_level();
+
+  if (xbee_provision_passed()) {
+    // The module's flash now holds the provisioning configuration, so nothing
+    // the console wrote earlier is waiting for a "write memory" any more.
+    config_dirty = false;
+    (void)console_uart_printf("[OK] %s\n", xbee_provision_result_str(outcome));
+  } else {
+    (void)console_uart_printf("%% Provisioning failed: %s\n",
+                              xbee_provision_result_str(outcome));
+  }
+
+  back_to_prompt();
+}
+
+/***************************************************************************//**
+ * Handle Ctrl-C while provisioning runs.
+ ******************************************************************************/
+static void interrupt_provision(void)
+{
+  if (xbee_provision_abort() == SL_STATUS_OK) {
+    (void)console_uart_puts("\n% Stopping after the current read\n");
+    return;
+  }
+
+  if (!provision_abort_refused) {
+    provision_abort_refused = true;
+    (void)console_uart_puts("\n% Provisioning is writing the module and cannot "
+                            "be interrupted\n");
+  }
+}
+
+/***************************************************************************//**
+ * Act on the answer to the provisioning confirmation.
+ *
+ * As in IOS, Enter alone confirms. "y" and "yes" do too; anything else cancels.
+ ******************************************************************************/
+static void handle_confirm(void)
+{
+  const char *answer = line_edit_line(&editor);
+  bool accepted = ((answer[0] == '\0')
+                   || equals_ignore_case(answer, "y")
+                   || equals_ignore_case(answer, "yes"));
+
+  (void)line_edit_reset(&editor);
+
+  if (!accepted) {
+    (void)console_uart_puts("% Cancelled\n");
+    back_to_prompt();
+    return;
+  }
+
+  start_provision();
+}
+
+/***************************************************************************//**
  * Carry out a matched command.
  *
  * @return true when a request was started, so the prompt must wait for it.
@@ -877,6 +1033,10 @@ static bool execute(const cli_parse_result_t *result)
 
     case CMD_BRIDGE:
       started = cmd_bridge();
+      break;
+
+    case CMD_XBEE_PROVISION_ALL:
+      started = cmd_provision_all();
       break;
 
     default:
@@ -995,6 +1155,10 @@ static void feed_byte(char c)
     if (c == CLI_CH_ETX) {
       if (state == CLI_STATE_WALK) {
         cli_show_all_abort();
+      } else if (state == CLI_STATE_PROVISION) {
+        interrupt_provision();
+      } else {
+        // A read or a write in flight; see above.
       }
     }
     return;
@@ -1006,6 +1170,8 @@ static void feed_byte(char c)
     case LINE_EDIT_READY:
       if (state == CLI_STATE_PASSWORD) {
         handle_password();
+      } else if (state == CLI_STATE_CONFIRM) {
+        handle_confirm();
       } else {
         handle_line();
       }
@@ -1018,6 +1184,9 @@ static void feed_byte(char c)
     case LINE_EDIT_ABORT:
       if (state == CLI_STATE_PASSWORD) {
         cancel_password("Cancelled");
+      } else if (state == CLI_STATE_CONFIRM) {
+        (void)console_uart_puts("% Cancelled\n");
+        back_to_prompt();
       } else {
         print_prompt();
       }
@@ -1028,6 +1197,11 @@ static void feed_byte(char c)
       // written now rather than waiting for a terminator that reports nothing.
       (void)console_uart_printf("\n%% Line is longer than %u characters\n",
                                 (unsigned)(CLI_LINE_MAX - 1U));
+      if (state == CLI_STATE_CONFIRM) {
+        // Not a yes, so the provisioning does not run.
+        (void)console_uart_puts("% Cancelled\n");
+        state = CLI_STATE_PROMPT;
+      }
       print_prompt();
       break;
 
@@ -1284,6 +1458,21 @@ void cli_process(void)
     case CLI_STATE_PASSWORD:
       if (tick_reached(password_deadline)) {
         cancel_password("Timed out waiting for the password");
+      }
+      break;
+
+    case CLI_STATE_CONFIRM:
+      if (tick_reached(confirm_deadline)) {
+        (void)console_uart_puts("\n% Timed out waiting for confirmation\n");
+        back_to_prompt();
+      }
+      break;
+
+    case CLI_STATE_PROVISION:
+      // The engine leaves xbee_process() to the call above.
+      xbee_provision_process();
+      if (xbee_provision_is_finished()) {
+        finish_provision();
       }
       break;
 

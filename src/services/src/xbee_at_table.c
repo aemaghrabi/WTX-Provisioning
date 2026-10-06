@@ -117,8 +117,11 @@ static const xbee_at_entry_t at_table[] = {
   E(XBEE_AT_PL, XBEE_AT_CAT_RF, U8, 0, 1, 0U, 4U, 4U, "TX Power Level"),
   E(XBEE_AT_PP, XBEE_AT_CAT_RF, U8, RO | NODEF, 1, 0U, 0xFFU, 0U, "Output Power in dBm"),
   // CA accepts 0 to disable, or 0x28 to 0x64 as a negative dBm threshold, and
-  // only takes effect after WR and a reset.
-  E(XBEE_AT_CA, XBEE_AT_CAT_RF, U8, WRRST, 1, 0U, 0x64U, 0x41U, "CCA Threshold"),
+  // only takes effect after WR and a reset. The manual contradicts itself on
+  // the default: the command reference gives 0x41 (lines 5584 to 5586), the CCA
+  // operations section 0x32, -50 dBm (line 4100). The module in use reads 0x32
+  // straight after a restore, so 0x32 it is.
+  E(XBEE_AT_CA, XBEE_AT_CAT_RF, U8, WRRST, 1, 0U, 0x64U, 0x32U, "CCA Threshold"),
   E(XBEE_AT_RN, XBEE_AT_CAT_RF, U8, 0, 1, 0U, 5U, 0U, "Random Delay Slots"),
 
   // MAC diagnostics commands, manual lines 5601 to 5652.
