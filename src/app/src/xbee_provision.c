@@ -16,6 +16,7 @@
 #include "byte_util.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
+#include "xbee_cmd_mode_config.h"
 #include "xbee_provision_config.h"
 #include "xbee_provision_table.h"
 #include "xbee_provision.h"
@@ -79,12 +80,15 @@ _Static_assert(XBEE_PROV_SB == 0U,
 
 // ---------------------------------------------------------------------------
 
-/// Time allowed for a command that works on flash, in milliseconds.
+/// Time allowed for the write to flash (WR) and for the restore (R1 or RE), in
+/// milliseconds.
 ///
-/// Writing the configuration and restoring defaults both erase and rewrite
-/// flash, which takes far longer than a parameter access. The manual forbids
-/// sending anything to the module before the write answers (lines 7093 to
-/// 7095), so this is generous on purpose.
+/// WR writes the configuration to flash, which takes far longer than a
+/// parameter access, and the manual forbids sending anything to the module
+/// before it answers (lines 7089 to 7095), so this is generous on purpose. The
+/// manual does not say that the restore writes flash, only that it restores
+/// the parameters (lines 7100 to 7106 and 7129 to 7130), and gives no duration
+/// for it, so it is given the same allowance.
 #ifndef XBEE_PROV_FLASH_TIMEOUT_MS
 #define XBEE_PROV_FLASH_TIMEOUT_MS  5000U
 #endif
@@ -107,6 +111,21 @@ _Static_assert(XBEE_PROV_SB == 0U,
 #define XBEE_PROV_MAX_PARAMS  128U
 #endif
 
+/// Most parameters the read-back before saving may find different and still
+/// offer the save.
+///
+/// A parameter saved with a value other than the configured one is verified
+/// against the value that was saved, so that value has to be kept until the
+/// verification pass. More differences than this stop the run without saving,
+/// because what would be saved could not be verified.
+#ifndef XBEE_PROV_MAX_ACCEPTED
+#define XBEE_PROV_MAX_ACCEPTED  8U
+#endif
+
+/// Command mode timeout assumed when bring-up has not reported CT, in
+/// milliseconds. The module's default, 0x64 in units of 100 ms.
+#define DEFAULT_CT_MS  10000U
+
 /// Bytes of a parameter value written to the log before it is abbreviated.
 #define LOG_VALUE_MAX_BYTES  16U
 
@@ -122,6 +141,9 @@ typedef enum {
   PROV_AUDIT,      ///< Reading the module's configuration to compare it.
   PROV_RESTORE,    ///< Restoring the module's defaults.
   PROV_WRITE,      ///< Writing the parameters that deviate from the default.
+  PROV_REVIEW,     ///< Reading every parameter back before the save decision.
+  PROV_AWAIT_DECISION, ///< Waiting for the host to save or discard.
+  PROV_DISCARD,    ///< Resetting the module to drop the unsaved values.
   PROV_COMMIT,     ///< Writing the configuration to flash.
   PROV_CLOSE,      ///< Closing the session.
   PROV_RESET,      ///< Resetting the module so the new configuration applies.
@@ -184,6 +206,45 @@ static bool own_facade;
 /// differ is written regardless, so a wrong table default costs one redundant
 /// write instead of a failed verification.
 static uint8_t audit_mismatch[(XBEE_PROV_MAX_PARAMS + 7U) / 8U];
+
+/// The host's save decision.
+typedef enum {
+  DECISION_NONE,     ///< Not given yet.
+  DECISION_SAVE,     ///< Write to flash.
+  DECISION_DISCARD,  ///< Reset without writing.
+} prov_decision_t;
+
+/// A value the read-back found different and the host chose to save, which the
+/// verification pass then expects instead of the configured one.
+typedef struct {
+  uint16_t index;                    ///< Configuration table index.
+  uint16_t len;                      ///< Value length.
+  uint8_t  value[XBEE_AT_VALUE_MAX]; ///< Value as read back.
+} accepted_value_t;
+
+/// Host to hand the read-back to, or NULL to commit without asking.
+static xbee_prov_review_cb_t review_cb;
+
+/// Parameters the read-back found different.
+static uint16_t review_mismatch_count;
+
+/// True when more parameters differed than @ref accepted can hold.
+static bool review_overflow;
+
+/// Values found different during the read-back, in table order.
+static accepted_value_t accepted[XBEE_PROV_MAX_ACCEPTED];
+
+/// Entries of @ref accepted in use.
+static uint16_t accepted_count;
+
+/// The host's answer, once there is one.
+static prov_decision_t decision;
+
+/// Tick at which the next keep-alive is due while waiting for the decision.
+static uint32_t keepalive_tick;
+
+/// Interval between keep-alives, in milliseconds.
+static uint32_t keepalive_ms;
 
 /// True once the operator has asked the run to stop before anything is written.
 ///
@@ -274,6 +335,9 @@ static void finish(xbee_prov_result_t outcome)
 
   if (xbee_provision_passed()) {
     APP_LOG_INFO("provisioning passed: %s", xbee_provision_result_str(outcome));
+  } else if (outcome == XBEE_PROV_RESULT_DECLINED) {
+    APP_LOG_WARNING("provisioning not saved: %s",
+                    xbee_provision_result_str(outcome));
   } else {
     APP_LOG_ERROR("provisioning failed: %s", xbee_provision_result_str(outcome));
   }
@@ -444,6 +508,243 @@ static bool start_next_write(uint16_t from)
 }
 
 /***************************************************************************//**
+ * Reset the module without writing to flash, then stop with @p outcome.
+ *
+ * The values staged in the session live only in the module's RAM, so the reset
+ * drops them and the module comes back on its stored configuration. The
+ * session is deliberately not closed first: the exit command would apply the
+ * staged values, the serial mode and rate among them (manual lines 7071 to
+ * 7081).
+ ******************************************************************************/
+static void start_discard(xbee_prov_result_t outcome)
+{
+  req_active = false;
+  pending_result = outcome;
+
+  if (xbee_hw_reset() != SL_STATUS_OK) {
+    APP_LOG_ERROR("could not reset the module; it keeps the unsaved values "
+                  "until it is next reset");
+    finish(XBEE_PROV_RESULT_FAIL_RESET);
+    return;
+  }
+
+  APP_LOG_INFO("resetting the module to discard the unsaved values");
+  state = PROV_DISCARD;
+}
+
+/***************************************************************************//**
+ * Find the value the host chose to save for table entry @p index.
+ *
+ * @return The entry, or NULL when the configured value is the one expected.
+ ******************************************************************************/
+static const accepted_value_t *find_accepted(uint16_t index)
+{
+  uint16_t i;
+
+  for (i = 0U; i < accepted_count; i++) {
+    if (accepted[i].index == index) {
+      return &accepted[i];
+    }
+  }
+
+  return NULL;
+}
+
+/***************************************************************************//**
+ * Keep-alive interval: half the time the transport allows a quiet session.
+ *
+ * Any command the module accepts restarts its Command mode timeout (manual
+ * lines 3062 to 3065). Letting it lapse would apply the staged values without
+ * saving them (manual lines 7071 to 7078), so the wait for the decision sends
+ * a harmless read well inside the window.
+ ******************************************************************************/
+static uint32_t keepalive_interval_ms(void)
+{
+  xbee_info_t module;
+  uint32_t window = DEFAULT_CT_MS;
+
+  if ((xbee_get_info(&module) == SL_STATUS_OK) && (module.ct > 0U)) {
+    window = (uint32_t)module.ct * 100U;
+  }
+  if (window > XBEE_CMD_MODE_CT_MARGIN_MS) {
+    window -= XBEE_CMD_MODE_CT_MARGIN_MS;
+  }
+
+  return (window > 1U) ? (window / 2U) : 1U;
+}
+
+/***************************************************************************//**
+ * Begin waiting for the save decision, or stop if one cannot be offered.
+ ******************************************************************************/
+static void enter_decision(void)
+{
+  if (review_overflow) {
+    APP_LOG_ERROR("%u parameters differ, more than the %u XBEE_PROV_MAX_ACCEPTED "
+                  "can verify; not saving",
+                  (unsigned)review_mismatch_count,
+                  (unsigned)XBEE_PROV_MAX_ACCEPTED);
+    start_discard(XBEE_PROV_RESULT_FAIL_REVIEW);
+    return;
+  }
+
+  APP_LOG_INFO("read back, %u parameters differ; waiting for the save decision",
+               (unsigned)review_mismatch_count);
+  decision = DECISION_NONE;
+  keepalive_ms = keepalive_interval_ms();
+  keepalive_tick = deadline_from_ms(keepalive_ms);
+  state = PROV_AWAIT_DECISION;
+}
+
+/***************************************************************************//**
+ * Report table entries from @p from onwards to the host, reading the next one
+ * that can be read.
+ *
+ * @return false only when the table ran out, which is the caller's signal that
+ *         the read-back is complete. True means a read is in flight, or the run
+ *         has already been stopped because one could not be started.
+ ******************************************************************************/
+static bool start_next_review(uint16_t from)
+{
+  uint16_t i;
+
+  for (i = from; i < table_count; i++) {
+    sl_status_t status;
+
+    if (!is_readable(table[i].command)) {
+      review_cb(table[i].command, XBEE_PROV_REVIEW_UNREADABLE, NULL, 0U,
+                table[i].value, table[i].len);
+      continue;
+    }
+
+    status = xbee_at_get(table[i].command, &req);
+    if (status != SL_STATUS_OK) {
+      APP_LOG_ERROR("could not ask for %s, status 0x%04X",
+                    command_name(table[i].command), (unsigned)status);
+      start_discard(XBEE_PROV_RESULT_FAIL_REVIEW);
+      return true;
+    }
+
+    table_index = i;
+    req_active = true;
+    return true;
+  }
+
+  return false;
+}
+
+/***************************************************************************//**
+ * Begin reading everything back before the save decision.
+ ******************************************************************************/
+static void start_review(void)
+{
+  review_mismatch_count = 0U;
+  review_overflow = false;
+  accepted_count = 0U;
+
+  APP_LOG_INFO("reading back %u parameters before saving",
+               (unsigned)table_count);
+
+  state = PROV_REVIEW;
+  if (!start_next_review(0U)) {
+    enter_decision();
+  }
+}
+
+/***************************************************************************//**
+ * Handle one completed read during the read-back before saving.
+ ******************************************************************************/
+static void handle_review_result(void)
+{
+  const xbee_prov_param_t *param = &table[table_index];
+  const xbee_at_entry_t *entry = xbee_at_table_find(param->command);
+
+  if (req.result != SL_STATUS_OK) {
+    APP_LOG_WARNING("could not read %s back, status 0x%04X",
+                    command_name(param->command), (unsigned)req.result);
+    review_cb(param->command, XBEE_PROV_REVIEW_READ_FAILED, NULL, 0U,
+              param->value, param->len);
+  } else if (!xbee_at_table_values_equal(entry, req.value, req.value_len,
+                                         param->value, param->len)) {
+    review_mismatch_count++;
+    if ((accepted_count < XBEE_PROV_MAX_ACCEPTED)
+        && (req.value_len <= sizeof(accepted[0].value))) {
+      accepted[accepted_count].index = table_index;
+      accepted[accepted_count].len = req.value_len;
+      (void)memcpy(accepted[accepted_count].value, req.value, req.value_len);
+      accepted_count++;
+    } else {
+      review_overflow = true;
+    }
+    review_cb(param->command, XBEE_PROV_REVIEW_MISMATCH,
+              req.value, req.value_len, param->value, param->len);
+  } else {
+    review_cb(param->command, XBEE_PROV_REVIEW_MATCH,
+              req.value, req.value_len, param->value, param->len);
+  }
+
+  if (start_next_review((uint16_t)(table_index + 1U))) {
+    return;
+  }
+
+  enter_decision();
+}
+
+/***************************************************************************//**
+ * Move on once every deviating parameter has been written.
+ *
+ * Commits straight away, or first reads everything back for the host when it
+ * asked to review the configuration before it is saved.
+ ******************************************************************************/
+static void writes_done(void)
+{
+  if (review_cb != NULL) {
+    start_review();
+  } else {
+    start_commit();
+  }
+}
+
+/***************************************************************************//**
+ * Wait for the save decision, keeping the session open meanwhile.
+ ******************************************************************************/
+static void process_decision(void)
+{
+  sl_status_t status;
+
+  if (!xbee_cmd_session_is_open()) {
+    // The module's Command mode timeout has lapsed, which applies the staged
+    // values to the running configuration without saving them.
+    APP_LOG_ERROR("Command mode session lapsed before the decision; the module "
+                  "may be running the unsaved values until its next reset");
+    finish(XBEE_PROV_RESULT_FAIL_SESSION);
+    return;
+  }
+
+  if (decision == DECISION_SAVE) {
+    APP_LOG_INFO("saving the configuration to flash");
+    start_commit();
+    return;
+  }
+  if (decision == DECISION_DISCARD) {
+    APP_LOG_WARNING("not saving the configuration");
+    start_discard(XBEE_PROV_RESULT_DECLINED);
+    return;
+  }
+
+  if (!tick_reached(keepalive_tick)) {
+    return;
+  }
+
+  status = xbee_at_get(XBEE_AT_CT, &req);
+  if (status == SL_STATUS_OK) {
+    req_active = true;
+    keepalive_tick = deadline_from_ms(keepalive_ms);
+  }
+  // Otherwise the transport is busy for a moment. Try again on the next pass,
+  // well inside the window that keepalive_ms leaves.
+}
+
+/***************************************************************************//**
  * Begin the restore, or the fallback if the module refused the first choice.
  ******************************************************************************/
 static void start_restore(bool fallback)
@@ -503,8 +804,21 @@ static void handle_read_result(void)
 {
   const xbee_at_entry_t *entry = xbee_at_table_find(table[table_index].command);
   const char *name = command_name(table[table_index].command);
+  const uint8_t *expected = table[table_index].value;
+  uint16_t expected_len = table[table_index].len;
   char actual[VALUE_TEXT_CAP];
   char wanted[VALUE_TEXT_CAP];
+
+  if (verifying) {
+    // A parameter saved with the value the read-back found, at the host's
+    // choice, is expected to have kept that value through the reset.
+    const accepted_value_t *saved = find_accepted(table_index);
+
+    if (saved != NULL) {
+      expected = saved->value;
+      expected_len = saved->len;
+    }
+  }
 
   if (req.result != SL_STATUS_OK) {
     // A parameter this variant does not carry is not a provisioning failure:
@@ -513,7 +827,7 @@ static void handle_read_result(void)
                     (unsigned)req.result);
     unreadable_count++;
   } else if (!xbee_at_table_values_equal(entry, req.value, req.value_len,
-                                         table[table_index].value, table[table_index].len)) {
+                                         expected, expected_len)) {
     mismatch_count++;
     if (!verifying) {
       mark_mismatch(table_index);
@@ -521,7 +835,7 @@ static void handle_read_result(void)
     if (verifying) {
       APP_LOG_ERROR("%s reads back as %s, expected %s", name,
                     value_text(actual, req.value, req.value_len),
-                    value_text(wanted, table[table_index].value, table[table_index].len));
+                    value_text(wanted, expected, expected_len));
       close_session(XBEE_PROV_RESULT_FAIL_VERIFY);
       return;
     }
@@ -549,6 +863,12 @@ static void handle_read_result(void)
   }
 
   if (verifying) {
+    if (accepted_count > 0U) {
+      APP_LOG_WARNING("verified, with %u parameters saved different from the "
+                      "configuration", (unsigned)accepted_count);
+      close_session(XBEE_PROV_RESULT_WRITTEN_WITH_DIFFERENCES);
+      return;
+    }
     APP_LOG_INFO("verified: every readable parameter matches");
     close_session(XBEE_PROV_RESULT_WRITTEN);
     return;
@@ -606,7 +926,7 @@ static void process_request(void)
         // Every configured value is a factory default, so the restore alone has
         // done the job. The commit still runs, to persist the restored state.
         APP_LOG_INFO("no parameter deviates from the default");
-        start_commit();
+        writes_done();
       }
       break;
 
@@ -622,9 +942,21 @@ static void process_request(void)
         written_count++;
         return;
       }
-      APP_LOG_INFO("%u parameters written, committing to flash",
-                   (unsigned)written_count);
-      start_commit();
+      APP_LOG_INFO("%u parameters written", (unsigned)written_count);
+      writes_done();
+      break;
+
+    case PROV_REVIEW:
+      handle_review_result();
+      break;
+
+    case PROV_AWAIT_DECISION:
+      // A keep-alive has completed. A failure is not fatal in itself: if the
+      // session has gone, the next pass finds out.
+      if (req.result != SL_STATUS_OK) {
+        APP_LOG_WARNING("keep-alive read failed, status 0x%04X",
+                        (unsigned)req.result);
+      }
       break;
 
     case PROV_COMMIT:
@@ -696,6 +1028,10 @@ static sl_status_t prepare_run(void)
   verifying = false;
   restore_fell_back = false;
   abort_requested = false;
+  review_mismatch_count = 0U;
+  review_overflow = false;
+  accepted_count = 0U;
+  decision = DECISION_NONE;
   written_count = 0U;
   table_index = 0U;
 
@@ -719,6 +1055,7 @@ sl_status_t xbee_provision_init(void)
   sl_status_t status;
 
   own_facade = true;
+  review_cb = NULL;
 
   status = prepare_run();
   if (status != SL_STATUS_OK) {
@@ -739,7 +1076,7 @@ sl_status_t xbee_provision_init(void)
 /***************************************************************************//**
  * Start provisioning on a facade the caller already runs.
  ******************************************************************************/
-sl_status_t xbee_provision_start(void)
+sl_status_t xbee_provision_start(xbee_prov_review_cb_t review)
 {
   sl_status_t status;
 
@@ -751,6 +1088,7 @@ sl_status_t xbee_provision_start(void)
   }
 
   own_facade = false;
+  review_cb = review;
 
   status = prepare_run();
   if (status != SL_STATUS_OK) {
@@ -768,6 +1106,10 @@ sl_status_t xbee_provision_start(void)
  ******************************************************************************/
 sl_status_t xbee_provision_abort(void)
 {
+  if (state == PROV_AWAIT_DECISION) {
+    return xbee_provision_decide(false);
+  }
+
   if (verifying
       || ((state != PROV_BRINGUP) && (state != PROV_OPEN)
           && (state != PROV_AUDIT))) {
@@ -777,6 +1119,35 @@ sl_status_t xbee_provision_abort(void)
   }
 
   abort_requested = true;
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Report whether the run is waiting for the save decision.
+ ******************************************************************************/
+bool xbee_provision_awaiting_decision(void)
+{
+  return ((state == PROV_AWAIT_DECISION) && (decision == DECISION_NONE));
+}
+
+/***************************************************************************//**
+ * Number of parameters the read-back before saving found different.
+ ******************************************************************************/
+uint16_t xbee_provision_review_mismatches(void)
+{
+  return review_mismatch_count;
+}
+
+/***************************************************************************//**
+ * Save the reviewed configuration to flash, or discard it.
+ ******************************************************************************/
+sl_status_t xbee_provision_decide(bool save)
+{
+  if (!xbee_provision_awaiting_decision()) {
+    return SL_STATUS_INVALID_STATE;
+  }
+
+  decision = save ? DECISION_SAVE : DECISION_DISCARD;
   return SL_STATUS_OK;
 }
 
@@ -897,9 +1268,28 @@ void xbee_provision_process(void)
       state = PROV_BRINGUP;
       break;
 
+    case PROV_AWAIT_DECISION:
+      process_decision();
+      break;
+
+    case PROV_DISCARD:
+      if (xbee_get_state() == XBEE_STATE_FAILED) {
+        APP_LOG_ERROR("module did not come back after the reset, status 0x%04X",
+                      (unsigned)xbee_get_result());
+        finish(XBEE_PROV_RESULT_FAIL_RESET);
+        return;
+      }
+      if (!xbee_is_ready()) {
+        return;
+      }
+      report_module();
+      finish(pending_result);
+      break;
+
     case PROV_AUDIT:
     case PROV_RESTORE:
     case PROV_WRITE:
+    case PROV_REVIEW:
     case PROV_COMMIT:
     case PROV_DONE:
     default:
@@ -975,6 +1365,17 @@ const char *xbee_provision_result_str(xbee_prov_result_t outcome)
       break;
     case XBEE_PROV_RESULT_ABORTED:
       text = "aborted by the operator, nothing written";
+      break;
+    case XBEE_PROV_RESULT_DECLINED:
+      text = "not saved, the module was reset to its stored configuration";
+      break;
+    case XBEE_PROV_RESULT_WRITTEN_WITH_DIFFERENCES:
+      text = "written, committed and verified, with parameters different "
+             "from the configuration";
+      break;
+    case XBEE_PROV_RESULT_FAIL_REVIEW:
+      text = "the configuration could not be read back before saving, "
+             "nothing saved";
       break;
     default:
       text = "unknown";

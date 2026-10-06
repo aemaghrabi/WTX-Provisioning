@@ -49,6 +49,15 @@
 #define CLI_PASSWORD_TIMEOUT_MS  30000U
 #endif
 
+/// Milliseconds to wait at the "do you want to save?" prompt of
+/// "xbee provision all" before giving up and not saving.
+///
+/// The module's Command mode session is kept open by the provisioning engine
+/// for as long as this lasts.
+#ifndef CLI_SAVE_CONFIRM_TIMEOUT_MS
+#define CLI_SAVE_CONFIRM_TIMEOUT_MS  60000U
+#endif
+
 /// Milliseconds a request may spend waiting to be accepted by the transport.
 ///
 /// A dispatch can be refused while the Command mode session is being

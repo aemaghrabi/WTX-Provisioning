@@ -15,7 +15,9 @@
  * The walk behind "show xbee all" owns its own request while it runs, and the
  * console starts none of its own until the walk reports that it has finished.
  * "xbee provision all" works the same way: the provisioning engine owns the
- * facade's one request until it reports that the run has finished.
+ * facade's one request until it reports that the run has finished. Before it
+ * writes to flash it hands back every parameter it read back, which is listed
+ * as "{Parameter}={value}", and waits while the console asks whether to save.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -102,6 +104,7 @@ typedef enum {
   CLI_STATE_BRIDGE,    ///< The bridge owns the link; the console is not here.
   CLI_STATE_CONFIRM,   ///< At the "[confirm]" prompt before provisioning.
   CLI_STATE_PROVISION, ///< "xbee provision all" is running.
+  CLI_STATE_SAVE_CONFIRM, ///< At the "do you want to save?" prompt of a provisioning run.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -284,6 +287,9 @@ static app_log_level_t saved_log_level;
 /// True once the operator has been told this run can no longer be stopped,
 /// so that repeated Ctrl-C does not repeat it.
 static bool provision_abort_refused;
+
+/// Tick by which the save question must have been answered.
+static uint32_t save_confirm_deadline;
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -814,6 +820,15 @@ static bool equals_ignore_case(const char *a, const char *b)
 }
 
 /***************************************************************************//**
+ * Write the question asked before provisioning.
+ ******************************************************************************/
+static void print_confirm_question(void)
+{
+  (void)console_uart_puts("Provisioning restores defaults, writes the module's "
+                          "flash and resets it. Proceed? [confirm]");
+}
+
+/***************************************************************************//**
  * Ask before provisioning, which restores, writes flash and resets the module.
  *
  * @return true when the confirmation prompt is now waiting for an answer.
@@ -825,8 +840,7 @@ static bool cmd_provision_all(void)
     return false;
   }
 
-  (void)console_uart_puts("Provisioning restores defaults, writes the module's "
-                          "flash and resets it. Proceed? [confirm]");
+  print_confirm_question();
   confirm_deadline = deadline_from_ms(CLI_PASSWORD_TIMEOUT_MS);
   state = CLI_STATE_CONFIRM;
 
@@ -839,6 +853,149 @@ static bool cmd_provision_all(void)
 static void restore_log_level(void)
 {
   (void)app_log_set_level(saved_log_level);
+}
+
+/***************************************************************************//**
+ * Print one parameter of the read-back before saving, as "{Parameter}={value}".
+ ******************************************************************************/
+static void provision_review_cb(uint16_t command,
+                                xbee_prov_review_t kind,
+                                const uint8_t *value,
+                                uint16_t len,
+                                const uint8_t *configured,
+                                uint16_t configured_len)
+{
+  const xbee_at_entry_t *entry = xbee_at_table_find(command);
+  char name[4];
+  char text[XBEE_DUMP_VALUE_TEXT_CAP];
+  char wanted[XBEE_DUMP_VALUE_TEXT_CAP];
+
+  (void)command_text(command, name);
+
+  switch (kind) {
+    case XBEE_PROV_REVIEW_MATCH:
+      (void)console_uart_printf("%s=%s\n", name,
+                                xbee_dump_format_value(entry, value, len,
+                                                       text, sizeof(text)));
+      break;
+
+    case XBEE_PROV_REVIEW_MISMATCH:
+      (void)console_uart_printf("%s=%s (differs, configured %s)\n", name,
+                                xbee_dump_format_value(entry, value, len,
+                                                       text, sizeof(text)),
+                                xbee_dump_format_value(entry, configured,
+                                                       configured_len,
+                                                       wanted, sizeof(wanted)));
+      break;
+
+    case XBEE_PROV_REVIEW_UNREADABLE:
+      (void)console_uart_printf("%s=(not readable)\n", name);
+      break;
+
+    case XBEE_PROV_REVIEW_READ_FAILED:
+    default:
+      (void)console_uart_printf("%s=(read failed)\n", name);
+      break;
+  }
+}
+
+/***************************************************************************//**
+ * Write the save question, which depends on whether anything differed.
+ ******************************************************************************/
+static void print_save_question(void)
+{
+  uint16_t mismatches = xbee_provision_review_mismatches();
+
+  if (mismatches == 0U) {
+    (void)console_uart_puts("do you want to save? [N/y] ");
+  } else {
+    (void)console_uart_printf("%u parameters did not read back as written. "
+                              "Save anyway? [Y/n] ",
+                              (unsigned)mismatches);
+  }
+}
+
+/***************************************************************************//**
+ * Answer '?' at a yes/no question: list the accepted answers, then ask again.
+ *
+ * The command help means nothing here. The answer typed so far is untouched by
+ * the help request, so it is reprinted after the question and typing carries
+ * on from the same place, as at the command prompt.
+ ******************************************************************************/
+static void show_answer_help(void)
+{
+  (void)console_uart_puts("\n");
+
+  if (state == CLI_STATE_CONFIRM) {
+    help_cb("Enter", "Provision", NULL);
+    help_cb("y, yes", "Provision", NULL);
+    help_cb("other", "Cancel", NULL);
+    print_confirm_question();
+  } else if (xbee_provision_review_mismatches() == 0U) {
+    help_cb("y, yes", "Save to the module's flash", NULL);
+    help_cb("Enter", "Do not save; reset the module", NULL);
+    help_cb("other", "Do not save; reset the module", NULL);
+    print_save_question();
+  } else {
+    help_cb("Enter", "Save to the module's flash", NULL);
+    help_cb("y, yes", "Save to the module's flash", NULL);
+    help_cb("other", "Do not save; reset the module", NULL);
+    print_save_question();
+  }
+
+  (void)console_uart_puts(line_edit_line(&editor));
+}
+
+/***************************************************************************//**
+ * Ask whether to save what the read-back has just listed.
+ *
+ * Saving needs an explicit "y" when everything read back as configured. When
+ * something differs, the default is yes.
+ ******************************************************************************/
+static void ask_save(void)
+{
+  print_save_question();
+
+  (void)line_edit_reset(&editor);
+  save_confirm_deadline = deadline_from_ms(CLI_SAVE_CONFIRM_TIMEOUT_MS);
+  state = CLI_STATE_SAVE_CONFIRM;
+}
+
+/***************************************************************************//**
+ * Hand the operator's save decision to the engine and go back to watching it.
+ ******************************************************************************/
+static void decide_save(bool save)
+{
+  (void)line_edit_reset(&editor);
+
+  if (!save) {
+    (void)console_uart_puts("% Not saving\n");
+  }
+
+  if (xbee_provision_decide(save) != SL_STATUS_OK) {
+    // Cannot happen while the engine is waiting, which is the only time this
+    // state is entered. The run carries on and reports how it ended.
+    (void)console_uart_puts("% The provisioning run is no longer waiting\n");
+  }
+
+  state = CLI_STATE_PROVISION;
+}
+
+/***************************************************************************//**
+ * Act on the answer to the save question.
+ ******************************************************************************/
+static void handle_save_confirm(void)
+{
+  const char *answer = line_edit_line(&editor);
+  bool yes = (equals_ignore_case(answer, "y")
+              || equals_ignore_case(answer, "yes"));
+
+  if ((answer[0] == '\0') && (xbee_provision_review_mismatches() > 0U)) {
+    // Enter alone takes the default, which is yes only when something differs.
+    yes = true;
+  }
+
+  decide_save(yes);
 }
 
 /***************************************************************************//**
@@ -857,7 +1014,7 @@ static void start_provision(void)
     (void)app_log_set_level(APP_LOG_LEVEL_INFO);
   }
 
-  status = xbee_provision_start();
+  status = xbee_provision_start(provision_review_cb);
   if (status != SL_STATUS_OK) {
     restore_log_level();
     (void)console_uart_printf("%% Could not start provisioning, status 0x%04X\n",
@@ -884,6 +1041,12 @@ static void finish_provision(void)
     // the console wrote earlier is waiting for a "write memory" any more.
     config_dirty = false;
     (void)console_uart_printf("[OK] %s\n", xbee_provision_result_str(outcome));
+  } else if (outcome == XBEE_PROV_RESULT_DECLINED) {
+    // The module was reset, which drops anything the console wrote earlier
+    // without saving, just as "reload" does.
+    config_dirty = false;
+    (void)console_uart_printf("%% Not saved: %s\n",
+                              xbee_provision_result_str(outcome));
   } else {
     (void)console_uart_printf("%% Provisioning failed: %s\n",
                               xbee_provision_result_str(outcome));
@@ -1172,13 +1335,19 @@ static void feed_byte(char c)
         handle_password();
       } else if (state == CLI_STATE_CONFIRM) {
         handle_confirm();
+      } else if (state == CLI_STATE_SAVE_CONFIRM) {
+        handle_save_confirm();
       } else {
         handle_line();
       }
       break;
 
     case LINE_EDIT_HELP:
-      show_help();
+      if ((state == CLI_STATE_CONFIRM) || (state == CLI_STATE_SAVE_CONFIRM)) {
+        show_answer_help();
+      } else {
+        show_help();
+      }
       break;
 
     case LINE_EDIT_ABORT:
@@ -1187,6 +1356,8 @@ static void feed_byte(char c)
       } else if (state == CLI_STATE_CONFIRM) {
         (void)console_uart_puts("% Cancelled\n");
         back_to_prompt();
+      } else if (state == CLI_STATE_SAVE_CONFIRM) {
+        decide_save(false);
       } else {
         print_prompt();
       }
@@ -1201,6 +1372,13 @@ static void feed_byte(char c)
         // Not a yes, so the provisioning does not run.
         (void)console_uart_puts("% Cancelled\n");
         state = CLI_STATE_PROMPT;
+      } else if (state == CLI_STATE_SAVE_CONFIRM) {
+        // Not a clear answer, so nothing is saved. The run reports how it
+        // ended, and the prompt follows that.
+        decide_save(false);
+        break;
+      } else {
+        // Back to an ordinary prompt.
       }
       print_prompt();
       break;
@@ -1473,6 +1651,26 @@ void cli_process(void)
       xbee_provision_process();
       if (xbee_provision_is_finished()) {
         finish_provision();
+      } else if (xbee_provision_awaiting_decision()) {
+        ask_save();
+      } else {
+        // Still running.
+      }
+      break;
+
+    case CLI_STATE_SAVE_CONFIRM:
+      // The engine keeps the module's Command mode session alive while the
+      // operator decides, so it has to keep running here too.
+      xbee_provision_process();
+      if (xbee_provision_is_finished()) {
+        // The session was lost while waiting, and the engine has given up.
+        (void)console_uart_puts("\n");
+        finish_provision();
+      } else if (tick_reached(save_confirm_deadline)) {
+        (void)console_uart_puts("\n% Timed out waiting for an answer\n");
+        decide_save(false);
+      } else {
+        // Waiting for the operator.
       }
       break;
 
