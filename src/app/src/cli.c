@@ -18,6 +18,10 @@
  * facade's one request until it reports that the run has finished. Before it
  * writes to flash it hands back every parameter it read back, which is listed
  * as "{Parameter}={value}", and waits while the console asks whether to save.
+ *
+ * "device serial-number" does not talk to the module at all. It shows the
+ * serial number it would write to MCU NVM3, warns if a different one is
+ * already stored there, and writes only once the operator has said yes.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -28,9 +32,11 @@
 
 #include "app_log.h"
 #include "console_uart.h"
+#include "device_sn.h"
 #include "line_edit.h"
 
 #include "cli_parser.h"
+#include "nvm_store.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -89,6 +95,8 @@ enum {
   CMD_NO_XBEE_AT,
   CMD_BRIDGE,
   CMD_XBEE_PROVISION_ALL,
+  CMD_DEVICE_SN_SET,
+  CMD_SHOW_DEVICE_SN,
 };
 /// @}
 
@@ -105,6 +113,7 @@ typedef enum {
   CLI_STATE_CONFIRM,   ///< At the "[confirm]" prompt before provisioning.
   CLI_STATE_PROVISION, ///< "xbee provision all" is running.
   CLI_STATE_SAVE_CONFIRM, ///< At the "do you want to save?" prompt of a provisioning run.
+  CLI_STATE_SN_CONFIRM, ///< At the question asked before writing the serial number.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -126,7 +135,14 @@ static const cli_node_t show_xbee_children[] = {
     M_ALL, CMD_SHOW_INFO, NULL, 0U },
 };
 
+static const cli_node_t show_device_children[] = {
+  { "serial-number", "Serial number stored in MCU NVM", CLI_NODE_KEYWORD,
+    M_ALL, CMD_SHOW_DEVICE_SN, NULL, 0U },
+};
+
 static const cli_node_t show_children[] = {
+  { "device", "Identity stored on this board", CLI_NODE_KEYWORD,
+    M_ALL, CLI_CMD_NONE, show_device_children, 1U },
   { "version", "Firmware build and module identity", CLI_NODE_KEYWORD,
     M_ALL, CMD_SHOW_VERSION, NULL, 0U },
   { "xbee", "XBee module information", CLI_NODE_KEYWORD,
@@ -198,11 +214,36 @@ static const cli_node_t no_children[] = {
     M_CONF, CLI_CMD_NONE, no_xbee_children, 1U },
 };
 
+// "device serial-number <NNNNN> [week <YYWW>]": <NNNNN> is a complete command
+// on its own and also leads on to the optional week, which replaces the one
+// taken from the build date.
+static const cli_node_t conf_sn_week_value[] = {
+  { "<YYWW>", "Year and ISO week, for example 2641", CLI_NODE_ARG,
+    M_CONF, CMD_DEVICE_SN_SET, NULL, 0U },
+};
+
+static const cli_node_t conf_sn_week[] = {
+  { "week", "Use this year and week instead of the build date",
+    CLI_NODE_KEYWORD, M_CONF, CLI_CMD_NONE, conf_sn_week_value, 1U },
+};
+
+static const cli_node_t conf_sn_sequence[] = {
+  { "<NNNNN>", "Five-digit sequence number, for example 00123", CLI_NODE_ARG,
+    M_CONF, CMD_DEVICE_SN_SET, conf_sn_week, 1U },
+};
+
+static const cli_node_t conf_device_children[] = {
+  { "serial-number", "Write the serial number to MCU NVM", CLI_NODE_KEYWORD,
+    M_CONF, CLI_CMD_NONE, conf_sn_sequence, 1U },
+};
+
 static const cli_node_t root[] = {
   { "bridge", "Connect this terminal straight to the XBee module",
     CLI_NODE_KEYWORD, M_PRIV, CMD_BRIDGE, NULL, 0U },
   { "configure", "Enter configuration mode", CLI_NODE_KEYWORD,
     M_PRIV, CLI_CMD_NONE, configure_children, 1U },
+  { "device", "Identity stored on this board", CLI_NODE_KEYWORD,
+    M_CONF, CLI_CMD_NONE, conf_device_children, 1U },
   { "disable", "Leave privileged commands", CLI_NODE_KEYWORD,
     M_PRIV, CMD_DISABLE, NULL, 0U },
   { "enable", "Turn on privileged commands", CLI_NODE_KEYWORD,
@@ -218,7 +259,7 @@ static const cli_node_t root[] = {
   { "reload", "Reset the XBee module and bring it up again", CLI_NODE_KEYWORD,
     M_PRIV, CMD_RELOAD, NULL, 0U },
   { "show", "Show running system information", CLI_NODE_KEYWORD,
-    M_ALL, CLI_CMD_NONE, show_children, 2U },
+    M_ALL, CLI_CMD_NONE, show_children, 3U },
   { "write", "Save the running configuration", CLI_NODE_KEYWORD,
     M_PRIV, CLI_CMD_NONE, write_children, 1U },
   { "xbee", "XBee module configuration", CLI_NODE_KEYWORD,
@@ -290,6 +331,19 @@ static bool provision_abort_refused;
 
 /// Tick by which the save question must have been answered.
 static uint32_t save_confirm_deadline;
+
+/// Serial number "device serial-number" will write once the operator agrees.
+static char pending_sn[DEVICE_SN_STR_LEN];
+
+/// The different serial number already stored, made safe to print. Valid while
+/// sn_overwrite is true.
+static char stored_sn_shown[DEVICE_SN_STR_LEN];
+
+/// True when the question is whether to replace a different serial number.
+static bool sn_overwrite;
+
+/// Tick by which the serial number question must have been answered.
+static uint32_t sn_confirm_deadline;
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -916,6 +970,19 @@ static void print_save_question(void)
 }
 
 /***************************************************************************//**
+ * Write the question asked before the serial number is written to MCU NVM.
+ ******************************************************************************/
+static void print_sn_question(void)
+{
+  if (sn_overwrite) {
+    (void)console_uart_printf("Overwrite %s with %s? [N/y] ",
+                              stored_sn_shown, pending_sn);
+  } else {
+    (void)console_uart_printf("Write %s to MCU NVM? [N/y] ", pending_sn);
+  }
+}
+
+/***************************************************************************//**
  * Answer '?' at a yes/no question: list the accepted answers, then ask again.
  *
  * The command help means nothing here. The answer typed so far is untouched by
@@ -931,6 +998,11 @@ static void show_answer_help(void)
     help_cb("y, yes", "Provision", NULL);
     help_cb("other", "Cancel", NULL);
     print_confirm_question();
+  } else if (state == CLI_STATE_SN_CONFIRM) {
+    help_cb("y, yes", "Write the serial number to MCU NVM", NULL);
+    help_cb("Enter", "Do not write", NULL);
+    help_cb("other", "Do not write", NULL);
+    print_sn_question();
   } else if (xbee_provision_review_mismatches() == 0U) {
     help_cb("y, yes", "Save to the module's flash", NULL);
     help_cb("Enter", "Do not save; reset the module", NULL);
@@ -1096,6 +1168,143 @@ static void handle_confirm(void)
 }
 
 /***************************************************************************//**
+ * Form the serial number, show it, and ask before writing it to MCU NVM.
+ *
+ * Nothing is written here. When a different serial number is already stored,
+ * the operator is warned and asked whether to overwrite it; when the same one
+ * is stored, nothing is asked and nothing is written.
+ *
+ * @param[in] sequence_text Typed NNNNN.
+ * @param[in] yyww_text     Typed YYWW, or NULL to take the week from the date
+ *                          this firmware was built, as "show version" prints it.
+ *
+ * @return true when the question is now waiting for an answer.
+ ******************************************************************************/
+static bool cmd_device_sn_set(const char *sequence_text, const char *yyww_text)
+{
+  char stored[DEVICE_SN_STR_LEN];
+  size_t stored_len = 0U;
+  uint32_t sequence = 0U;
+  uint16_t yyww = 0U;
+  sl_status_t status;
+
+  if (device_sn_parse_sequence(sequence_text, &sequence) != SL_STATUS_OK) {
+    (void)console_uart_printf("%% \"%s\" is not a five-digit sequence number, "
+                              "for example 00123\n", sequence_text);
+    return false;
+  }
+
+  if (yyww_text != NULL) {
+    status = device_sn_parse_yyww(yyww_text, &yyww);
+    if (status == SL_STATUS_INVALID_RANGE) {
+      (void)console_uart_printf("%% Week %s does not exist: WW is 01 to 52, or "
+                                "53 in a year that has one\n", yyww_text);
+      return false;
+    }
+    if (status != SL_STATUS_OK) {
+      (void)console_uart_printf("%% \"%s\" is not a year and week, for example "
+                                "2641\n", yyww_text);
+      return false;
+    }
+  } else {
+    status = device_sn_yyww_from_build_date(__DATE__, &yyww);
+    if (status != SL_STATUS_OK) {
+      (void)console_uart_printf("%% No week can be taken from the build date "
+                                "\"%s\". Give one with \"week <YYWW>\".\n",
+                                __DATE__);
+      return false;
+    }
+  }
+
+  status = device_sn_format(yyww, sequence, pending_sn, sizeof(pending_sn));
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not form the serial number, status "
+                              "0x%04X\n", (unsigned)status);
+    return false;
+  }
+
+  (void)console_uart_printf("Serial number %s, week %04u from %s\n",
+                            pending_sn, (unsigned)yyww,
+                            (yyww_text != NULL) ? "the command"
+                            : "the build date");
+
+  sn_overwrite = false;
+  status = nvm_store_read_device_sn(stored, sizeof(stored), &stored_len);
+
+  switch (status) {
+    case SL_STATUS_OK:
+      if (memcmp(stored, pending_sn, DEVICE_SN_STR_LEN) == 0) {
+        (void)console_uart_puts("It is already stored. Nothing written.\n");
+        return false;
+      }
+      (void)device_sn_to_printable(stored, stored_sn_shown,
+                                   sizeof(stored_sn_shown));
+      (void)console_uart_printf("%% Warning: serial number %s is already stored "
+                                "on this board.\n", stored_sn_shown);
+      sn_overwrite = true;
+      break;
+
+    case SL_STATUS_NOT_FOUND:
+      break;
+
+    case SL_STATUS_INVALID_COUNT:
+      (void)console_uart_printf("%% Warning: the object stored under the serial "
+                                "number key is %u bytes, not %u, and reads as "
+                                "not set.\n",
+                                (unsigned)stored_len,
+                                (unsigned)DEVICE_SN_STR_LEN);
+      break;
+
+    case SL_STATUS_INVALID_TYPE:
+      (void)console_uart_puts("% Warning: a counter object is stored under the "
+                              "serial number key, and reads as not set.\n");
+      break;
+
+    default:
+      (void)console_uart_printf("%% Could not read MCU NVM, status 0x%04X. "
+                                "Nothing written.\n", (unsigned)status);
+      return false;
+  }
+
+  print_sn_question();
+  sn_confirm_deadline = deadline_from_ms(CLI_SN_CONFIRM_TIMEOUT_MS);
+  state = CLI_STATE_SN_CONFIRM;
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Act on the answer to the serial number question.
+ *
+ * Only "y" or "yes" writes. Enter alone, and anything else, writes nothing.
+ ******************************************************************************/
+static void handle_sn_confirm(void)
+{
+  const char *answer = line_edit_line(&editor);
+  bool yes = (equals_ignore_case(answer, "y")
+              || equals_ignore_case(answer, "yes"));
+  sl_status_t status;
+
+  if (!yes) {
+    (void)console_uart_puts("% Not written\n");
+    back_to_prompt();
+    return;
+  }
+
+  // Blocks while flash is programmed; see nvm_store_write_device_sn(). The
+  // console has no request in flight at this prompt.
+  status = nvm_store_write_device_sn(pending_sn);
+  if (status == SL_STATUS_OK) {
+    (void)console_uart_printf("[OK] serial number written: %s\n", pending_sn);
+  } else {
+    (void)console_uart_printf("%% Writing the serial number failed, status "
+                              "0x%04X\n", (unsigned)status);
+  }
+
+  back_to_prompt();
+}
+
+/***************************************************************************//**
  * Carry out a matched command.
  *
  * @return true when a request was started, so the prompt must wait for it.
@@ -1200,6 +1409,17 @@ static bool execute(const cli_parse_result_t *result)
 
     case CMD_XBEE_PROVISION_ALL:
       started = cmd_provision_all();
+      break;
+
+    case CMD_DEVICE_SN_SET:
+      // The week argument is there only when "week <YYWW>" was typed.
+      started = cmd_device_sn_set(result->args[0],
+                                  (result->arg_count > 1U) ? result->args[1]
+                                  : NULL);
+      break;
+
+    case CMD_SHOW_DEVICE_SN:
+      cli_show_device_sn();
       break;
 
     default:
@@ -1337,13 +1557,17 @@ static void feed_byte(char c)
         handle_confirm();
       } else if (state == CLI_STATE_SAVE_CONFIRM) {
         handle_save_confirm();
+      } else if (state == CLI_STATE_SN_CONFIRM) {
+        handle_sn_confirm();
       } else {
         handle_line();
       }
       break;
 
     case LINE_EDIT_HELP:
-      if ((state == CLI_STATE_CONFIRM) || (state == CLI_STATE_SAVE_CONFIRM)) {
+      if ((state == CLI_STATE_CONFIRM)
+          || (state == CLI_STATE_SAVE_CONFIRM)
+          || (state == CLI_STATE_SN_CONFIRM)) {
         show_answer_help();
       } else {
         show_help();
@@ -1358,6 +1582,9 @@ static void feed_byte(char c)
         back_to_prompt();
       } else if (state == CLI_STATE_SAVE_CONFIRM) {
         decide_save(false);
+      } else if (state == CLI_STATE_SN_CONFIRM) {
+        (void)console_uart_puts("% Not written\n");
+        back_to_prompt();
       } else {
         print_prompt();
       }
@@ -1377,6 +1604,10 @@ static void feed_byte(char c)
         // ended, and the prompt follows that.
         decide_save(false);
         break;
+      } else if (state == CLI_STATE_SN_CONFIRM) {
+        // Not a yes, so the serial number is not written.
+        (void)console_uart_puts("% Not written\n");
+        state = CLI_STATE_PROMPT;
       } else {
         // Back to an ordinary prompt.
       }
@@ -1671,6 +1902,14 @@ void cli_process(void)
         decide_save(false);
       } else {
         // Waiting for the operator.
+      }
+      break;
+
+    case CLI_STATE_SN_CONFIRM:
+      if (tick_reached(sn_confirm_deadline)) {
+        (void)console_uart_puts("\n% Timed out waiting for an answer. "
+                                "Nothing written.\n");
+        back_to_prompt();
       }
       break;
 

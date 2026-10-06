@@ -1,0 +1,6 @@
+# Python packages for tools/provision.py.
+#
+# Only the flash-and-watch step needs them; building the image needs nothing
+# beyond the Python standard library. Install with:
+#   python -m pip install -r tools/requirements.txt
+pyserial>=3.5

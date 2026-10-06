@@ -58,6 +58,12 @@
 #define CLI_SAVE_CONFIRM_TIMEOUT_MS  60000U
 #endif
 
+/// Milliseconds to wait at the question asked by "device serial-number"
+/// before giving up and writing nothing.
+#ifndef CLI_SN_CONFIRM_TIMEOUT_MS
+#define CLI_SN_CONFIRM_TIMEOUT_MS  30000U
+#endif
+
 /// Milliseconds a request may spend waiting to be accepted by the transport.
 ///
 /// A dispatch can be refused while the Command mode session is being

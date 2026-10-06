@@ -48,4 +48,15 @@ void cli_show_all_abort(void);
  ******************************************************************************/
 void cli_show_info(void);
 
+/***************************************************************************//**
+ * Print the device serial number stored in MCU NVM3, for
+ * "show device serial-number".
+ *
+ * Synchronous: one NVM3 read, nothing sent to the module. Prints the value, or
+ * "not set" with the reason when the stored object would not be accepted by
+ * the production firmware, and flags a value that is malformed or has a wrong
+ * check digit.
+ ******************************************************************************/
+void cli_show_device_sn(void);
+
 #endif  // CLI_SHOW_H

@@ -45,6 +45,8 @@ When a task needs such a change, Claude must:
   `app.c` (compiled in the generated `slc` OBJECT library).
 - `src/**` — new application modules, laid out as described in "Rule: application folder
   structure".
+- `tools/**` — host-side scripts (for example `tools/provision.py`, which builds the per-unit
+  provisioning image) and their `requirements.txt`.
 - `readme.md`, `docs/**`, `CLAUDE.md`, `.gitignore`, `.gitattributes`.
 
 Application code **may call** HAL/driver APIs (`sl_gpio_*`, `UARTDRV_*`, `sl_sleeptimer_*`, …)
@@ -208,7 +210,12 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
 - **SDK:** Simplicity SDK 2025.6.2, import mode `LINK_LIBRARIES` (SDK sources stay in `~/.silabs`)
 - **Tooling:** Simplicity Studio 6, VS Code generator, CMake + Ninja, GCC 12.2.1
 - **Components:** `clock_manager`, `device_init`, `sl_main`, `uartdrv_eusart` (instance `XBEE`),
-  `iostream_eusart` (instance `VCOM`), `iostream_retarget_stdio`
+  `iostream_eusart` (instance `VCOM`), `iostream_retarget_stdio`, `nvm3_default` (flash back-end
+  and `memory_manager` resolved as dependencies)
+- **NVM3:** default instance shared with the production firmware (WTX-FW). Its configuration in
+  `config/nvm3_default_config.h` (40960 bytes, cache 200, max object 254, headroom 0) must stay
+  identical to WTX-FW's, so both images find it at `0x080F4000`. Key `0x00003` is the device
+  serial number (`src/services/inc/nvm_store.h`); keys `0x00001` and `0x00002` belong to WTX-FW.
 - **Global define:** `DEBUG_EFM`
 - **App model:** bare-metal super loop → `app_init()` once, `app_process_action()` every iteration
 

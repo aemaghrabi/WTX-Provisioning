@@ -27,6 +27,8 @@
 #include "sl_sleeptimer.h"
 
 #include "console_uart.h"
+#include "device_sn.h"
+#include "nvm_store.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -355,4 +357,52 @@ void cli_show_info(void)
                             (unsigned)info.gt,
                             (unsigned)info.cc,
                             (unsigned)(info.ct * 100U));
+}
+
+void cli_show_device_sn(void)
+{
+  char stored[DEVICE_SN_STR_LEN];
+  char shown[DEVICE_SN_STR_LEN];
+  size_t stored_len = 0U;
+  sl_status_t status = nvm_store_read_device_sn(stored, sizeof(stored),
+                                                &stored_len);
+
+  switch (status) {
+    case SL_STATUS_OK:
+      // Printed through the sanitised copy in every case: the stored bytes are
+      // not guaranteed to be text, let alone NUL terminated.
+      (void)device_sn_to_printable(stored, shown, sizeof(shown));
+      status = device_sn_validate(stored);
+      if (status == SL_STATUS_OK) {
+        (void)console_uart_printf("Serial number  %s\n", shown);
+      } else if (status == SL_STATUS_INVALID_SIGNATURE) {
+        (void)console_uart_printf("Serial number  %s (check digit invalid)\n",
+                                  shown);
+      } else {
+        (void)console_uart_printf("Serial number  %s (not in the form "
+                                  "YYWW-NNNNN-C)\n", shown);
+      }
+      break;
+
+    case SL_STATUS_NOT_FOUND:
+      (void)console_uart_puts("Serial number  not set\n");
+      break;
+
+    case SL_STATUS_INVALID_COUNT:
+      (void)console_uart_printf("Serial number  not set (the stored object is "
+                                "%u bytes, not %u)\n",
+                                (unsigned)stored_len,
+                                (unsigned)DEVICE_SN_STR_LEN);
+      break;
+
+    case SL_STATUS_INVALID_TYPE:
+      (void)console_uart_puts("Serial number  not set (a counter object is "
+                              "stored under its key)\n");
+      break;
+
+    default:
+      (void)console_uart_printf("%% Could not read MCU NVM, status 0x%04X\n",
+                                (unsigned)status);
+      break;
+  }
 }

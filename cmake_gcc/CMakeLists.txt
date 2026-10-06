@@ -24,8 +24,10 @@ add_executable(xbee_provision
     ../src/app/src/xbee_dump_format.c
     ../src/app/src/xbee_provision.c
     ../src/app/src/xbee_provision_table.c
+    ../src/app/src/sn_burner.c
     ../src/utils/src/app_log.c
     ../src/utils/src/byte_util.c
+    ../src/utils/src/device_sn.c
     ../src/utils/src/line_edit.c
     ../src/utils/src/ring_buffer.c
     ../src/drivers/src/console_uart.c
@@ -34,6 +36,7 @@ add_executable(xbee_provision
     ../src/drivers/src/xbee_sleep.c
     ../src/drivers/src/xbee_uart.c
     ../src/services/src/cli_parser.c
+    ../src/services/src/nvm_store.c
     ../src/services/src/xbee.c
     ../src/services/src/xbee_api.c
     ../src/services/src/xbee_at_table.c
@@ -67,10 +70,26 @@ target_compile_definitions(xbee_provision PUBLIC
     # console build reaches the same bridge from its "bridge" command, so this
     # value is for the case where the console must not be in the way at all.
     #
-    # Change it in BOTH this block and the slc one below: app.c is compiled in
-    # the generated slc library and does not inherit these definitions, so
-    # changing one alone selects one application's init and another's process.
-    XBEE_APP=XBEE_APP_CLI
+    # Chosen at configure time with -DXBEE_APP_SELECT=PROVISION, BRINGUP, DUMP,
+    # CLI or BRIDGE; without it the build is CLI, as before. tools/provision.py
+    # configures the provisioning build this way, in its own build directory.
+    # An unknown value stops the build at the #error in app.c.
+    #
+    # Keep this line identical in BOTH this block and the slc one below: app.c
+    # is compiled in the generated slc library and does not inherit these
+    # definitions, so a difference selects one application's init and another's
+    # process.
+    XBEE_APP=XBEE_APP_$<IF:$<STREQUAL:${XBEE_APP_SELECT},>,CLI,${XBEE_APP_SELECT}>
+
+    # Device serial number written by the provisioning build (src/app/inc/
+    # sn_burner.h). SN_BURNER_SEQUENCE is the NNNNN part, five digits, and is
+    # required by that build; SN_BURNER_BUILD_YYWW is the build host's ISO year
+    # and week. Both are given with -D at configure time, normally by
+    # tools/provision.py, and are left out entirely when not given. The test is
+    # for an empty string rather than $<BOOL:...>, so that 00000 is a value.
+    # Both blocks again, because app.c checks SN_BURNER_SEQUENCE.
+    $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
 
     # Compile the human-readable AT command names, which the parameter dump
     # prints beside each command.
@@ -87,7 +106,9 @@ target_compile_definitions(xbee_provision PUBLIC
 # app.c is compiled in the generated slc OBJECT library, which does not inherit
 # the definitions above, so the application selection is given to it as well.
 target_compile_definitions(slc PUBLIC
-    XBEE_APP=XBEE_APP_CLI
+    XBEE_APP=XBEE_APP_$<IF:$<STREQUAL:${XBEE_APP_SELECT},>,CLI,${XBEE_APP_SELECT}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
     XBEE_AT_TABLE_NAMES=1
 )
 

@@ -21,7 +21,8 @@ The provisioning firmware is responsible for:
    parameter the module stores and ships holding the factory defaults. See
    [XBee radio configuration](#xbee-radio-configuration).
 4. **Write MCU NVM data** -- store provisioning data on the EFM32 that the main firmware reads at
-   runtime. Data content and storage layout: **TBD**.
+   runtime. Implemented for the device serial number, not yet run on hardware; see
+   [Device serial number](#device-serial-number). Other data: **TBD**.
 5. **Report the result** -- over a UART log to a PC and via the debugger (RTT). Details: **TBD**.
 
 Out of scope: the main product firmware itself, and loading it. After provisioning, the main
@@ -69,7 +70,8 @@ Reporting over RTT is not configured yet: **TBD**.
   (`app.c`)
 - Installed software components: `clock_manager`, `device_init`, `sl_main`,
   `uartdrv_eusart` (instance `XBEE`), `iostream_eusart` (instance `VCOM`),
-  `iostream_retarget_stdio`
+  `iostream_retarget_stdio`, `nvm3_default` (with its flash back-end and, as a dependency,
+  `memory_manager`)
 - Logging: `app_log` (`src/utils/`), levelled `printf` output over the VCOM UART
 - XBee stack (implemented, not yet run on hardware; see
   `docs/plan/2026-09-18-xbee3-driver-stack.md`):
@@ -102,9 +104,11 @@ The whole sequence runs inside one Command mode session. Parameters set in Comma
 until the session ends, so even changes that would otherwise break the serial link, such as `AP` or
 `BD`, can be written safely and applied together at the reset.
 
-Which application runs is chosen by `XBEE_APP` in `cmake_gcc/CMakeLists.txt`:
-`XBEE_APP_PROVISION` (the default) or `XBEE_APP_BRINGUP`, which only detects and reports, writing
-nothing to the module.
+Which application runs is chosen at configure time with `-DXBEE_APP_SELECT=<value>`, which
+`cmake_gcc/CMakeLists.txt` turns into `XBEE_APP`: `CLI` (the default when nothing is given),
+`PROVISION`, `BRINGUP` (only detects and reports, writing nothing to the module), `DUMP` or
+`BRIDGE`. The provisioning build is made per unit by `tools/provision.py`; see
+[Device serial number](#device-serial-number).
 
 The configured values are checked against the AT command table by the host test
 `test_xbee_provision_table`, which also prints exactly which parameters a run would write. A value
@@ -112,9 +116,61 @@ outside the documented range, or a string too long for its command, fails the bu
 board. The UART settings are additionally checked against the generated `XBEE` instance
 configuration at compile time.
 
-Planned features will need additional components (for example NVM storage and RTT). These are
-added only through Simplicity Studio and will be specified in the relevant plan under
-`docs/plan/`.
+Planned features will need additional components (for example RTT). These are added only through
+Simplicity Studio and will be specified in the relevant plan under `docs/plan/`.
+
+### Device serial number
+
+The device serial number is the enclosure nameplate number. The provisioning firmware writes it to
+the EFM32's NVM3; the main product firmware (WTX-FW) only reads it, shows it on the LCD and sends
+it to the gateway at registration. Specification: GitHub issue #4. Design:
+`docs/plan/2026-10-06-device-serial-number.md`.
+
+| Item | Value |
+| --- | --- |
+| Form | `YYWW-NNNNN-C`, digits only, dashes stored, for example `2641-00123-3` |
+| `YYWW` | ISO week-numbering year (last two digits) and ISO week of the build date; 2027-01-01 gives `2653` |
+| `NNNNN` | Five-digit sequence number, given to the CLI or to `tools/provision.py` |
+| `C` | ISO 7064 MOD 11-10 check digit over `YYWWNNNNN` |
+| Storage | NVM3 default instance, data object, key `0x00003`, exactly 13 bytes (12 characters and a NUL) |
+
+The example in issue #4, `2640-00123-4`, has the wrong check digit: ISO 7064 MOD 11-10 gives 8.
+
+Both images must use the same NVM3 instance, so the NVM3 configuration here
+(`config/nvm3_default_config.h`: 40960 bytes, cache 200, max object 254, headroom 0) must stay
+identical to WTX-FW's. The instance then sits at `0x080F4000` in both.
+
+**Provisioning (hex) build.** Each image carries one serial number, so it is built per unit:
+
+```sh
+python tools/provision.py --sequence 00123
+```
+
+The script builds the `PROVISION` variant in `cmake_gcc/build-provision/`, leaving the normal build
+alone, and copies the image to `cmake_gcc/build-provision/units/xbee_provision_<serial>.hex`. It
+then asks whether to flash it and watch the log; answering yes flashes it with Simplicity Commander
+and waits for the board's result line. That step needs `--port COMx` and pyserial
+(`python -m pip install -r tools/requirements.txt`); `python tools/provision.py --help` lists every
+option. On the board, the serial number is written only after the XBee configuration has passed,
+and it replaces whatever is stored. The run ends with one log line,
+`serial number written: YYWW-NNNNN-C` or `serial number not written: <reason>`. Configuring the
+`PROVISION` variant without `-DSN_BURNER_SEQUENCE` fails the build on purpose.
+
+**Console (CLI) build.**
+
+```text
+xbee> enable
+xbee# configure terminal
+xbee(config)# device serial-number 00123
+xbee(config)# device serial-number 00123 week 2653
+xbee(config)# show device serial-number
+```
+
+`device serial-number` shows the serial number it will write, with the week taken from the build
+date (as `show version` prints it) unless `week <YYWW>` is given. When a different serial number is
+already stored it warns and asks before overwriting; only `y` or `yes` writes. When the same one is
+stored it writes nothing. `show device serial-number` reports the stored value, `not set`, or why
+the stored object would not be accepted by WTX-FW.
 
 ### Repository layout
 
@@ -127,6 +183,7 @@ added only through Simplicity Studio and will be specified in the relevant plan 
 | `src/drivers/` | New application modules: board-level wrappers over SDK driver APIs |
 | `src/utils/` | New application modules: hardware-independent helpers |
 | `test/` | Host-side unit tests for the hardware-independent modules |
+| `tools/` | Host-side scripts, e.g. `provision.py`, which builds the per-unit provisioning image |
 | `config/`, `autogen/`, `*.slcp`, `*.slps`, `*.pintool` | Simplicity Studio generated -- **do not edit by hand** |
 | `cmake_gcc/` | CMake build files |
 | `docs/manuals/` | Reference manuals (EFM32PG28, XBee 3 802.15.4) |
@@ -175,8 +232,11 @@ The test build finds `sl_status.h` through `SDK_PATH`, which it reads from the g
 Flow for each new board (procedure details **TBD**):
 
 1. Connect the board to a debug probe (SWD) and, for the log, to a PC UART.
-2. Flash the provisioning image `xbee_provision.s37` over SWD (for example with Simplicity
-   Commander).
-3. Let the board run provisioning; observe the result on the UART log or via RTT.
-4. On pass: flash the main product firmware over SWD. On fail: set the board aside for
-   investigation and record the reported error.
+2. Build the board's own provisioning image with `python tools/provision.py --sequence NNNNN`
+   (see [Device serial number](#device-serial-number)), and flash it over SWD, either from the
+   script's prompt or with Simplicity Commander.
+3. Let the board run provisioning; observe the result on the UART log or via RTT. A pass ends with
+   `serial number written: YYWW-NNNNN-C`.
+4. On pass: flash the main product firmware over SWD **without a mass or chip erase**, which would
+   also erase the serial number in NVM3. On fail: set the board aside for investigation and record
+   the reported error.

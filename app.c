@@ -17,12 +17,14 @@
 
 #include "app.h"
 #include "cli.h"
+#include "sn_burner.h"
 #include "xbee_bridge.h"
 #include "xbee_bringup.h"
 #include "xbee_dump.h"
 #include "xbee_provision.h"
 
-/// Configure the XBee module from xbee_provision_config.h, then verify it.
+/// Configure the XBee module from xbee_provision_config.h, verify it, then
+/// write the device serial number to MCU NVM3.
 #define XBEE_APP_PROVISION  1
 
 /// Only detect the module and report what it is, changing nothing.
@@ -39,10 +41,15 @@
 
 /// Which application runs.
 ///
-/// Set it in the "Add additional macros here" section of
-/// cmake_gcc/CMakeLists.txt, in both target_compile_definitions blocks: app.c
-/// is compiled in the generated slc library, which does not inherit the ones
-/// given to xbee_provision. Bring-up is the diagnostic build: it is useful when
+/// Chosen at configure time with -DXBEE_APP_SELECT=PROVISION, BRINGUP, DUMP,
+/// CLI or BRIDGE; without it the build is the console.
+/// cmake_gcc/CMakeLists.txt turns that into this macro in both
+/// target_compile_definitions blocks, because app.c is compiled in the
+/// generated slc library, which does not inherit the ones given to
+/// xbee_provision. tools/provision.py configures the provisioning build this
+/// way.
+///
+/// Bring-up is the diagnostic build: it is useful when
 /// a board will not talk at all, because it writes nothing to the module. Dump
 /// reports the module's whole configuration and also writes nothing. The
 /// console is the interactive build: it reads and writes parameters on demand
@@ -52,6 +59,14 @@
 /// reaches the same bridge from its "bridge" command.
 #ifndef XBEE_APP
 #define XBEE_APP  XBEE_APP_CLI
+#endif
+
+// The provisioning build writes the device serial number, and every image of
+// it is for one unit. Building one without its sequence number would produce
+// an image that provisions the module and then writes nothing, so it is not
+// allowed to build at all.
+#if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_SEQUENCE)
+#error "The provisioning build needs the serial number's sequence part. Build it with tools/provision.py --sequence NNNNN, or configure with -DSN_BURNER_SEQUENCE=NNNNN."
 #endif
 
 /***************************************************************************//**
@@ -84,6 +99,9 @@ void app_process_action(void)
 {
 #if XBEE_APP == XBEE_APP_PROVISION
   xbee_provision_process();
+  // Waits for the run above to finish, then writes the serial number once if
+  // it passed.
+  sn_burner_process();
 #elif XBEE_APP == XBEE_APP_BRINGUP
   xbee_bringup_process();
 #elif XBEE_APP == XBEE_APP_DUMP

@@ -33,6 +33,8 @@ gecko_sdk_*/
 # --- Build output ------------------------------------------------------------
 cmake_gcc/build/
 cmake_gcc/*/build/
+# Per-unit provisioning images built by tools/provision.py
+cmake_gcc/build-provision/
 artifact/
 build/
 GNU\ ARM*/

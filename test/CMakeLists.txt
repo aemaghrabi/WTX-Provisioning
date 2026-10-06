@@ -66,6 +66,10 @@ add_module_test(test_ring_buffer "${PROJECT_ROOT}/src/utils/src/ring_buffer.c")
 add_module_test(test_byte_util "${PROJECT_ROOT}/src/utils/src/byte_util.c")
 add_module_test(test_line_edit "${PROJECT_ROOT}/src/utils/src/line_edit.c")
 
+# The device serial number: check digit, ISO week, input parsing and format.
+# The vectors are the ones the provisioning tool and WTX-FW depend on.
+add_module_test(test_device_sn "${PROJECT_ROOT}/src/utils/src/device_sn.c")
+
 # The console's grammar. The tree in the test mirrors the real one closely
 # enough to cover keywords, arguments, mode filtering and every diagnostic.
 add_module_test(test_cli_parser "${PROJECT_ROOT}/src/services/src/cli_parser.c")
