@@ -507,10 +507,32 @@ static void test_values_equal(void)
   TEST_ASSERT(!xbee_at_table_values_equal(e, (const uint8_t *)"node", 4U,
                                           (const uint8_t *)"Node", 4U));
 
-  // Byte parameters compare exactly too.
+  // Byte parameters compare exactly once leading zero bytes are stripped,
+  // because Command mode drops those too.
   e = xbee_at_table_find(XBEE_AT_KY);
   TEST_ASSERT(xbee_at_table_values_equal(e, bare, 1U, bare, 1U));
-  TEST_ASSERT(!xbee_at_table_values_equal(e, bare, 1U, padded, 2U));
+  TEST_ASSERT(xbee_at_table_values_equal(e, bare, 1U, padded, 2U));
+  TEST_ASSERT(!xbee_at_table_values_equal(e, other, 1U, padded, 2U));
+
+  // The case seen on target: an unset 32-byte verifier reads back as "0".
+  {
+    const uint8_t zeros[32] = { 0U };
+    const uint8_t one_zero[1] = { 0x00U };
+    const uint8_t lead[4] = { 0x00U, 0x00U, 0x1FU, 0xA0U };
+    const uint8_t lead_bare[2] = { 0x1FU, 0xA0U };
+    const uint8_t lead_other[2] = { 0x1FU, 0xA1U };
+    const uint8_t trail[3] = { 0x1FU, 0xA0U, 0x00U };
+
+    e = xbee_at_table_find(XBEE_AT_STAR_V);
+    TEST_ASSERT(xbee_at_table_values_equal(e, one_zero, 1U, zeros, 32U));
+    TEST_ASSERT(xbee_at_table_values_equal(e, zeros, 32U, one_zero, 1U));
+    TEST_ASSERT(xbee_at_table_values_equal(e, NULL, 0U, zeros, 32U));
+    TEST_ASSERT(!xbee_at_table_values_equal(e, one_zero, 1U, lead, 4U));
+    TEST_ASSERT(xbee_at_table_values_equal(e, lead_bare, 2U, lead, 4U));
+    TEST_ASSERT(!xbee_at_table_values_equal(e, lead_other, 2U, lead, 4U));
+    // Only leading zeros are insignificant; a trailing zero changes the value.
+    TEST_ASSERT(!xbee_at_table_values_equal(e, lead_bare, 2U, trail, 3U));
+  }
 
   TEST_ASSERT(!xbee_at_table_values_equal(NULL, bare, 1U, bare, 1U));
 }

@@ -501,8 +501,11 @@ bool xbee_at_table_is_default(const xbee_at_entry_t *entry,
  *
  * Integers compare numerically, which matters because Command mode prints a
  * parameter as hexadecimal without leading zeros, so a two-byte parameter read
- * back as one byte still equals the two-byte value that was written. Strings
- * and byte parameters compare exactly.
+ * back as one byte still equals the two-byte value that was written. Byte
+ * parameters lose their leading zeros the same way, so they compare exactly
+ * once leading zero bytes are stripped from both sides: an unset 32-byte
+ * verifier read back as one zero byte equals 32 zero bytes. Strings compare
+ * exactly, length included.
  *
  * @param[in] entry Table entry, may be NULL.
  * @param[in] a     First value, may be NULL when alen is 0.

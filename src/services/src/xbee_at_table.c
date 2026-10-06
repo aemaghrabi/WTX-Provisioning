@@ -588,6 +588,21 @@ bool xbee_at_table_values_equal(const xbee_at_entry_t *entry,
     return (left == right);
   }
 
+  if (entry->type == XBEE_AT_TYPE_BYTES) {
+    // Command mode drops leading zeros from byte parameters as well: an unset
+    // 32-byte verifier reads back as "0", one byte. Compare what is left once
+    // the leading zero bytes are stripped from both sides, which still tells
+    // apart any two values that differ in a significant byte.
+    while ((alen > 0U) && (a[0] == 0U)) {
+      a++;
+      alen--;
+    }
+    while ((blen > 0U) && (b[0] == 0U)) {
+      b++;
+      blen--;
+    }
+  }
+
   if (alen != blen) {
     return false;
   }
