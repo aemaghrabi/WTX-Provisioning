@@ -343,7 +343,7 @@ static void test_format_errors(void)
  ******************************************************************************/
 static void test_validate(void)
 {
-  // Exactly 12 bytes, no terminator, as stored in NVM3.
+  // Exactly 12 bytes, no terminator: validation reads the digits only.
   static const char no_nul[DEVICE_SN_LEN] = {
     '1', '8', '2', '6', '4', '1', '0', '0', '1', '2', '3', '1'
   };

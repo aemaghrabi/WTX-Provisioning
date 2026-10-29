@@ -14,14 +14,20 @@
 /// Value of an erased flash byte.
 #define MFG_STORE_ERASED_BYTE  0xFFU
 
+/// Value of the terminator stored after the digits.
+#define MFG_STORE_SN_TERMINATOR  0x00U
+
 /// Bytes programmed for a serial number: the stored bytes rounded up to whole
-/// flash words. The bytes past the serial number are written as 0xFF, which
-/// leaves them erased.
+/// flash words. The bytes past the terminator are written as 0xFF, which
+/// leaves them erased, as the contract's "write the first 13 and leave the
+/// rest alone" asks.
 #define MFG_STORE_SN_WRITE_LEN                                    \
-  (((DEVICE_SN_LEN + USERDATA_FLASH_WORD_SIZE) - 1U)              \
+  (((DEVICE_SN_STORED_LEN + USERDATA_FLASH_WORD_SIZE) - 1U)       \
    / USERDATA_FLASH_WORD_SIZE * USERDATA_FLASH_WORD_SIZE)
 
-_Static_assert(DEVICE_SN_LEN <= MFG_STORE_SN_SLOT_SIZE,
+_Static_assert(DEVICE_SN_STORED_LEN == (DEVICE_SN_LEN + 1U),
+               "the stored serial number is the digits and one NUL");
+_Static_assert(DEVICE_SN_STORED_LEN <= MFG_STORE_SN_SLOT_SIZE,
                "the serial number must fit its USERDATA slot");
 _Static_assert(MFG_STORE_SN_WRITE_LEN <= MFG_STORE_SN_SLOT_SIZE,
                "the serial number write must stay inside its USERDATA slot");
@@ -51,7 +57,7 @@ static bool all_erased(const uint8_t *bytes, size_t len)
  ******************************************************************************/
 sl_status_t mfg_store_read_device_sn(char *out, size_t cap)
 {
-  uint8_t stored[DEVICE_SN_LEN];
+  uint8_t stored[DEVICE_SN_STORED_LEN];
   sl_status_t status;
 
   if (out == NULL) {
@@ -70,8 +76,14 @@ sl_status_t mfg_store_read_device_sn(char *out, size_t cap)
     return SL_STATUS_NOT_FOUND;
   }
 
-  (void)memcpy(out, stored, sizeof(stored));
+  // The terminator is supplied here rather than copied, so out is a C string
+  // even when the stored one is missing.
+  (void)memcpy(out, stored, DEVICE_SN_LEN);
   out[DEVICE_SN_LEN] = '\0';
+
+  if (stored[DEVICE_SN_LEN] != MFG_STORE_SN_TERMINATOR) {
+    return SL_STATUS_INVALID_COUNT;
+  }
 
   return SL_STATUS_OK;
 }
@@ -104,7 +116,7 @@ sl_status_t mfg_store_device_sn_slot_is_blank(bool *blank)
 sl_status_t mfg_store_write_device_sn(const char *sn)
 {
   uint8_t image[MFG_STORE_SN_WRITE_LEN];
-  uint8_t readback[DEVICE_SN_LEN];
+  uint8_t readback[DEVICE_SN_STORED_LEN];
   bool blank = false;
   sl_status_t status;
 
@@ -130,6 +142,7 @@ sl_status_t mfg_store_write_device_sn(const char *sn)
 
   (void)memset(image, MFG_STORE_ERASED_BYTE, sizeof(image));
   (void)memcpy(image, sn, DEVICE_SN_LEN);
+  image[DEVICE_SN_LEN] = MFG_STORE_SN_TERMINATOR;
 
   status = userdata_flash_write(MFG_STORE_SN_OFFSET, image, sizeof(image));
   if (status != SL_STATUS_OK) {
@@ -141,7 +154,8 @@ sl_status_t mfg_store_write_device_sn(const char *sn)
     return status;
   }
 
-  if (memcmp(readback, sn, DEVICE_SN_LEN) != 0) {
+  // All of what WTX-FW reads, the terminator included.
+  if (memcmp(readback, image, DEVICE_SN_STORED_LEN) != 0) {
     return SL_STATUS_FAIL;
   }
 

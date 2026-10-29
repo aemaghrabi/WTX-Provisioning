@@ -10,11 +10,13 @@
  * USERDATA is not part of a main flash mass erase, so the serial number
  * survives reflashing.
  *
- * Stored form: the DEVICE_SN_LEN digits "FFYYWWSSSSSC" at the start of the
- * slot. The remaining bytes of the slot are left erased.
+ * Stored form: exactly DEVICE_SN_STORED_LEN (13) bytes at the start of the
+ * slot, the twelve digits "FFYYWWSSSSSC" followed by one NUL (0x00). WTX-FW
+ * reads exactly those 13 bytes. The remaining bytes of the slot are left
+ * erased.
  *
- * "Not set" means every one of the DEVICE_SN_LEN bytes still reads 0xFF, the
- * erased state of flash.
+ * "Not set" means every one of the DEVICE_SN_STORED_LEN bytes still reads
+ * 0xFF, the erased state of flash.
  *
  * Flash cannot be rewritten in place: a serial number is written only into a
  * slot whose 16 bytes are all still erased. Replacing one needs the USERDATA
@@ -40,15 +42,18 @@
 /***************************************************************************//**
  * Read the device serial number.
  *
- * The stored bytes are returned as they are, followed by a NUL added in out.
- * They are not guaranteed to be well formed; check them with
- * device_sn_validate() before relying on them, and print them through
- * device_sn_to_printable().
+ * The DEVICE_SN_LEN digit bytes are returned as they are, followed by a NUL
+ * in out, whatever the stored terminator byte holds. They are not guaranteed
+ * to be well formed; check them with device_sn_validate() before relying on
+ * them, and print them through device_sn_to_printable().
  *
- * @param[out] out Destination, DEVICE_SN_STR_SIZE bytes on success.
+ * @param[out] out Destination, DEVICE_SN_STR_SIZE bytes, written on
+ *                 SL_STATUS_OK and on SL_STATUS_INVALID_COUNT.
  * @param[in]  cap Capacity of out, at least DEVICE_SN_STR_SIZE.
  *
- * @return SL_STATUS_OK when a serial number is stored,
+ * @return SL_STATUS_OK when a serial number is stored with its NUL,
+ *         SL_STATUS_INVALID_COUNT when something is stored but the byte after
+ *         the digits is not the NUL; WTX-FW would read past the digits,
  *         SL_STATUS_NULL_POINTER if out is NULL,
  *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE,
  *         SL_STATUS_NOT_FOUND if none is stored,
@@ -78,9 +83,11 @@ sl_status_t mfg_store_device_sn_slot_is_blank(bool *blank);
  * @note Blocks while flash is programmed, a few words. Meant for a one-time
  *       factory step, called with nothing else in flight.
  *
- * @param[in] sn DEVICE_SN_LEN digits, "FFYYWWSSSSSC".
+ * @param[in] sn DEVICE_SN_LEN digits, "FFYYWWSSSSSC". The NUL that follows
+ *               them in flash is written here; sn need not be terminated.
  *
- * @return SL_STATUS_OK when it was written and read back identical,
+ * @return SL_STATUS_OK when all DEVICE_SN_STORED_LEN bytes were written and
+ *         read back identical,
  *         SL_STATUS_NULL_POINTER if sn is NULL,
  *         SL_STATUS_INVALID_PARAMETER if sn is not a valid serial number,
  *         SL_STATUS_ALREADY_EXISTS if the slot is not erased; nothing is

@@ -17,8 +17,9 @@
  * - C: ISO 7064 MOD 11-10 check digit over the eleven digits FFYYWWSSSSS.
  *
  * Twelve decimal digits, no separators, no letters. It is stored as exactly
- * DEVICE_SN_LEN (12) bytes with no NUL terminator; WTX-FW must accept that
- * length. In RAM it is kept in DEVICE_SN_STR_SIZE bytes so it can be printed.
+ * DEVICE_SN_STORED_LEN (13) bytes: the digits followed by one NUL, which is
+ * what WTX-FW reads (its DEVICE_SN_STR_LEN). In RAM it is kept in
+ * DEVICE_SN_STR_SIZE bytes so it can be printed.
  *
  * Specification: docs/plan/2026-10-29-serial-number-family-code.md. The
  * specification's example "180726001234" does not satisfy ISO 7064 MOD 11-10;
@@ -35,9 +36,12 @@
 #include <stdint.h>
 #include "sl_status.h"
 
-/// Bytes of a stored serial number: the twelve digits, no NUL terminator.
-/// Must equal the serial number length WTX-FW accepts.
+/// Digits of a serial number, without its NUL terminator.
 #define DEVICE_SN_LEN              12U
+
+/// Bytes of a stored serial number: the digits followed by one NUL. Must equal
+/// DEVICE_SN_STR_LEN in WTX-FW lcd_menu.h, which reads exactly this many.
+#define DEVICE_SN_STORED_LEN       (DEVICE_SN_LEN + 1U)
 
 /// Bytes of a RAM buffer holding a serial number as a C string.
 #define DEVICE_SN_STR_SIZE         (DEVICE_SN_LEN + 1U)
@@ -166,8 +170,8 @@ sl_status_t device_sn_parse_yyww(const char *text, uint16_t *yyww);
  *
  * Before anything is written to out, the result is checked independently: the
  * check digit is recomputed from the formatted digits and the whole number is
- * passed through device_sn_validate(). Only the first DEVICE_SN_LEN bytes are
- * the serial number to store.
+ * passed through device_sn_validate(). The digits and the NUL written to out,
+ * DEVICE_SN_STORED_LEN bytes, are exactly the stored form.
  *
  * @param[in]  family   0 to 99.
  * @param[in]  yyww     YYWW, which must name a real ISO week.

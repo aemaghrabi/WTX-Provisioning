@@ -105,6 +105,12 @@ static slot_state_t check_slot(const char *sn)
                     "serial number %s", shown);
       return SLOT_REFUSED;
 
+    case SL_STATUS_INVALID_COUNT:
+      (void)device_sn_to_printable(stored, shown, sizeof(shown));
+      APP_LOG_ERROR("serial number not written: USERDATA holds serial number "
+                    "%s without its NUL terminator", shown);
+      return SLOT_REFUSED;
+
     case SL_STATUS_NOT_FOUND:
       break;
 

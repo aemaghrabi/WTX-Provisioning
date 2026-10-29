@@ -1247,6 +1247,12 @@ static bool cmd_device_sn_set(const char *family_text,
       }
       return false;
 
+    case SL_STATUS_INVALID_COUNT:
+      (void)device_sn_to_printable(stored, shown, sizeof(shown));
+      (void)console_uart_printf("%% Serial number %s is stored without its NUL "
+                                "terminator. Nothing written.\n", shown);
+      return false;
+
     case SL_STATUS_NOT_FOUND:
       break;
 

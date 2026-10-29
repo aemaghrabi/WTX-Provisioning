@@ -76,10 +76,13 @@ static void test_write_and_read(void)
   TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_OK);
   TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 1U);
 
-  TEST_ASSERT_EQ_MEM(&page[MFG_STORE_SN_OFFSET], sn_a, DEVICE_SN_LEN);
+  // Exactly the 13 bytes WTX-FW reads: the digits, then the NUL.
+  TEST_ASSERT_EQ_UINT(DEVICE_SN_STORED_LEN, 13U);
+  TEST_ASSERT_EQ_MEM(&page[MFG_STORE_SN_OFFSET], sn_a, DEVICE_SN_STORED_LEN);
+  TEST_ASSERT_EQ_UINT(page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN], 0x00U);
   // The rest of the slot, and the rest of the page, stay erased.
-  TEST_ASSERT(page_erased(MFG_STORE_SN_OFFSET + DEVICE_SN_LEN,
-                          MFG_STORE_SN_SLOT_SIZE - DEVICE_SN_LEN));
+  TEST_ASSERT(page_erased(MFG_STORE_SN_OFFSET + DEVICE_SN_STORED_LEN,
+                          MFG_STORE_SN_SLOT_SIZE - DEVICE_SN_STORED_LEN));
   TEST_ASSERT(page_erased(0U, MFG_STORE_SN_OFFSET));
   TEST_ASSERT(page_erased(MFG_STORE_SN_OFFSET + MFG_STORE_SN_SLOT_SIZE,
                           USERDATA_FLASH_SIZE - MFG_STORE_SN_OFFSET
@@ -148,19 +151,55 @@ static void test_read_malformed(void)
 
   fake_userdata_flash_reset();
   page = fake_userdata_flash_page();
-  (void)memcpy(&page[MFG_STORE_SN_OFFSET], "18072600123X", DEVICE_SN_LEN);
+  (void)memcpy(&page[MFG_STORE_SN_OFFSET], "18072600123X", DEVICE_SN_STORED_LEN);
 
   TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
   TEST_ASSERT_EQ_MEM(out, "18072600123X", DEVICE_SN_STR_SIZE);
   TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_INVALID_PARAMETER);
 
-  // Phase 1 rule: set as soon as any of the twelve bytes is not erased.
+  // Set as soon as any of the thirteen bytes is not erased (until phase 3).
+  // Here only the last digit is written, so the terminator is missing too.
   fake_userdata_flash_reset();
   page = fake_userdata_flash_page();
   page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN - 1U] = '0';
-  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_INVALID_COUNT);
   TEST_ASSERT_EQ_UINT((uint8_t)out[0], 0xFFU);
   TEST_ASSERT_EQ_UINT((uint8_t)out[DEVICE_SN_LEN], 0U);
+
+  // Only the terminator written: something is stored, and it is not digits.
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN] = 0x00U;
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_INVALID_PARAMETER);
+}
+
+/***************************************************************************//**
+ * Twelve good digits without the NUL after them are reported, not accepted:
+ * WTX-FW would read past the digits.
+ ******************************************************************************/
+static void test_read_missing_terminator(void)
+{
+  uint8_t *page;
+  char out[DEVICE_SN_STR_SIZE];
+
+  // The terminator byte left erased, as a 12-byte write would leave it.
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  (void)memcpy(&page[MFG_STORE_SN_OFFSET], sn_a, DEVICE_SN_LEN);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_INVALID_COUNT);
+  // The digits still come back, terminated in RAM, for the caller to show.
+  TEST_ASSERT_EQ_MEM(out, sn_a, DEVICE_SN_STR_SIZE);
+  TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_OK);
+
+  // A byte other than 0x00 or 0xFF there is no better.
+  page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN] = (uint8_t)'7';
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_INVALID_COUNT);
+  TEST_ASSERT_EQ_UINT((uint8_t)out[DEVICE_SN_LEN], 0U);
+
+  // And such a slot is not writable.
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_ALREADY_EXISTS);
 }
 
 /***************************************************************************//**
@@ -205,6 +244,7 @@ int main(void)
   TEST_RUN(test_no_overwrite);
   TEST_RUN(test_neighbours_ignored);
   TEST_RUN(test_read_malformed);
+  TEST_RUN(test_read_missing_terminator);
   TEST_RUN(test_rejects);
   TEST_RUN(test_write_failure);
   return TEST_SUMMARY();

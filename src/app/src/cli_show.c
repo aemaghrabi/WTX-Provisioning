@@ -382,6 +382,14 @@ void cli_show_device_sn(void)
       }
       break;
 
+    case SL_STATUS_INVALID_COUNT:
+      // WTX-FW reads all 13 bytes, so without the NUL it would take in
+      // whatever follows the digits.
+      (void)device_sn_to_printable(stored, shown, sizeof(shown));
+      (void)console_uart_printf("Serial number  %s (no NUL terminator)\n",
+                                shown);
+      break;
+
     case SL_STATUS_NOT_FOUND:
       (void)console_uart_puts("Serial number  not set\n");
       break;
