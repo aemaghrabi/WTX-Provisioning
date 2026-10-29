@@ -1262,7 +1262,8 @@ static bool cmd_device_sn_set(const char *family_text,
       return false;
   }
 
-  // Not set does not mean writable: the rest of the slot may hold something.
+  // Not set only says the first byte is erased; the rest of the slot may still
+  // hold something, and then it cannot be written.
   status = mfg_store_device_sn_slot_is_blank(&blank);
   if (status != SL_STATUS_OK) {
     (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X. "
@@ -1270,8 +1271,8 @@ static bool cmd_device_sn_set(const char *family_text,
     return false;
   }
   if (!blank) {
-    (void)console_uart_puts("% The serial number slot in USERDATA is not "
-                            "blank. Nothing written.\n");
+    (void)console_uart_puts("% Serial number not set, but its USERDATA slot is "
+                            "not blank. Nothing written.\n");
     return false;
   }
 

@@ -1,6 +1,6 @@
 # Plan: move the device serial number to USERDATA (contract Part 1, topics 1, 2, 5, 6)
 
-Status: In progress (Phases 1 and 2 done, build-verified only; phases 3 and 4 not started)
+Status: In progress (Phases 1 to 3 done, build-verified only; phase 4 not started)
 Date: 2026-10-29
 Related history: docs/history/2026-10-29-sn-userdata-phaseN.md (one per phase, written as each phase is done)
 Supersedes (storage only): docs/plan/2026-10-29-serial-number-family-code.md

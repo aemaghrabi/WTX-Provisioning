@@ -15,12 +15,17 @@
  * reads exactly those 13 bytes. The remaining bytes of the slot are left
  * erased.
  *
- * "Not set" means every one of the DEVICE_SN_STORED_LEN bytes still reads
- * 0xFF, the erased state of flash.
+ * "Not set" means the first byte of the slot reads 0xFF, the erased state of
+ * flash. That is the only check WTX-FW makes (raw flash carries no length or
+ * existence metadata), so this module decides it the same way: whatever
+ * follows a 0xFF first byte is ignored, and anything else counts as set, well
+ * formed or not.
  *
  * Flash cannot be rewritten in place: a serial number is written only into a
- * slot whose 16 bytes are all still erased. Replacing one needs the USERDATA
- * page erased first.
+ * slot whose 16 bytes are all still erased. "Not set" is therefore not the same
+ * as writable: a slot whose first byte is erased but whose other bytes are not
+ * reads as not set and still cannot be written. Replacing a serial number needs
+ * the USERDATA page erased first.
  *
  * Plan: docs/plan/2026-10-29-sn-userdata-storage.md.
  ******************************************************************************/
@@ -56,7 +61,7 @@
  *         the digits is not the NUL; WTX-FW would read past the digits,
  *         SL_STATUS_NULL_POINTER if out is NULL,
  *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE,
- *         SL_STATUS_NOT_FOUND if none is stored,
+ *         SL_STATUS_NOT_FOUND if none is stored: the first byte reads 0xFF,
  *         otherwise the status of the flash read.
  ******************************************************************************/
 sl_status_t mfg_store_read_device_sn(char *out, size_t cap);

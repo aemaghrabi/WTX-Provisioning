@@ -127,7 +127,8 @@ static slot_state_t check_slot(const char *sn)
     return SLOT_REFUSED;
   }
   if (!blank) {
-    APP_LOG_ERROR("serial number not written: its USERDATA slot is not blank");
+    APP_LOG_ERROR("serial number not written: it reads as not set, but its "
+                  "USERDATA slot is not blank");
     return SLOT_REFUSED;
   }
 

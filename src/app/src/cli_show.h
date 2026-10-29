@@ -53,8 +53,9 @@ void cli_show_info(void);
  * "show device serial-number".
  *
  * Synchronous: one flash read, nothing sent to the module. Prints the value,
- * or "not set" when its slot is erased, and flags a value that is malformed or
- * has a wrong check digit.
+ * or "not set" when the first byte of its slot is erased, which is the rule
+ * WTX-FW applies, and flags a value that is malformed, has a wrong check digit
+ * or lacks its NUL terminator.
  ******************************************************************************/
 void cli_show_device_sn(void);
 

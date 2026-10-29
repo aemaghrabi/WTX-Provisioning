@@ -72,7 +72,9 @@ sl_status_t mfg_store_read_device_sn(char *out, size_t cap)
     return status;
   }
 
-  if (all_erased(stored, sizeof(stored))) {
+  // WTX-FW's rule, and only it: an erased first byte means never provisioned,
+  // whatever the rest of the slot holds.
+  if (stored[0] == MFG_STORE_ERASED_BYTE) {
     return SL_STATUS_NOT_FOUND;
   }
 

@@ -157,21 +157,55 @@ static void test_read_malformed(void)
   TEST_ASSERT_EQ_MEM(out, "18072600123X", DEVICE_SN_STR_SIZE);
   TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_INVALID_PARAMETER);
 
-  // Set as soon as any of the thirteen bytes is not erased (until phase 3).
-  // Here only the last digit is written, so the terminator is missing too.
+  // Only the first byte written, the rest erased: set, as WTX-FW sees it, and
+  // malformed. The terminator is still erased, so that is what is reported.
   fake_userdata_flash_reset();
   page = fake_userdata_flash_page();
-  page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN - 1U] = '0';
+  page[MFG_STORE_SN_OFFSET] = (uint8_t)'1';
   TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_INVALID_COUNT);
-  TEST_ASSERT_EQ_UINT((uint8_t)out[0], 0xFFU);
+  TEST_ASSERT_EQ_UINT((uint8_t)out[0], (uint8_t)'1');
+  TEST_ASSERT_EQ_UINT((uint8_t)out[1], 0xFFU);
   TEST_ASSERT_EQ_UINT((uint8_t)out[DEVICE_SN_LEN], 0U);
+  TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_INVALID_PARAMETER);
 
-  // Only the terminator written: something is stored, and it is not digits.
+  // First byte 0x00, which is not erased: set too, however empty it looks.
   fake_userdata_flash_reset();
   page = fake_userdata_flash_page();
+  page[MFG_STORE_SN_OFFSET] = 0x00U;
   page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN] = 0x00U;
   TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
   TEST_ASSERT_EQ_UINT(device_sn_validate(out), SL_STATUS_INVALID_PARAMETER);
+}
+
+/***************************************************************************//**
+ * Not set is decided on the first byte alone, as WTX-FW decides it, and is not
+ * the same as writable.
+ ******************************************************************************/
+static void test_not_set_rule(void)
+{
+  uint8_t *page;
+  char out[DEVICE_SN_STR_SIZE];
+  bool blank = true;
+
+  // First byte erased, garbage after it: not set, and not blank.
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  (void)memcpy(&page[MFG_STORE_SN_OFFSET + 1U], "8072600123", 10U);
+  page[MFG_STORE_SN_OFFSET + DEVICE_SN_LEN] = 0x00U;
+
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_NOT_FOUND);
+  TEST_ASSERT_EQ_UINT(mfg_store_device_sn_slot_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(!blank);
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_ALREADY_EXISTS);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 0U);
+
+  // First byte erased, only the last byte of the slot written: the same.
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  page[MFG_STORE_SN_OFFSET + MFG_STORE_SN_SLOT_SIZE - 1U] = 0x00U;
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_NOT_FOUND);
+  TEST_ASSERT_EQ_UINT(mfg_store_device_sn_slot_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(!blank);
 }
 
 /***************************************************************************//**
@@ -245,6 +279,7 @@ int main(void)
   TEST_RUN(test_neighbours_ignored);
   TEST_RUN(test_read_malformed);
   TEST_RUN(test_read_missing_terminator);
+  TEST_RUN(test_not_set_rule);
   TEST_RUN(test_rejects);
   TEST_RUN(test_write_failure);
   return TEST_SUMMARY();
