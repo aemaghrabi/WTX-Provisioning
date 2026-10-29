@@ -22,9 +22,9 @@ After building, the script asks whether to flash the image and watch the
 board's log. Answering yes flashes it with Simplicity Commander (no mass erase;
 the image does not cover USERDATA, so only the firmware writes the serial
 number), reads the VCOM log at 115200 baud and waits for the firmware's result
-line. The firmware writes only an erased slot: a unit that already holds a
-different serial number reports "not written". That step needs --port and
-pyserial (python -m pip install -r tools/requirements.txt).
+line. Before writing, the firmware erases the whole USERDATA page on every run:
+anything stored there, an earlier serial number included, is lost. That step
+needs --port and pyserial (python -m pip install -r tools/requirements.txt).
 
 Exit codes:
     0  built; and if flashed, the board wrote the expected serial number

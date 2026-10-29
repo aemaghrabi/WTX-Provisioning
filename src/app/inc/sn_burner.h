@@ -17,10 +17,10 @@
  * to its USERDATA slot (src/services/inc/mfg_store.h) and reads it back. If
  * the run failed, nothing is written.
  *
- * Flash cannot be rewritten in place, so the slot is written only while it is
- * erased. When it already holds this same serial number, nothing is written
- * and the step passes. When it holds anything else, the step fails and the
- * USERDATA page has to be erased first.
+ * Flash cannot be rewritten in place, so every run first erases the whole
+ * USERDATA page, then writes. Flash is erased a page at a time: everything
+ * stored in USERDATA is lost, not only an earlier serial number. What the page
+ * held is logged before the erase.
  *
  * Build inputs, passed as compiler defines (tools/provision.py passes all):
  * - SN_BURNER_FAMILY: the FF product family code, two digits, unquoted, for

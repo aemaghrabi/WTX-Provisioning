@@ -22,6 +22,12 @@ static sl_status_t write_failure = SL_STATUS_OK;
 /// Writes that reached the page.
 static uint32_t writes;
 
+/// Status every erase returns while not SL_STATUS_OK.
+static sl_status_t erase_failure = SL_STATUS_OK;
+
+/// Erases that reached the page.
+static uint32_t erases;
+
 /***************************************************************************//**
  * Report whether len bytes from offset lie inside the page.
  ******************************************************************************/
@@ -36,6 +42,18 @@ void fake_userdata_flash_reset(void)
   (void)memset(page, 0xFF, sizeof(page));
   write_failure = SL_STATUS_OK;
   writes = 0U;
+  erase_failure = SL_STATUS_OK;
+  erases = 0U;
+}
+
+void fake_userdata_flash_fail_erases(sl_status_t status)
+{
+  erase_failure = status;
+}
+
+uint32_t fake_userdata_flash_erase_count(void)
+{
+  return erases;
 }
 
 uint8_t *fake_userdata_flash_page(void)
@@ -95,6 +113,37 @@ sl_status_t userdata_flash_write(uint32_t offset, const void *data, size_t len)
     page[offset + i] &= src[i];
   }
   writes++;
+
+  return SL_STATUS_OK;
+}
+
+sl_status_t userdata_flash_is_erased(bool *erased)
+{
+  size_t i;
+
+  if (erased == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+
+  for (i = 0U; i < sizeof(page); i++) {
+    if (page[i] != 0xFFU) {
+      *erased = false;
+      return SL_STATUS_OK;
+    }
+  }
+
+  *erased = true;
+  return SL_STATUS_OK;
+}
+
+sl_status_t userdata_flash_erase(void)
+{
+  if (erase_failure != SL_STATUS_OK) {
+    return erase_failure;
+  }
+
+  (void)memset(page, 0xFF, sizeof(page));
+  erases++;
 
   return SL_STATUS_OK;
 }

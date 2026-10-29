@@ -11,7 +11,8 @@
  * Series 2 config 1 (xG21).
  *
  * Offsets are relative to USERDATA_BASE. Reads are plain memory reads. Writes
- * go through emlib MSC_WriteWord(), which runs from RAM:
+ * and the page erase go through emlib MSC_WriteWord() and MSC_ErasePage(),
+ * which run from RAM:
  * - flash bits only go from 1 to 0, so a write can only clear bits that are
  *   still erased;
  * - each 64-bit double-word may be written at most twice between erases
@@ -26,6 +27,7 @@
 #ifndef USERDATA_FLASH_H
 #define USERDATA_FLASH_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "sl_status.h"
@@ -78,5 +80,36 @@ sl_status_t userdata_flash_read(uint32_t offset, void *out, size_t len);
  *         SL_STATUS_FAIL for any other MSC error.
  ******************************************************************************/
 sl_status_t userdata_flash_write(uint32_t offset, const void *data, size_t len);
+
+/***************************************************************************//**
+ * Report whether the whole USERDATA page reads as erased flash (0xFF).
+ *
+ * @param[out] erased true when every byte of the page is 0xFF.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if erased is NULL.
+ ******************************************************************************/
+sl_status_t userdata_flash_is_erased(bool *erased);
+
+/***************************************************************************//**
+ * Erase the whole USERDATA page, then check that it reads as erased.
+ *
+ * Everything in the page is lost, not only what this project stores there:
+ * the same effect as "commander device pageerase --region @userdata".
+ *
+ * @note Synchronous: the CPU stalls on flash for the duration of a page erase
+ *       while emlib MSC_ErasePage() runs from RAM. The erase time is in the
+ *       device datasheet, which is not in docs/manuals/. An interrupt does not
+ *       abort it: MSC_WRITECTRL.IRQERASEABORT resets to 0
+ *       (docs/manuals/efm32pg28_reference_manual.md, MSC_WRITECTRL register
+ *       table), and nothing in this project sets it. The check afterwards
+ *       catches an incomplete erase whatever the cause.
+ *
+ * @return SL_STATUS_OK when the page was erased and reads as erased,
+ *         SL_STATUS_FAIL if the MSC reported success but the page does not
+ *         read as erased,
+ *         otherwise the MSC errors listed for userdata_flash_write().
+ ******************************************************************************/
+sl_status_t userdata_flash_erase(void);
 
 #endif  // USERDATA_FLASH_H

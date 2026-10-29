@@ -270,6 +270,77 @@ static void test_write_failure(void)
   TEST_ASSERT(page_erased(0U, USERDATA_FLASH_SIZE));
 }
 
+/***************************************************************************//**
+ * The page reads as blank only when every byte of it is erased, slot or not.
+ ******************************************************************************/
+static void test_page_blank(void)
+{
+  bool blank = false;
+
+  fake_userdata_flash_reset();
+  TEST_ASSERT_EQ_UINT(mfg_store_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(blank);
+
+  // Outside the serial number slot counts too.
+  fake_userdata_flash_page()[USERDATA_FLASH_SIZE - 1U] = 0x7FU;
+  TEST_ASSERT_EQ_UINT(mfg_store_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(!blank);
+
+  fake_userdata_flash_reset();
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(!blank);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_is_blank(NULL), SL_STATUS_NULL_POINTER);
+}
+
+/***************************************************************************//**
+ * Erasing clears the whole page, after which a different serial number can be
+ * written, which is the only way to replace one.
+ ******************************************************************************/
+static void test_erase_then_rewrite(void)
+{
+  uint8_t *page;
+  char out[DEVICE_SN_STR_SIZE];
+  bool blank = false;
+
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_OK);
+  // Something else in the page, which the erase takes with it.
+  page[0] = 0x12U;
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_b), SL_STATUS_ALREADY_EXISTS);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_erase(), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_erase_count(), 1U);
+  TEST_ASSERT(page_erased(0U, USERDATA_FLASH_SIZE));
+  TEST_ASSERT_EQ_UINT(mfg_store_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(blank);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_NOT_FOUND);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_b), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_MEM(out, sn_b, DEVICE_SN_STR_SIZE);
+  TEST_ASSERT_EQ_MEM(&page[MFG_STORE_SN_OFFSET], sn_b, DEVICE_SN_STORED_LEN);
+}
+
+/***************************************************************************//**
+ * A failed erase is passed back, and the page is left as it was.
+ ******************************************************************************/
+static void test_erase_failure(void)
+{
+  uint8_t *page;
+
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_OK);
+  fake_userdata_flash_fail_erases(SL_STATUS_FLASH_PROGRAM_FAILED);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_erase(), SL_STATUS_FLASH_PROGRAM_FAILED);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_erase_count(), 0U);
+  TEST_ASSERT_EQ_MEM(&page[MFG_STORE_SN_OFFSET], sn_a, DEVICE_SN_STORED_LEN);
+}
+
 int main(void)
 {
   TEST_RUN(test_slot_layout);
@@ -282,5 +353,8 @@ int main(void)
   TEST_RUN(test_not_set_rule);
   TEST_RUN(test_rejects);
   TEST_RUN(test_write_failure);
+  TEST_RUN(test_page_blank);
+  TEST_RUN(test_erase_then_rewrite);
+  TEST_RUN(test_erase_failure);
   return TEST_SUMMARY();
 }

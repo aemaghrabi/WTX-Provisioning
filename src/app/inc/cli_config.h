@@ -64,6 +64,12 @@
 #define CLI_SN_CONFIRM_TIMEOUT_MS  30000U
 #endif
 
+/// Milliseconds to wait at the question asked by "erase device userdata"
+/// before giving up and erasing nothing.
+#ifndef CLI_ERASE_CONFIRM_TIMEOUT_MS
+#define CLI_ERASE_CONFIRM_TIMEOUT_MS  30000U
+#endif
+
 /// Milliseconds a request may spend waiting to be accepted by the transport.
 ///
 /// A dispatch can be refused while the Command mode session is being

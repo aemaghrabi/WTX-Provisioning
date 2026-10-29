@@ -21,7 +21,8 @@ The provisioning firmware is responsible for:
    parameter the module stores and ships holding the factory defaults. See
    [XBee radio configuration](#xbee-radio-configuration).
 4. **Write MCU NVM data** -- store provisioning data on the EFM32 that the main firmware reads at
-   runtime. Implemented for the device serial number, not yet run on hardware; see
+   runtime. Implemented for the device serial number (in the USERDATA page), not yet run on
+   hardware; see
    [Device serial number](#device-serial-number). Other data: **TBD**.
 5. **Report the result** -- over a UART log to a PC and via the debugger (RTT). Details: **TBD**.
 
@@ -122,9 +123,10 @@ Simplicity Studio and will be specified in the relevant plan under `docs/plan/`.
 ### Device serial number
 
 The device serial number is the enclosure nameplate number. The provisioning firmware writes it to
-the EFM32's NVM3; the main product firmware (WTX-FW) only reads it, shows it on the LCD and sends
-it to the gateway at registration. Design: `docs/plan/2026-10-06-device-serial-number.md`, with the
-format changed by `docs/plan/2026-10-29-serial-number-family-code.md`.
+the EFM32's USERDATA flash page; the main product firmware (WTX-FW) only reads it, shows it on the
+LCD and sends it to the gateway at registration. Design: `docs/plan/2026-10-06-device-serial-number.md`,
+with the format changed by `docs/plan/2026-10-29-serial-number-family-code.md` and the storage by
+`docs/plan/2026-10-29-sn-userdata-storage.md`.
 
 | Item | Value |
 | --- | --- |
@@ -133,16 +135,18 @@ format changed by `docs/plan/2026-10-29-serial-number-family-code.md`.
 | `YYWW` | ISO week-numbering year (last two digits) and ISO week of the build date; 2027-01-01 gives `2653` |
 | `SSSSS` | Five-digit sequence number, given to the CLI or to `tools/provision.py` |
 | `C` | ISO 7064 MOD 11-10 check digit over all eleven digits `FFYYWWSSSSS` |
-| Storage | NVM3 default instance, data object, key `0x00003`, exactly 12 bytes, no NUL terminator |
+| Storage | USERDATA page, `0x0FE0008C`: the SDK's `TOKEN_MFG_SERIAL_NUMBER` slot (offset `0x08C`, 16 bytes) |
+| Stored bytes | Exactly 13: the 12 digits, then `0x00`. The other 3 bytes of the slot stay erased (`0xFF`) |
+| Not set | The first byte of the slot reads `0xFF`, the rule WTX-FW applies |
 
 The specification's example, `180726001234`, has the wrong check digit: ISO 7064 MOD 11-10 gives 0.
 
-WTX-FW must accept the 12-byte object. Until its reader is changed from the earlier 13-byte form,
-it reports the serial number as not set.
-
-Both images must use the same NVM3 instance, so the NVM3 configuration here
-(`config/nvm3_default_config.h`: 40960 bytes, cache 200, max object 254, headroom 0) must stay
-identical to WTX-FW's. The instance then sits at `0x080F4000` in both.
+USERDATA is not part of a main flash mass erase (reference manual 5.3.12), so the serial number
+survives reflashing. Flash cannot be rewritten in place: a serial number is written only into a
+slot whose 16 bytes are all erased, and replacing one means erasing the whole 1 kB USERDATA page,
+which removes everything stored there. WTX-FW must read the serial number from this slot; one that
+still reads NVM3 key `0x00003` reports it as not set. Units provisioned before this change hold
+the serial number in NVM3, which this firmware no longer reads or writes.
 
 **Provisioning (hex) build.** Each image carries one serial number, so it is built per unit:
 
@@ -155,8 +159,9 @@ alone, and copies the image to `cmake_gcc/build-provision/units/xbee_provision_<
 then asks whether to flash it and watch the log; answering yes flashes it with Simplicity Commander
 and waits for the board's result line. That step needs `--port COMx` and pyserial
 (`python -m pip install -r tools/requirements.txt`); `python tools/provision.py --help` lists every
-option. On the board, the serial number is written only after the XBee configuration has passed,
-and it replaces whatever is stored. The run ends with one log line,
+option. On the board, the serial number is written only after the XBee configuration has passed.
+Every run first erases the whole USERDATA page, logging what it held, then writes and reads the
+serial number back. The run ends with one log line,
 `serial number written: FFYYWWSSSSSC` or `serial number not written: <reason>`. Configuring the
 `PROVISION` variant without `-DSN_BURNER_FAMILY` or `-DSN_BURNER_SEQUENCE` fails the build on
 purpose.
@@ -169,13 +174,19 @@ xbee# configure terminal
 xbee(config)# device serial-number 18 00123
 xbee(config)# device serial-number 18 00123 week 2653
 xbee(config)# show device serial-number
+xbee(config)# end
+xbee# erase device userdata
 ```
 
 `device serial-number` shows the serial number it will write, with the week taken from the build
-date (as `show version` prints it) unless `week <YYWW>` is given. When a different serial number is
-already stored it warns and asks before overwriting; only `y` or `yes` writes. When the same one is
-stored it writes nothing. `show device serial-number` reports the stored value, `not set`, or why
-the stored object would not be accepted by WTX-FW.
+date (as `show version` prints it) unless `week <YYWW>` is given, and asks before writing; only `y`
+or `yes` writes. When a serial number is already stored, or the slot is not blank, it writes
+nothing and says to run `erase device userdata` first. `show device serial-number` reports the
+stored value, `not set`, or what is wrong with it (malformed, wrong check digit, no NUL terminator).
+
+`erase device userdata` (privileged EXEC) erases the whole USERDATA page, the same as
+`commander device pageerase --region @userdata`. It names the serial number it is about to remove
+and asks first; only `y` or `yes` erases. It does nothing when the page is already blank.
 
 ### Repository layout
 
@@ -242,6 +253,7 @@ Flow for each new board (procedure details **TBD**):
    script's prompt or with Simplicity Commander.
 3. Let the board run provisioning; observe the result on the UART log or via RTT. A pass ends with
    `serial number written: FFYYWWSSSSSC`.
-4. On pass: flash the main product firmware over SWD **without a mass or chip erase**, which would
-   also erase the serial number in NVM3. On fail: set the board aside for investigation and record
-   the reported error.
+4. On pass: flash the main product firmware over SWD **without a mass or chip erase**. The serial
+   number is in USERDATA, which a main flash mass erase does not include (reference manual
+   5.3.12); a mass erase still clears NVM3. On fail: set the board aside for investigation and
+   record the reported error.

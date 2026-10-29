@@ -1,6 +1,6 @@
 # Plan: move the device serial number to USERDATA (contract Part 1, topics 1, 2, 5, 6)
 
-Status: In progress (Phases 1 to 3 done, build-verified only; phase 4 not started)
+Status: In progress (all four phases implemented and build-verified; on-target verification pending)
 Date: 2026-10-29
 Related history: docs/history/2026-10-29-sn-userdata-phaseN.md (one per phase, written as each phase is done)
 Supersedes (storage only): docs/plan/2026-10-29-serial-number-family-code.md
@@ -221,6 +221,12 @@ write.
    `MSC_ErasePage` handle this. The blank check after the erase always catches an aborted erase.
    If aborts happen, the fix (for example, clearing `IRQERASEABORT` through an emlib API) is
    proposed before it is applied.
+   - **Outcome (phase 4):** not a risk with the default settings.
+     - The register table and the device header both give `IRQERASEABORT` a reset value of 0, so
+       an interrupt does not abort the erase.
+     - Neither emlib nor NVM3 sets the bit.
+     - The 5.3.12 prose contradicts the register table.
+     - The blank check stays. See `docs/history/2026-10-29-sn-userdata-phase4.md`.
 4. **UDLOCK.** If `MSC_MISCLOCKWORD.UDLOCKBIT` is set on a unit, every write and erase fails
    with "locked". This is reported, not worked around.
 5. **Units already provisioned in NVM3** keep their stale NVM3 object, and it is ignored.

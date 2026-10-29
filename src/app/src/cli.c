@@ -22,7 +22,8 @@
  * "device serial-number" does not talk to the module at all. It shows the
  * serial number it would write to the USERDATA flash page, refuses if one is
  * already stored there (flash cannot be rewritten in place), and writes only
- * once the operator has said yes.
+ * once the operator has said yes. "erase device userdata" clears the way for a
+ * new one: it erases the whole USERDATA page, again only after a yes.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -98,6 +99,7 @@ enum {
   CMD_XBEE_PROVISION_ALL,
   CMD_DEVICE_SN_SET,
   CMD_SHOW_DEVICE_SN,
+  CMD_ERASE_USERDATA,
 };
 /// @}
 
@@ -115,6 +117,7 @@ typedef enum {
   CLI_STATE_PROVISION, ///< "xbee provision all" is running.
   CLI_STATE_SAVE_CONFIRM, ///< At the "do you want to save?" prompt of a provisioning run.
   CLI_STATE_SN_CONFIRM, ///< At the question asked before writing the serial number.
+  CLI_STATE_ERASE_CONFIRM, ///< At the question asked before erasing USERDATA.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -243,6 +246,18 @@ static const cli_node_t conf_device_children[] = {
     M_CONF, CLI_CMD_NONE, conf_sn_family, 1U },
 };
 
+// "erase device userdata": privileged EXEC, like IOS "erase startup-config".
+// Flash is erased a page at a time, so it erases the whole page.
+static const cli_node_t erase_device_children[] = {
+  { "userdata", "The whole USERDATA page, serial number included",
+    CLI_NODE_KEYWORD, M_PRIV, CMD_ERASE_USERDATA, NULL, 0U },
+};
+
+static const cli_node_t erase_children[] = {
+  { "device", "Identity stored on this board", CLI_NODE_KEYWORD,
+    M_PRIV, CLI_CMD_NONE, erase_device_children, 1U },
+};
+
 static const cli_node_t root[] = {
   { "bridge", "Connect this terminal straight to the XBee module",
     CLI_NODE_KEYWORD, M_PRIV, CMD_BRIDGE, NULL, 0U },
@@ -256,6 +271,8 @@ static const cli_node_t root[] = {
     M_USER, CMD_ENABLE, NULL, 0U },
   { "end", "Return to privileged EXEC", CLI_NODE_KEYWORD,
     M_CONF, CMD_END, NULL, 0U },
+  { "erase", "Erase data stored on this board", CLI_NODE_KEYWORD,
+    M_PRIV, CLI_CMD_NONE, erase_children, 1U },
   { "exit", "Leave the current mode", CLI_NODE_KEYWORD,
     M_ALL, CMD_EXIT, NULL, 0U },
   { "logging", "Log output from the XBee stack", CLI_NODE_KEYWORD,
@@ -343,6 +360,17 @@ static char pending_sn[DEVICE_SN_STR_SIZE];
 
 /// Tick by which the serial number question must have been answered.
 static uint32_t sn_confirm_deadline;
+
+/// The serial number the erase question names, made safe to print. Valid
+/// while erase_has_sn is true.
+static char erase_sn_shown[DEVICE_SN_STR_SIZE];
+
+/// True when USERDATA holds a serial number, well formed or not, so that the
+/// erase question names it.
+static bool erase_has_sn;
+
+/// Tick by which the erase question must have been answered.
+static uint32_t erase_confirm_deadline;
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -977,6 +1005,30 @@ static void print_sn_question(void)
 }
 
 /***************************************************************************//**
+ * Tell the operator how to clear a serial number slot that cannot be written.
+ ******************************************************************************/
+static void print_erase_hint(void)
+{
+  (void)console_uart_puts("% Leave configuration mode and run \"erase device "
+                          "userdata\" first.\n");
+}
+
+/***************************************************************************//**
+ * Write the question asked before the USERDATA page is erased.
+ ******************************************************************************/
+static void print_erase_question(void)
+{
+  if (erase_has_sn) {
+    (void)console_uart_printf("Erase the whole USERDATA page (serial number "
+                              "%s)? Everything stored there is lost. [N/y] ",
+                              erase_sn_shown);
+  } else {
+    (void)console_uart_puts("Erase the whole USERDATA page (no serial number "
+                            "set)? Everything stored there is lost. [N/y] ");
+  }
+}
+
+/***************************************************************************//**
  * Answer '?' at a yes/no question: list the accepted answers, then ask again.
  *
  * The command help means nothing here. The answer typed so far is untouched by
@@ -997,6 +1049,11 @@ static void show_answer_help(void)
     help_cb("Enter", "Do not write", NULL);
     help_cb("other", "Do not write", NULL);
     print_sn_question();
+  } else if (state == CLI_STATE_ERASE_CONFIRM) {
+    help_cb("y, yes", "Erase the whole USERDATA page", NULL);
+    help_cb("Enter", "Do not erase", NULL);
+    help_cb("other", "Do not erase", NULL);
+    print_erase_question();
   } else if (xbee_provision_review_mismatches() == 0U) {
     help_cb("y, yes", "Save to the module's flash", NULL);
     help_cb("Enter", "Do not save; reset the module", NULL);
@@ -1244,6 +1301,7 @@ static bool cmd_device_sn_set(const char *family_text,
         (void)device_sn_to_printable(stored, shown, sizeof(shown));
         (void)console_uart_printf("%% Serial number %s is already stored. "
                                   "Nothing written.\n", shown);
+        print_erase_hint();
       }
       return false;
 
@@ -1251,6 +1309,7 @@ static bool cmd_device_sn_set(const char *family_text,
       (void)device_sn_to_printable(stored, shown, sizeof(shown));
       (void)console_uart_printf("%% Serial number %s is stored without its NUL "
                                 "terminator. Nothing written.\n", shown);
+      print_erase_hint();
       return false;
 
     case SL_STATUS_NOT_FOUND:
@@ -1273,6 +1332,7 @@ static bool cmd_device_sn_set(const char *family_text,
   if (!blank) {
     (void)console_uart_puts("% Serial number not set, but its USERDATA slot is "
                             "not blank. Nothing written.\n");
+    print_erase_hint();
     return false;
   }
 
@@ -1311,9 +1371,81 @@ static void handle_sn_confirm(void)
     // USERDATA meanwhile gets here.
     (void)console_uart_puts("% The serial number slot in USERDATA is no longer "
                             "blank. Nothing written.\n");
+    print_erase_hint();
   } else {
     (void)console_uart_printf("%% Writing the serial number failed, status "
                               "0x%04X\n", (unsigned)status);
+  }
+
+  back_to_prompt();
+}
+
+/***************************************************************************//**
+ * Say what USERDATA holds and ask before erasing it.
+ *
+ * Nothing is erased here. When the page is already blank, nothing is asked.
+ *
+ * @return true when the question is now waiting for an answer.
+ ******************************************************************************/
+static bool cmd_erase_userdata(void)
+{
+  char stored[DEVICE_SN_STR_SIZE];
+  bool blank = false;
+  sl_status_t status = mfg_store_is_blank(&blank);
+
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X. "
+                              "Nothing erased.\n", (unsigned)status);
+    return false;
+  }
+  if (blank) {
+    (void)console_uart_puts("USERDATA is already blank. Nothing erased.\n");
+    return false;
+  }
+
+  // Name the serial number in the question, well formed or not, so the
+  // operator sees what is about to go.
+  status = mfg_store_read_device_sn(stored, sizeof(stored));
+  erase_has_sn = ((status == SL_STATUS_OK)
+                  || (status == SL_STATUS_INVALID_COUNT));
+  if (erase_has_sn) {
+    (void)device_sn_to_printable(stored, erase_sn_shown,
+                                 sizeof(erase_sn_shown));
+  }
+
+  print_erase_question();
+  erase_confirm_deadline = deadline_from_ms(CLI_ERASE_CONFIRM_TIMEOUT_MS);
+  state = CLI_STATE_ERASE_CONFIRM;
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Act on the answer to the erase question.
+ *
+ * Only "y" or "yes" erases. Enter alone, and anything else, erases nothing.
+ ******************************************************************************/
+static void handle_erase_confirm(void)
+{
+  const char *answer = line_edit_line(&editor);
+  bool yes = (equals_ignore_case(answer, "y")
+              || equals_ignore_case(answer, "yes"));
+  sl_status_t status;
+
+  if (!yes) {
+    (void)console_uart_puts("% Not erased\n");
+    back_to_prompt();
+    return;
+  }
+
+  // Blocks for one page erase; see mfg_store_erase(). The console has no
+  // request in flight at this prompt.
+  status = mfg_store_erase();
+  if (status == SL_STATUS_OK) {
+    (void)console_uart_puts("[OK] USERDATA erased\n");
+  } else {
+    (void)console_uart_printf("%% Erasing USERDATA failed, status 0x%04X\n",
+                              (unsigned)status);
   }
 
   back_to_prompt();
@@ -1435,6 +1567,10 @@ static bool execute(const cli_parse_result_t *result)
 
     case CMD_SHOW_DEVICE_SN:
       cli_show_device_sn();
+      break;
+
+    case CMD_ERASE_USERDATA:
+      started = cmd_erase_userdata();
       break;
 
     default:
@@ -1574,6 +1710,8 @@ static void feed_byte(char c)
         handle_save_confirm();
       } else if (state == CLI_STATE_SN_CONFIRM) {
         handle_sn_confirm();
+      } else if (state == CLI_STATE_ERASE_CONFIRM) {
+        handle_erase_confirm();
       } else {
         handle_line();
       }
@@ -1582,7 +1720,8 @@ static void feed_byte(char c)
     case LINE_EDIT_HELP:
       if ((state == CLI_STATE_CONFIRM)
           || (state == CLI_STATE_SAVE_CONFIRM)
-          || (state == CLI_STATE_SN_CONFIRM)) {
+          || (state == CLI_STATE_SN_CONFIRM)
+          || (state == CLI_STATE_ERASE_CONFIRM)) {
         show_answer_help();
       } else {
         show_help();
@@ -1599,6 +1738,9 @@ static void feed_byte(char c)
         decide_save(false);
       } else if (state == CLI_STATE_SN_CONFIRM) {
         (void)console_uart_puts("% Not written\n");
+        back_to_prompt();
+      } else if (state == CLI_STATE_ERASE_CONFIRM) {
+        (void)console_uart_puts("% Not erased\n");
         back_to_prompt();
       } else {
         print_prompt();
@@ -1622,6 +1764,10 @@ static void feed_byte(char c)
       } else if (state == CLI_STATE_SN_CONFIRM) {
         // Not a yes, so the serial number is not written.
         (void)console_uart_puts("% Not written\n");
+        state = CLI_STATE_PROMPT;
+      } else if (state == CLI_STATE_ERASE_CONFIRM) {
+        // Not a yes, so nothing is erased.
+        (void)console_uart_puts("% Not erased\n");
         state = CLI_STATE_PROMPT;
       } else {
         // Back to an ordinary prompt.
@@ -1924,6 +2070,14 @@ void cli_process(void)
       if (tick_reached(sn_confirm_deadline)) {
         (void)console_uart_puts("\n% Timed out waiting for an answer. "
                                 "Nothing written.\n");
+        back_to_prompt();
+      }
+      break;
+
+    case CLI_STATE_ERASE_CONFIRM:
+      if (tick_reached(erase_confirm_deadline)) {
+        (void)console_uart_puts("\n% Timed out waiting for an answer. "
+                                "Nothing erased.\n");
         back_to_prompt();
       }
       break;

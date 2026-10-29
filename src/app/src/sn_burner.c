@@ -7,7 +7,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "app_log.h"
 #include "device_sn.h"
@@ -74,65 +73,25 @@ static sl_status_t build_week(uint16_t *yyww, const char **source)
 #endif
 }
 
-/// What is in the serial number slot, as far as writing is concerned.
-typedef enum {
-  SLOT_BLANK,      ///< Erased; the serial number can be written.
-  SLOT_SAME,       ///< Already holds this very serial number.
-  SLOT_REFUSED,    ///< Holds something else; the reason has been logged.
-} slot_state_t;
-
 /***************************************************************************//**
- * Look at the serial number slot before writing.
- *
- * Flash cannot be rewritten in place, so anything but an erased slot or this
- * same serial number ends the step. Every refusal logs the one
- * "serial number not written" line.
+ * Say what the USERDATA page holds before it is erased.
  ******************************************************************************/
-static slot_state_t check_slot(const char *sn)
+static void report_before_erase(void)
 {
   char stored[DEVICE_SN_STR_SIZE];
   char shown[DEVICE_SN_STR_SIZE];
   bool blank = false;
   sl_status_t status = mfg_store_read_device_sn(stored, sizeof(stored));
 
-  switch (status) {
-    case SL_STATUS_OK:
-      if (memcmp(stored, sn, DEVICE_SN_LEN) == 0) {
-        return SLOT_SAME;
-      }
-      (void)device_sn_to_printable(stored, shown, sizeof(shown));
-      APP_LOG_ERROR("serial number not written: USERDATA already holds "
-                    "serial number %s", shown);
-      return SLOT_REFUSED;
-
-    case SL_STATUS_INVALID_COUNT:
-      (void)device_sn_to_printable(stored, shown, sizeof(shown));
-      APP_LOG_ERROR("serial number not written: USERDATA holds serial number "
-                    "%s without its NUL terminator", shown);
-      return SLOT_REFUSED;
-
-    case SL_STATUS_NOT_FOUND:
-      break;
-
-    default:
-      APP_LOG_ERROR("serial number not written: USERDATA could not be read, "
-                    "status 0x%04X", (unsigned)status);
-      return SLOT_REFUSED;
+  if ((status == SL_STATUS_OK) || (status == SL_STATUS_INVALID_COUNT)) {
+    (void)device_sn_to_printable(stored, shown, sizeof(shown));
+    APP_LOG_INFO("erasing USERDATA (it held serial number %s)", shown);
+  } else if ((mfg_store_is_blank(&blank) == SL_STATUS_OK) && blank) {
+    APP_LOG_INFO("erasing USERDATA (blank)");
+  } else {
+    APP_LOG_INFO("erasing USERDATA (it held no serial number, but was not "
+                 "blank)");
   }
-
-  status = mfg_store_device_sn_slot_is_blank(&blank);
-  if (status != SL_STATUS_OK) {
-    APP_LOG_ERROR("serial number not written: USERDATA could not be read, "
-                  "status 0x%04X", (unsigned)status);
-    return SLOT_REFUSED;
-  }
-  if (!blank) {
-    APP_LOG_ERROR("serial number not written: it reads as not set, but its "
-                  "USERDATA slot is not blank");
-    return SLOT_REFUSED;
-  }
-
-  return SLOT_BLANK;
 }
 
 /***************************************************************************//**
@@ -178,18 +137,14 @@ static bool burn(void)
   APP_LOG_INFO("serial number %s, week %04u from the %s",
                sn, (unsigned)yyww, week_source);
 
-  switch (check_slot(sn)) {
-    case SLOT_SAME:
-      // Nothing to program: the slot already reads back as this number.
-      APP_LOG_INFO("the same serial number is already stored in USERDATA");
-      APP_LOG_INFO("serial number written: %s", sn);
-      return true;
-
-    case SLOT_BLANK:
-      break;
-
-    default:
-      return false;
+  // Flash cannot be rewritten in place, so every run starts from an erased
+  // page. Flash is erased a page at a time: everything in USERDATA goes.
+  report_before_erase();
+  status = mfg_store_erase();
+  if (status != SL_STATUS_OK) {
+    APP_LOG_ERROR("serial number not written: erasing USERDATA failed, "
+                  "status 0x%04X", (unsigned)status);
+    return false;
   }
 
   status = mfg_store_write_device_sn(sn);

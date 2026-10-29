@@ -15,7 +15,7 @@
 #include "sl_status.h"
 
 /***************************************************************************//**
- * Erase the whole page, clear the injected failure and the write count.
+ * Erase the whole page, clear the injected failures and the counts.
  ******************************************************************************/
 void fake_userdata_flash_reset(void);
 
@@ -35,5 +35,16 @@ void fake_userdata_flash_fail_writes(sl_status_t status);
  * Number of writes that reached the page since the last reset.
  ******************************************************************************/
 uint32_t fake_userdata_flash_write_count(void);
+
+/***************************************************************************//**
+ * Make every following erase fail with status, without changing the page.
+ * @param[in] status SL_STATUS_OK to let erases succeed again.
+ ******************************************************************************/
+void fake_userdata_flash_fail_erases(sl_status_t status);
+
+/***************************************************************************//**
+ * Number of erases that reached the page since the last reset.
+ ******************************************************************************/
+uint32_t fake_userdata_flash_erase_count(void);
 
 #endif  // FAKE_USERDATA_FLASH_H

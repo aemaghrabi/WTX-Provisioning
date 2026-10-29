@@ -25,7 +25,7 @@
  * slot whose 16 bytes are all still erased. "Not set" is therefore not the same
  * as writable: a slot whose first byte is erased but whose other bytes are not
  * reads as not set and still cannot be written. Replacing a serial number needs
- * the USERDATA page erased first.
+ * the USERDATA page erased first, with mfg_store_erase().
  *
  * Plan: docs/plan/2026-10-29-sn-userdata-storage.md.
  ******************************************************************************/
@@ -101,5 +101,32 @@ sl_status_t mfg_store_device_sn_slot_is_blank(bool *blank);
  *         otherwise the status of the failing flash step.
  ******************************************************************************/
 sl_status_t mfg_store_write_device_sn(const char *sn);
+
+/***************************************************************************//**
+ * Report whether the whole USERDATA page is erased, so that there is nothing
+ * for mfg_store_erase() to do.
+ *
+ * @param[out] blank true when every byte of the page reads 0xFF.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if blank is NULL.
+ ******************************************************************************/
+sl_status_t mfg_store_is_blank(bool *blank);
+
+/***************************************************************************//**
+ * Erase the whole USERDATA page, serial number included, and check that it
+ * reads as erased afterwards.
+ *
+ * Flash can only be erased a page at a time, so this removes everything
+ * stored in USERDATA, not only the serial number: the same effect as
+ * "commander device pageerase --region @userdata".
+ *
+ * @note Blocks for one page erase. Meant for a factory step, called with
+ *       nothing else in flight.
+ *
+ * @return SL_STATUS_OK when the page was erased and reads as erased,
+ *         otherwise the status of userdata_flash_erase().
+ ******************************************************************************/
+sl_status_t mfg_store_erase(void);
 
 #endif  // MFG_STORE_H

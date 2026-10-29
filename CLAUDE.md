@@ -212,11 +212,19 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
 - **Components:** `clock_manager`, `device_init`, `sl_main`, `uartdrv_eusart` (instance `XBEE`),
   `iostream_eusart` (instance `VCOM`), `iostream_retarget_stdio`, `nvm3_default` (flash back-end
   and `memory_manager` resolved as dependencies)
+- **Device serial number:** `FFYYWWSSSSSC`, stored in the USERDATA page at `0x0FE0008C` (the
+  SDK's `TOKEN_MFG_SERIAL_NUMBER` slot, 16 bytes) as exactly 13 bytes, the digits then `0x00`;
+  "not set" means the first byte reads `0xFF`. Written through emlib MSC
+  (`src/drivers/inc/userdata_flash.h`, `src/services/inc/mfg_store.h`,
+  `src/utils/inc/device_sn.h`). Replacing it erases the whole 1 kB USERDATA page
+  (`erase device userdata`; the PROVISION image does so on every run). Plan:
+  `docs/plan/2026-10-29-sn-userdata-storage.md`.
 - **NVM3:** default instance shared with the production firmware (WTX-FW). Its configuration in
   `config/nvm3_default_config.h` (40960 bytes, cache 200, max object 254, headroom 0) must stay
-  identical to WTX-FW's, so both images find it at `0x080F4000`. Key `0x00003` is the device
-  serial number, `FFYYWWSSSSSC`, exactly 12 bytes with no NUL (`src/services/inc/nvm_store.h`,
-  `src/utils/inc/device_sn.h`); keys `0x00001` and `0x00002` belong to WTX-FW.
+  identical to WTX-FW's, so both images find it at `0x080F4000`. Keys `0x00001` and `0x00002`
+  belong to WTX-FW. Key `0x00003` held the device serial number before it moved to USERDATA;
+  `src/services/inc/nvm_store.h` still implements it but nothing calls it any more. It is kept
+  for now and marked for deletion.
 - **Global define:** `DEBUG_EFM`
 - **App model:** bare-metal super loop → `app_init()` once, `app_process_action()` every iteration
 

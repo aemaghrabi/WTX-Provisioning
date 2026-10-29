@@ -163,3 +163,19 @@ sl_status_t mfg_store_write_device_sn(const char *sn)
 
   return SL_STATUS_OK;
 }
+
+/***************************************************************************//**
+ * Report whether the whole USERDATA page is erased.
+ ******************************************************************************/
+sl_status_t mfg_store_is_blank(bool *blank)
+{
+  return userdata_flash_is_erased(blank);
+}
+
+/***************************************************************************//**
+ * Erase the whole USERDATA page.
+ ******************************************************************************/
+sl_status_t mfg_store_erase(void)
+{
+  return userdata_flash_erase();
+}
