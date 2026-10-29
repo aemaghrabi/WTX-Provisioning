@@ -3,8 +3,8 @@
  * @brief Device serial number: format, check digit, ISO week and input parsing.
  *
  * The device serial number is the enclosure nameplate number, written once at
- * the factory into MCU NVM3 and read by the production firmware (WTX-FW). Its
- * form is
+ * the factory into the USERDATA flash page (src/services/inc/mfg_store.h) and
+ * read by the production firmware (WTX-FW). Its form is
  *
  *     FFYYWWSSSSSC
  *
@@ -196,7 +196,7 @@ sl_status_t device_sn_format(uint8_t family,
  * read. Whether YYWW names a real week is not checked, because WTX-FW does not
  * check it either.
  *
- * @param[in] sn DEVICE_SN_LEN readable bytes, as read from NVM3.
+ * @param[in] sn DEVICE_SN_LEN readable bytes, as read from USERDATA.
  *
  * @return SL_STATUS_OK if the serial number is well formed and its check digit
  *         is right,

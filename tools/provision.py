@@ -2,9 +2,9 @@
 """Build the provisioning image for one unit, which writes its device serial number.
 
 The provisioning firmware (XBEE_APP_PROVISION) configures the XBee module and,
-once that has passed, writes the device serial number FFYYWWSSSSSC to MCU
-NVM3 (src/app/inc/sn_burner.h). Every image carries one serial number, so it
-is built per unit:
+once that has passed, writes the device serial number FFYYWWSSSSSC to its slot
+in the MCU's USERDATA flash page, at 0x0FE0008C (src/app/inc/sn_burner.h).
+Every image carries one serial number, so it is built per unit:
 
     python tools/provision.py --family 18 --sequence 00123
 
@@ -19,10 +19,12 @@ so the normal console build in cmake_gcc/build is left alone, and a copy named
 after the serial number is put in its units/ folder.
 
 After building, the script asks whether to flash the image and watch the
-board's log. Answering yes flashes it with Simplicity Commander (no mass erase,
-so the rest of the NVM3 region is kept), reads the VCOM log at 115200 baud and
-waits for the firmware's result line. That step needs --port and pyserial
-(python -m pip install -r tools/requirements.txt).
+board's log. Answering yes flashes it with Simplicity Commander (no mass erase;
+the image does not cover USERDATA, so only the firmware writes the serial
+number), reads the VCOM log at 115200 baud and waits for the firmware's result
+line. The firmware writes only an erased slot: a unit that already holds a
+different serial number reports "not written". That step needs --port and
+pyserial (python -m pip install -r tools/requirements.txt).
 
 Exit codes:
     0  built; and if flashed, the board wrote the expected serial number
@@ -287,7 +289,7 @@ def flash_and_watch(args: argparse.Namespace, image: Path, expected_sn: str) -> 
 def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build the provisioning image for one unit, which writes its "
-                    "device serial number FFYYWWSSSSSC to MCU NVM3.")
+                    "device serial number FFYYWWSSSSSC to MCU USERDATA.")
     parser.add_argument("--family", required=True,
                         help="the FF part, the product family code: exactly two digits, "
                              "for example 18")

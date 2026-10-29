@@ -20,8 +20,9 @@
  * as "{Parameter}={value}", and waits while the console asks whether to save.
  *
  * "device serial-number" does not talk to the module at all. It shows the
- * serial number it would write to MCU NVM3, warns if a different one is
- * already stored there, and writes only once the operator has said yes.
+ * serial number it would write to the USERDATA flash page, refuses if one is
+ * already stored there (flash cannot be rewritten in place), and writes only
+ * once the operator has said yes.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -36,7 +37,7 @@
 #include "line_edit.h"
 
 #include "cli_parser.h"
-#include "nvm_store.h"
+#include "mfg_store.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -136,7 +137,7 @@ static const cli_node_t show_xbee_children[] = {
 };
 
 static const cli_node_t show_device_children[] = {
-  { "serial-number", "Serial number stored in MCU NVM", CLI_NODE_KEYWORD,
+  { "serial-number", "Serial number stored in USERDATA", CLI_NODE_KEYWORD,
     M_ALL, CMD_SHOW_DEVICE_SN, NULL, 0U },
 };
 
@@ -238,7 +239,7 @@ static const cli_node_t conf_sn_family[] = {
 };
 
 static const cli_node_t conf_device_children[] = {
-  { "serial-number", "Write the serial number to MCU NVM", CLI_NODE_KEYWORD,
+  { "serial-number", "Write the serial number to USERDATA", CLI_NODE_KEYWORD,
     M_CONF, CLI_CMD_NONE, conf_sn_family, 1U },
 };
 
@@ -339,13 +340,6 @@ static uint32_t save_confirm_deadline;
 
 /// Serial number "device serial-number" will write once the operator agrees.
 static char pending_sn[DEVICE_SN_STR_SIZE];
-
-/// The different serial number already stored, made safe to print. Valid while
-/// sn_overwrite is true.
-static char stored_sn_shown[DEVICE_SN_STR_SIZE];
-
-/// True when the question is whether to replace a different serial number.
-static bool sn_overwrite;
 
 /// Tick by which the serial number question must have been answered.
 static uint32_t sn_confirm_deadline;
@@ -975,16 +969,11 @@ static void print_save_question(void)
 }
 
 /***************************************************************************//**
- * Write the question asked before the serial number is written to MCU NVM.
+ * Write the question asked before the serial number is written to USERDATA.
  ******************************************************************************/
 static void print_sn_question(void)
 {
-  if (sn_overwrite) {
-    (void)console_uart_printf("Overwrite %s with %s? [N/y] ",
-                              stored_sn_shown, pending_sn);
-  } else {
-    (void)console_uart_printf("Write %s to MCU NVM? [N/y] ", pending_sn);
-  }
+  (void)console_uart_printf("Write %s to USERDATA? [N/y] ", pending_sn);
 }
 
 /***************************************************************************//**
@@ -1004,7 +993,7 @@ static void show_answer_help(void)
     help_cb("other", "Cancel", NULL);
     print_confirm_question();
   } else if (state == CLI_STATE_SN_CONFIRM) {
-    help_cb("y, yes", "Write the serial number to MCU NVM", NULL);
+    help_cb("y, yes", "Write the serial number to USERDATA", NULL);
     help_cb("Enter", "Do not write", NULL);
     help_cb("other", "Do not write", NULL);
     print_sn_question();
@@ -1173,11 +1162,11 @@ static void handle_confirm(void)
 }
 
 /***************************************************************************//**
- * Form the serial number, show it, and ask before writing it to MCU NVM.
+ * Form the serial number, show it, and ask before writing it to USERDATA.
  *
- * Nothing is written here. When a different serial number is already stored,
- * the operator is warned and asked whether to overwrite it; when the same one
- * is stored, nothing is asked and nothing is written.
+ * Nothing is written here. Flash cannot be rewritten in place, so when any
+ * serial number is already stored, or its slot is not blank, nothing is asked
+ * and nothing is written.
  *
  * @param[in] family_text   Typed FF.
  * @param[in] sequence_text Typed SSSSS.
@@ -1191,7 +1180,8 @@ static bool cmd_device_sn_set(const char *family_text,
                               const char *yyww_text)
 {
   char stored[DEVICE_SN_STR_SIZE];
-  size_t stored_len = 0U;
+  char shown[DEVICE_SN_STR_SIZE];
+  bool blank = false;
   uint32_t sequence = 0U;
   uint16_t yyww = 0U;
   uint8_t family = 0U;
@@ -1244,42 +1234,39 @@ static bool cmd_device_sn_set(const char *family_text,
                             (yyww_text != NULL) ? "the command"
                             : "the build date");
 
-  sn_overwrite = false;
-  status = nvm_store_read_device_sn(stored, sizeof(stored), &stored_len);
+  status = mfg_store_read_device_sn(stored, sizeof(stored));
 
   switch (status) {
     case SL_STATUS_OK:
       if (memcmp(stored, pending_sn, DEVICE_SN_LEN) == 0) {
         (void)console_uart_puts("It is already stored. Nothing written.\n");
-        return false;
+      } else {
+        (void)device_sn_to_printable(stored, shown, sizeof(shown));
+        (void)console_uart_printf("%% Serial number %s is already stored. "
+                                  "Nothing written.\n", shown);
       }
-      (void)device_sn_to_printable(stored, stored_sn_shown,
-                                   sizeof(stored_sn_shown));
-      (void)console_uart_printf("%% Warning: serial number %s is already stored "
-                                "on this board.\n", stored_sn_shown);
-      sn_overwrite = true;
-      break;
+      return false;
 
     case SL_STATUS_NOT_FOUND:
       break;
 
-    case SL_STATUS_INVALID_COUNT:
-      (void)console_uart_printf("%% Warning: the object stored under the serial "
-                                "number key is %u bytes, not %u, and reads as "
-                                "not set.\n",
-                                (unsigned)stored_len,
-                                (unsigned)DEVICE_SN_LEN);
-      break;
-
-    case SL_STATUS_INVALID_TYPE:
-      (void)console_uart_puts("% Warning: a counter object is stored under the "
-                              "serial number key, and reads as not set.\n");
-      break;
-
     default:
-      (void)console_uart_printf("%% Could not read MCU NVM, status 0x%04X. "
+      (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X. "
                                 "Nothing written.\n", (unsigned)status);
       return false;
+  }
+
+  // Not set does not mean writable: the rest of the slot may hold something.
+  status = mfg_store_device_sn_slot_is_blank(&blank);
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X. "
+                              "Nothing written.\n", (unsigned)status);
+    return false;
+  }
+  if (!blank) {
+    (void)console_uart_puts("% The serial number slot in USERDATA is not "
+                            "blank. Nothing written.\n");
+    return false;
   }
 
   print_sn_question();
@@ -1307,11 +1294,16 @@ static void handle_sn_confirm(void)
     return;
   }
 
-  // Blocks while flash is programmed; see nvm_store_write_device_sn(). The
+  // Blocks while flash is programmed; see mfg_store_write_device_sn(). The
   // console has no request in flight at this prompt.
-  status = nvm_store_write_device_sn(pending_sn);
+  status = mfg_store_write_device_sn(pending_sn);
   if (status == SL_STATUS_OK) {
     (void)console_uart_printf("[OK] serial number written: %s\n", pending_sn);
+  } else if (status == SL_STATUS_ALREADY_EXISTS) {
+    // Checked when the question was asked; only something else writing
+    // USERDATA meanwhile gets here.
+    (void)console_uart_puts("% The serial number slot in USERDATA is no longer "
+                            "blank. Nothing written.\n");
   } else {
     (void)console_uart_printf("%% Writing the serial number failed, status "
                               "0x%04X\n", (unsigned)status);

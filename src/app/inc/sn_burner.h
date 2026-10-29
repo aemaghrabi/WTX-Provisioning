@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief Writes the device serial number to MCU NVM3 in the provisioning build.
+ * @brief Writes the device serial number to USERDATA in the provisioning build.
  *
  * The XBEE_APP_PROVISION image runs this after the XBee provisioning engine:
  *
@@ -14,8 +14,13 @@
  *
  * Once xbee_provision_is_finished(), it runs exactly once. If the XBee run
  * passed, it formats the serial number from the build inputs below, writes it
- * to NVM3 (replacing whatever is stored) and reads it back. If the run failed,
- * nothing is written.
+ * to its USERDATA slot (src/services/inc/mfg_store.h) and reads it back. If
+ * the run failed, nothing is written.
+ *
+ * Flash cannot be rewritten in place, so the slot is written only while it is
+ * erased. When it already holds this same serial number, nothing is written
+ * and the step passes. When it holds anything else, the step fails and the
+ * USERDATA page has to be erased first.
  *
  * Build inputs, passed as compiler defines (tools/provision.py passes all):
  * - SN_BURNER_FAMILY: the FF product family code, two digits, unquoted, for

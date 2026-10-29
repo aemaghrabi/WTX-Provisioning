@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief Writes the device serial number to MCU NVM3 in the provisioning build.
+ * @brief Writes the device serial number to USERDATA in the provisioning build.
  ******************************************************************************/
 
 #define APP_LOG_TAG  "sn_burner"
@@ -11,7 +11,7 @@
 
 #include "app_log.h"
 #include "device_sn.h"
-#include "nvm_store.h"
+#include "mfg_store.h"
 
 #include "sn_burner.h"
 #include "xbee_provision.h"
@@ -74,46 +74,58 @@ static sl_status_t build_week(uint16_t *yyww, const char **source)
 #endif
 }
 
+/// What is in the serial number slot, as far as writing is concerned.
+typedef enum {
+  SLOT_BLANK,      ///< Erased; the serial number can be written.
+  SLOT_SAME,       ///< Already holds this very serial number.
+  SLOT_REFUSED,    ///< Holds something else; the reason has been logged.
+} slot_state_t;
+
 /***************************************************************************//**
- * Say what is about to be replaced, if anything.
+ * Look at the serial number slot before writing.
+ *
+ * Flash cannot be rewritten in place, so anything but an erased slot or this
+ * same serial number ends the step. Every refusal logs the one
+ * "serial number not written" line.
  ******************************************************************************/
-static void report_stored(const char *sn)
+static slot_state_t check_slot(const char *sn)
 {
   char stored[DEVICE_SN_STR_SIZE];
   char shown[DEVICE_SN_STR_SIZE];
-  size_t stored_len = 0U;
-  sl_status_t status = nvm_store_read_device_sn(stored, sizeof(stored),
-                                                &stored_len);
+  bool blank = false;
+  sl_status_t status = mfg_store_read_device_sn(stored, sizeof(stored));
 
   switch (status) {
     case SL_STATUS_OK:
       if (memcmp(stored, sn, DEVICE_SN_LEN) == 0) {
-        APP_LOG_INFO("the same serial number is already stored; writing it again");
-      } else {
-        (void)device_sn_to_printable(stored, shown, sizeof(shown));
-        APP_LOG_WARNING("overwriting the stored serial number %s", shown);
+        return SLOT_SAME;
       }
-      break;
+      (void)device_sn_to_printable(stored, shown, sizeof(shown));
+      APP_LOG_ERROR("serial number not written: USERDATA already holds "
+                    "serial number %s", shown);
+      return SLOT_REFUSED;
 
     case SL_STATUS_NOT_FOUND:
       break;
 
-    case SL_STATUS_INVALID_COUNT:
-      APP_LOG_WARNING("overwriting a stored object of %u bytes, which is not "
-                      "a serial number", (unsigned)stored_len);
-      break;
-
-    case SL_STATUS_INVALID_TYPE:
-      APP_LOG_WARNING("overwriting a counter object stored under the serial "
-                      "number key");
-      break;
-
     default:
-      // The write below reports whether NVM3 is usable at all.
-      APP_LOG_WARNING("could not read the stored serial number, status 0x%04X",
-                      (unsigned)status);
-      break;
+      APP_LOG_ERROR("serial number not written: USERDATA could not be read, "
+                    "status 0x%04X", (unsigned)status);
+      return SLOT_REFUSED;
   }
+
+  status = mfg_store_device_sn_slot_is_blank(&blank);
+  if (status != SL_STATUS_OK) {
+    APP_LOG_ERROR("serial number not written: USERDATA could not be read, "
+                  "status 0x%04X", (unsigned)status);
+    return SLOT_REFUSED;
+  }
+  if (!blank) {
+    APP_LOG_ERROR("serial number not written: its USERDATA slot is not blank");
+    return SLOT_REFUSED;
+  }
+
+  return SLOT_BLANK;
 }
 
 /***************************************************************************//**
@@ -159,11 +171,23 @@ static bool burn(void)
   APP_LOG_INFO("serial number %s, week %04u from the %s",
                sn, (unsigned)yyww, week_source);
 
-  report_stored(sn);
+  switch (check_slot(sn)) {
+    case SLOT_SAME:
+      // Nothing to program: the slot already reads back as this number.
+      APP_LOG_INFO("the same serial number is already stored in USERDATA");
+      APP_LOG_INFO("serial number written: %s", sn);
+      return true;
 
-  status = nvm_store_write_device_sn(sn);
+    case SLOT_BLANK:
+      break;
+
+    default:
+      return false;
+  }
+
+  status = mfg_store_write_device_sn(sn);
   if (status != SL_STATUS_OK) {
-    APP_LOG_ERROR("serial number not written: NVM3 error, status 0x%04X",
+    APP_LOG_ERROR("serial number not written: USERDATA error, status 0x%04X",
                   (unsigned)status);
     return false;
   }

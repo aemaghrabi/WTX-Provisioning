@@ -28,7 +28,7 @@
 
 #include "console_uart.h"
 #include "device_sn.h"
-#include "nvm_store.h"
+#include "mfg_store.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -363,9 +363,7 @@ void cli_show_device_sn(void)
 {
   char stored[DEVICE_SN_STR_SIZE];
   char shown[DEVICE_SN_STR_SIZE];
-  size_t stored_len = 0U;
-  sl_status_t status = nvm_store_read_device_sn(stored, sizeof(stored),
-                                                &stored_len);
+  sl_status_t status = mfg_store_read_device_sn(stored, sizeof(stored));
 
   switch (status) {
     case SL_STATUS_OK:
@@ -388,20 +386,8 @@ void cli_show_device_sn(void)
       (void)console_uart_puts("Serial number  not set\n");
       break;
 
-    case SL_STATUS_INVALID_COUNT:
-      (void)console_uart_printf("Serial number  not set (the stored object is "
-                                "%u bytes, not %u)\n",
-                                (unsigned)stored_len,
-                                (unsigned)DEVICE_SN_LEN);
-      break;
-
-    case SL_STATUS_INVALID_TYPE:
-      (void)console_uart_puts("Serial number  not set (a counter object is "
-                              "stored under its key)\n");
-      break;
-
     default:
-      (void)console_uart_printf("%% Could not read MCU NVM, status 0x%04X\n",
+      (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X\n",
                                 (unsigned)status);
       break;
   }

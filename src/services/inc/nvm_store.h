@@ -12,6 +12,11 @@
  *
  * Keys 0x00001 (settings) and 0x00002 (radio state) belong to WTX-FW
  * (lcd_menu.c) and are never touched here.
+ *
+ * @note No longer used for the device serial number, which moved to the
+ *       USERDATA page (src/services/inc/mfg_store.h, see
+ *       docs/plan/2026-10-29-sn-userdata-storage.md). Nothing calls this module
+ *       any more. Kept for now; to be deleted later.
  ******************************************************************************/
 
 #ifndef NVM_STORE_H

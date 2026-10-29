@@ -1,6 +1,6 @@
 # Plan: move the device serial number to USERDATA (contract Part 1, topics 1, 2, 5, 6)
 
-Status: Approved (2026-10-29); implementation not started
+Status: In progress (Phase 1 done, build-verified only; phases 2 to 4 not started)
 Date: 2026-10-29
 Related history: docs/history/2026-10-29-sn-userdata-phaseN.md (one per phase, written as each phase is done)
 Supersedes (storage only): docs/plan/2026-10-29-serial-number-family-code.md
@@ -92,6 +92,9 @@ Goal: the SN lives at `0x0FE0008C`. Nothing writes the NVM3 key any more. The fo
 it is: 12 bytes, no NUL.
 
 - Add `userdata_flash` and `mfg_store` as described above.
+  - As implemented: `userdata_flash_erase()` and `mfg_store_erase()` come with Phase 4, which
+    is their only user.
+  - `mfg_store` does not log, so it builds for the host tests; its callers log.
 - **Interim rules for this phase only** (phases 2 and 3 replace them):
   - Write exactly 12 bytes.
   - "Not set" means all 12 bytes are `0xFF`.

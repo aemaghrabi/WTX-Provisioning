@@ -31,11 +31,13 @@ add_executable(xbee_provision
     ../src/utils/src/line_edit.c
     ../src/utils/src/ring_buffer.c
     ../src/drivers/src/console_uart.c
+    ../src/drivers/src/userdata_flash.c
     ../src/drivers/src/xbee_power.c
     ../src/drivers/src/xbee_reset.c
     ../src/drivers/src/xbee_sleep.c
     ../src/drivers/src/xbee_uart.c
     ../src/services/src/cli_parser.c
+    ../src/services/src/mfg_store.c
     ../src/services/src/nvm_store.c
     ../src/services/src/xbee.c
     ../src/services/src/xbee_api.c

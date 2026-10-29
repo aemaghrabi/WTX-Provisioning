@@ -1,0 +1,93 @@
+/***************************************************************************//**
+ * @file
+ * @brief Manufacturing data in the USERDATA page, read by the production firmware.
+ *
+ * The device serial number lives in the Simplicity SDK's reserved
+ * manufacturing token slot TOKEN_MFG_SERIAL_NUMBER: offset 0x08C into
+ * USERDATA, 16 bytes, so at 0x0FE0008C
+ * (platform/service/token_manager/inc/sl_token_manager_manufacturing.h). The
+ * production firmware (WTX-FW) reads it from there with a plain memory read.
+ * USERDATA is not part of a main flash mass erase, so the serial number
+ * survives reflashing.
+ *
+ * Stored form: the DEVICE_SN_LEN digits "FFYYWWSSSSSC" at the start of the
+ * slot. The remaining bytes of the slot are left erased.
+ *
+ * "Not set" means every one of the DEVICE_SN_LEN bytes still reads 0xFF, the
+ * erased state of flash.
+ *
+ * Flash cannot be rewritten in place: a serial number is written only into a
+ * slot whose 16 bytes are all still erased. Replacing one needs the USERDATA
+ * page erased first.
+ *
+ * Plan: docs/plan/2026-10-29-sn-userdata-storage.md.
+ ******************************************************************************/
+
+#ifndef MFG_STORE_H
+#define MFG_STORE_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include "sl_status.h"
+
+/// Offset of the serial number slot in USERDATA. Must equal
+/// TOKEN_MFG_SERIAL_NUMBER & 0x0FFF in the SDK token manager.
+#define MFG_STORE_SN_OFFSET     0x08CU
+
+/// Size of the serial number slot reserved by the SDK, in bytes.
+#define MFG_STORE_SN_SLOT_SIZE  16U
+
+/***************************************************************************//**
+ * Read the device serial number.
+ *
+ * The stored bytes are returned as they are, followed by a NUL added in out.
+ * They are not guaranteed to be well formed; check them with
+ * device_sn_validate() before relying on them, and print them through
+ * device_sn_to_printable().
+ *
+ * @param[out] out Destination, DEVICE_SN_STR_SIZE bytes on success.
+ * @param[in]  cap Capacity of out, at least DEVICE_SN_STR_SIZE.
+ *
+ * @return SL_STATUS_OK when a serial number is stored,
+ *         SL_STATUS_NULL_POINTER if out is NULL,
+ *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE,
+ *         SL_STATUS_NOT_FOUND if none is stored,
+ *         otherwise the status of the flash read.
+ ******************************************************************************/
+sl_status_t mfg_store_read_device_sn(char *out, size_t cap);
+
+/***************************************************************************//**
+ * Report whether the whole serial number slot is still erased, so that a
+ * serial number can be written into it.
+ *
+ * @param[out] blank true when all MFG_STORE_SN_SLOT_SIZE bytes read 0xFF.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if blank is NULL,
+ *         otherwise the status of the flash read.
+ ******************************************************************************/
+sl_status_t mfg_store_device_sn_slot_is_blank(bool *blank);
+
+/***************************************************************************//**
+ * Write the device serial number, then read it back to verify it.
+ *
+ * Only a serial number that passes device_sn_validate() is written, so a
+ * malformed value or a wrong check digit never reaches the production
+ * firmware, which checks neither. Only an erased slot is written.
+ *
+ * @note Blocks while flash is programmed, a few words. Meant for a one-time
+ *       factory step, called with nothing else in flight.
+ *
+ * @param[in] sn DEVICE_SN_LEN digits, "FFYYWWSSSSSC".
+ *
+ * @return SL_STATUS_OK when it was written and read back identical,
+ *         SL_STATUS_NULL_POINTER if sn is NULL,
+ *         SL_STATUS_INVALID_PARAMETER if sn is not a valid serial number,
+ *         SL_STATUS_ALREADY_EXISTS if the slot is not erased; nothing is
+ *         written,
+ *         SL_STATUS_FAIL if the read-back differs,
+ *         otherwise the status of the failing flash step.
+ ******************************************************************************/
+sl_status_t mfg_store_write_device_sn(const char *sn);
+
+#endif  // MFG_STORE_H
