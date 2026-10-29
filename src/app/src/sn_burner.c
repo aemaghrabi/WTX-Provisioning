@@ -21,8 +21,20 @@
 #define SN_BURNER_STR(x)   SN_BURNER_STR_(x)
 /// @endcond
 
+#if defined(SN_BURNER_FAMILY)
+/// The FF part this image writes. Stringified, so 07 is never read as octal.
+static const char family_text[] = SN_BURNER_STR(SN_BURNER_FAMILY);
+
+_Static_assert(sizeof(family_text) == (DEVICE_SN_FAMILY_DIGITS + 1U),
+               "SN_BURNER_FAMILY must be exactly two digits, for example 18");
+#else
+/// No family code in this image. Only the provisioning build calls this
+/// module, and app.c refuses to build that one without it.
+static const char family_text[] = "";
+#endif
+
 #if defined(SN_BURNER_SEQUENCE)
-/// The NNNNN part this image writes. Stringified, so 00123 stays five digits
+/// The SSSSS part this image writes. Stringified, so 00123 stays five digits
 /// rather than becoming the octal constant 83.
 static const char sequence_text[] = SN_BURNER_STR(SN_BURNER_SEQUENCE);
 
@@ -67,15 +79,15 @@ static sl_status_t build_week(uint16_t *yyww, const char **source)
  ******************************************************************************/
 static void report_stored(const char *sn)
 {
-  char stored[DEVICE_SN_STR_LEN];
-  char shown[DEVICE_SN_STR_LEN];
+  char stored[DEVICE_SN_STR_SIZE];
+  char shown[DEVICE_SN_STR_SIZE];
   size_t stored_len = 0U;
   sl_status_t status = nvm_store_read_device_sn(stored, sizeof(stored),
                                                 &stored_len);
 
   switch (status) {
     case SL_STATUS_OK:
-      if (memcmp(stored, sn, DEVICE_SN_STR_LEN) == 0) {
+      if (memcmp(stored, sn, DEVICE_SN_LEN) == 0) {
         APP_LOG_INFO("the same serial number is already stored; writing it again");
       } else {
         (void)device_sn_to_printable(stored, shown, sizeof(shown));
@@ -111,11 +123,18 @@ static void report_stored(const char *sn)
  ******************************************************************************/
 static bool burn(void)
 {
-  char sn[DEVICE_SN_STR_LEN];
+  char sn[DEVICE_SN_STR_SIZE];
   const char *week_source = "";
   uint32_t sequence = 0U;
   uint16_t yyww = 0U;
+  uint8_t family = 0U;
   sl_status_t status;
+
+  if (device_sn_parse_family(family_text, &family) != SL_STATUS_OK) {
+    APP_LOG_ERROR("serial number not written: the family code built into "
+                  "this image, \"%s\", is not two digits", family_text);
+    return false;
+  }
 
   if (device_sn_parse_sequence(sequence_text, &sequence) != SL_STATUS_OK) {
     APP_LOG_ERROR("serial number not written: the sequence number built into "
@@ -130,7 +149,7 @@ static bool burn(void)
     return false;
   }
 
-  status = device_sn_format(yyww, sequence, sn, sizeof(sn));
+  status = device_sn_format(family, yyww, sequence, sn, sizeof(sn));
   if (status != SL_STATUS_OK) {
     APP_LOG_ERROR("serial number not written: it could not be formatted, "
                   "status 0x%04X", (unsigned)status);

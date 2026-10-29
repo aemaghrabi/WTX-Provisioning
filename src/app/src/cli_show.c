@@ -361,8 +361,8 @@ void cli_show_info(void)
 
 void cli_show_device_sn(void)
 {
-  char stored[DEVICE_SN_STR_LEN];
-  char shown[DEVICE_SN_STR_LEN];
+  char stored[DEVICE_SN_STR_SIZE];
+  char shown[DEVICE_SN_STR_SIZE];
   size_t stored_len = 0U;
   sl_status_t status = nvm_store_read_device_sn(stored, sizeof(stored),
                                                 &stored_len);
@@ -370,7 +370,7 @@ void cli_show_device_sn(void)
   switch (status) {
     case SL_STATUS_OK:
       // Printed through the sanitised copy in every case: the stored bytes are
-      // not guaranteed to be text, let alone NUL terminated.
+      // not guaranteed to be text.
       (void)device_sn_to_printable(stored, shown, sizeof(shown));
       status = device_sn_validate(stored);
       if (status == SL_STATUS_OK) {
@@ -380,7 +380,7 @@ void cli_show_device_sn(void)
                                   shown);
       } else {
         (void)console_uart_printf("Serial number  %s (not in the form "
-                                  "YYWW-NNNNN-C)\n", shown);
+                                  "FFYYWWSSSSSC)\n", shown);
       }
       break;
 
@@ -392,7 +392,7 @@ void cli_show_device_sn(void)
       (void)console_uart_printf("Serial number  not set (the stored object is "
                                 "%u bytes, not %u)\n",
                                 (unsigned)stored_len,
-                                (unsigned)DEVICE_SN_STR_LEN);
+                                (unsigned)DEVICE_SN_LEN);
       break;
 
     case SL_STATUS_INVALID_TYPE:

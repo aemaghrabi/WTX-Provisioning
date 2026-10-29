@@ -62,11 +62,14 @@
 #endif
 
 // The provisioning build writes the device serial number, and every image of
-// it is for one unit. Building one without its sequence number would produce
-// an image that provisions the module and then writes nothing, so it is not
-// allowed to build at all.
+// it is for one unit. Building one without its family code or sequence number
+// would produce an image that provisions the module and then writes nothing,
+// so it is not allowed to build at all.
+#if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_FAMILY)
+#error "The provisioning build needs the serial number's product family code. Build it with tools/provision.py --family FF, or configure with -DSN_BURNER_FAMILY=FF."
+#endif
 #if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_SEQUENCE)
-#error "The provisioning build needs the serial number's sequence part. Build it with tools/provision.py --sequence NNNNN, or configure with -DSN_BURNER_SEQUENCE=NNNNN."
+#error "The provisioning build needs the serial number's sequence part. Build it with tools/provision.py --sequence SSSSS, or configure with -DSN_BURNER_SEQUENCE=SSSSS."
 #endif
 
 /***************************************************************************//**

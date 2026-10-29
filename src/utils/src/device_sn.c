@@ -4,6 +4,7 @@
  ******************************************************************************/
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "device_sn.h"
 
@@ -13,20 +14,14 @@
 /// Modulus of the ISO 7064 MOD 11-10 hybrid system.
 #define DEVICE_SN_MOD_11           11U
 
-/// Offset of the first dash in "YYWW-NNNNN-C".
-#define DEVICE_SN_DASH1_POS        4U
+/// Offset of the first YYWW digit in "FFYYWWSSSSSC".
+#define DEVICE_SN_YYWW_POS         DEVICE_SN_FAMILY_DIGITS
 
 /// Offset of the first sequence digit.
-#define DEVICE_SN_SEQUENCE_POS     5U
-
-/// Offset of the second dash.
-#define DEVICE_SN_DASH2_POS        10U
+#define DEVICE_SN_SEQUENCE_POS     (DEVICE_SN_YYWW_POS + DEVICE_SN_YYWW_DIGITS)
 
 /// Offset of the check digit.
-#define DEVICE_SN_CHECK_POS        11U
-
-/// Offset of the terminator.
-#define DEVICE_SN_NUL_POS          12U
+#define DEVICE_SN_CHECK_POS        DEVICE_SN_PAYLOAD_DIGITS
 
 /// Length of a __DATE__ string, "Mmm dd yyyy".
 #define DEVICE_SN_BUILD_DATE_LEN   11U
@@ -337,7 +332,25 @@ sl_status_t device_sn_yyww_from_build_date(const char *date, uint16_t *yyww)
 }
 
 /***************************************************************************//**
- * Parse the NNNNN part.
+ * Parse the FF part.
+ ******************************************************************************/
+sl_status_t device_sn_parse_family(const char *text, uint8_t *family)
+{
+  if ((text == NULL) || (family == NULL)) {
+    return SL_STATUS_NULL_POINTER;
+  }
+  if (!is_digit_string(text, DEVICE_SN_FAMILY_DIGITS)) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  *family = (uint8_t)((digit_value(text[0]) * DEVICE_SN_RADIX)
+                      + digit_value(text[1]));
+
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Parse the SSSSS part.
  ******************************************************************************/
 sl_status_t device_sn_parse_sequence(const char *text, uint32_t *sequence)
 {
@@ -391,42 +404,51 @@ sl_status_t device_sn_parse_yyww(const char *text, uint16_t *yyww)
 /***************************************************************************//**
  * Build the serial number string.
  ******************************************************************************/
-sl_status_t device_sn_format(uint16_t yyww, uint32_t sequence, char *out, size_t cap)
+sl_status_t device_sn_format(uint8_t family,
+                             uint16_t yyww,
+                             uint32_t sequence,
+                             char *out,
+                             size_t cap)
 {
-  char payload[DEVICE_SN_PAYLOAD_DIGITS];
+  char sn[DEVICE_SN_STR_SIZE];
   uint8_t check = 0U;
-  uint8_t i;
+  uint8_t recheck = 0U;
   sl_status_t status;
 
   if (out == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
-  if (cap < DEVICE_SN_STR_LEN) {
+  if (cap < DEVICE_SN_STR_SIZE) {
     return SL_STATUS_WOULD_OVERFLOW;
   }
-  if (!yyww_is_real(yyww) || (sequence > DEVICE_SN_SEQUENCE_MAX)) {
+  if ((family > DEVICE_SN_FAMILY_MAX)
+      || !yyww_is_real(yyww)
+      || (sequence > DEVICE_SN_SEQUENCE_MAX)) {
     return SL_STATUS_INVALID_RANGE;
   }
 
-  put_digits(payload, yyww, (uint8_t)DEVICE_SN_YYWW_DIGITS);
-  put_digits(&payload[DEVICE_SN_YYWW_DIGITS], sequence,
+  put_digits(sn, family, (uint8_t)DEVICE_SN_FAMILY_DIGITS);
+  put_digits(&sn[DEVICE_SN_YYWW_POS], yyww, (uint8_t)DEVICE_SN_YYWW_DIGITS);
+  put_digits(&sn[DEVICE_SN_SEQUENCE_POS], sequence,
              (uint8_t)DEVICE_SN_SEQUENCE_DIGITS);
 
-  status = device_sn_check_digit(payload, sizeof(payload), &check);
+  status = device_sn_check_digit(sn, DEVICE_SN_PAYLOAD_DIGITS, &check);
   if (status != SL_STATUS_OK) {
     return status;
   }
+  sn[DEVICE_SN_CHECK_POS] = (char)('0' + check);
+  sn[DEVICE_SN_LEN] = '\0';
 
-  for (i = 0U; i < DEVICE_SN_YYWW_DIGITS; i++) {
-    out[i] = payload[i];
+  // Self-check before anything leaves this function. Nothing downstream
+  // validates the check digit, so a fault in the formatting above would
+  // otherwise reach the nameplate unnoticed.
+  if ((device_sn_check_digit(sn, DEVICE_SN_PAYLOAD_DIGITS, &recheck) != SL_STATUS_OK)
+      || (recheck != check)
+      || (device_sn_validate(sn) != SL_STATUS_OK)) {
+    return SL_STATUS_FAIL;
   }
-  out[DEVICE_SN_DASH1_POS] = '-';
-  for (i = 0U; i < DEVICE_SN_SEQUENCE_DIGITS; i++) {
-    out[DEVICE_SN_SEQUENCE_POS + i] = payload[DEVICE_SN_YYWW_DIGITS + i];
-  }
-  out[DEVICE_SN_DASH2_POS] = '-';
-  out[DEVICE_SN_CHECK_POS] = (char)('0' + check);
-  out[DEVICE_SN_NUL_POS] = '\0';
+
+  (void)memcpy(out, sn, sizeof(sn));
 
   return SL_STATUS_OK;
 }
@@ -436,7 +458,6 @@ sl_status_t device_sn_format(uint16_t yyww, uint32_t sequence, char *out, size_t
  ******************************************************************************/
 sl_status_t device_sn_validate(const char *sn)
 {
-  char payload[DEVICE_SN_PAYLOAD_DIGITS];
   uint8_t check = 0U;
   uint8_t i;
 
@@ -444,31 +465,14 @@ sl_status_t device_sn_validate(const char *sn)
     return SL_STATUS_NULL_POINTER;
   }
 
-  for (i = 0U; i < DEVICE_SN_STR_LEN; i++) {
-    bool ok;
-
-    if ((i == DEVICE_SN_DASH1_POS) || (i == DEVICE_SN_DASH2_POS)) {
-      ok = (sn[i] == '-');
-    } else if (i == DEVICE_SN_NUL_POS) {
-      ok = (sn[i] == '\0');
-    } else {
-      ok = is_digit(sn[i]);
-    }
-
-    if (!ok) {
+  for (i = 0U; i < DEVICE_SN_LEN; i++) {
+    if (!is_digit(sn[i])) {
       return SL_STATUS_INVALID_PARAMETER;
     }
   }
 
-  for (i = 0U; i < DEVICE_SN_YYWW_DIGITS; i++) {
-    payload[i] = sn[i];
-  }
-  for (i = 0U; i < DEVICE_SN_SEQUENCE_DIGITS; i++) {
-    payload[DEVICE_SN_YYWW_DIGITS + i] = sn[DEVICE_SN_SEQUENCE_POS + i];
-  }
-
   // Cannot fail: every payload character was checked to be a digit above.
-  (void)device_sn_check_digit(payload, sizeof(payload), &check);
+  (void)device_sn_check_digit(sn, DEVICE_SN_PAYLOAD_DIGITS, &check);
 
   if (digit_value(sn[DEVICE_SN_CHECK_POS]) != check) {
     return SL_STATUS_INVALID_SIGNATURE;
@@ -487,11 +491,11 @@ sl_status_t device_sn_to_printable(const char *sn, char *out, size_t cap)
   if ((sn == NULL) || (out == NULL)) {
     return SL_STATUS_NULL_POINTER;
   }
-  if (cap < DEVICE_SN_STR_LEN) {
+  if (cap < DEVICE_SN_STR_SIZE) {
     return SL_STATUS_WOULD_OVERFLOW;
   }
 
-  for (i = 0U; i < DEVICE_SN_TEXT_LEN; i++) {
+  for (i = 0U; i < DEVICE_SN_LEN; i++) {
     unsigned char c = (unsigned char)sn[i];
 
     if (c == 0U) {

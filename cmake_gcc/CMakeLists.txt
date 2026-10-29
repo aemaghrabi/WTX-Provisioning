@@ -82,12 +82,15 @@ target_compile_definitions(xbee_provision PUBLIC
     XBEE_APP=XBEE_APP_$<IF:$<STREQUAL:${XBEE_APP_SELECT},>,CLI,${XBEE_APP_SELECT}>
 
     # Device serial number written by the provisioning build (src/app/inc/
-    # sn_burner.h). SN_BURNER_SEQUENCE is the NNNNN part, five digits, and is
-    # required by that build; SN_BURNER_BUILD_YYWW is the build host's ISO year
-    # and week. Both are given with -D at configure time, normally by
-    # tools/provision.py, and are left out entirely when not given. The test is
-    # for an empty string rather than $<BOOL:...>, so that 00000 is a value.
-    # Both blocks again, because app.c checks SN_BURNER_SEQUENCE.
+    # sn_burner.h). SN_BURNER_FAMILY is the FF part, two digits, and
+    # SN_BURNER_SEQUENCE the SSSSS part, five digits; both are required by that
+    # build. SN_BURNER_BUILD_YYWW is the build host's ISO year and week. All are
+    # given with -D at configure time, normally by tools/provision.py, and are
+    # left out entirely when not given. The test is for an empty string rather
+    # than $<BOOL:...>, so that 00 and 00000 are values.
+    # Both blocks again, because app.c checks SN_BURNER_FAMILY and
+    # SN_BURNER_SEQUENCE.
+    $<$<NOT:$<STREQUAL:${SN_BURNER_FAMILY},>>:SN_BURNER_FAMILY=${SN_BURNER_FAMILY}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
 
@@ -107,6 +110,7 @@ target_compile_definitions(xbee_provision PUBLIC
 # the definitions above, so the application selection is given to it as well.
 target_compile_definitions(slc PUBLIC
     XBEE_APP=XBEE_APP_$<IF:$<STREQUAL:${XBEE_APP_SELECT},>,CLI,${XBEE_APP_SELECT}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_FAMILY},>>:SN_BURNER_FAMILY=${SN_BURNER_FAMILY}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
     XBEE_AT_TABLE_NAMES=1

@@ -2,16 +2,17 @@
 """Build the provisioning image for one unit, which writes its device serial number.
 
 The provisioning firmware (XBEE_APP_PROVISION) configures the XBee module and,
-once that has passed, writes the device serial number YYWW-NNNNN-C to MCU NVM3
-(src/app/inc/sn_burner.h). Every image carries one serial number, so it is
-built per unit:
+once that has passed, writes the device serial number FFYYWWSSSSSC to MCU
+NVM3 (src/app/inc/sn_burner.h). Every image carries one serial number, so it
+is built per unit:
 
-    python tools/provision.py --sequence 00123
+    python tools/provision.py --family 18 --sequence 00123
 
-- NNNNN is the --sequence argument.
+- FF is the --family argument, the product family code.
 - YYWW is the ISO week-numbering year and ISO week of today's date on this
   machine, which is the build date of the image.
-- C is the ISO 7064 MOD 11-10 check digit over YYWWNNNNN.
+- SSSSS is the --sequence argument.
+- C is the ISO 7064 MOD 11-10 check digit over FFYYWWSSSSS.
 
 The image is built in its own directory (cmake_gcc/build-provision by default),
 so the normal console build in cmake_gcc/build is left alone, and a copy named
@@ -63,11 +64,13 @@ DEFAULT_TIMEOUT_S = 180.0
 YEAR_MIN = 2000
 YEAR_MAX = 2099
 
+FAMILY_RE = re.compile(r"\d{2}")
 SEQUENCE_RE = re.compile(r"\d{5}")
+SN_RE = re.compile(r"\d{12}")
 # The firmware's terminal lines (src/app/src/sn_burner.c). "not written" is
 # matched first; it does not contain "serial number written" anyway.
 NOT_WRITTEN_RE = re.compile(r"serial number not written: (.*)")
-WRITTEN_RE = re.compile(r"serial number written: (\d{4}-\d{5}-\d)")
+WRITTEN_RE = re.compile(r"serial number written: (\d{12})")
 # The log colours its lines with ANSI escape sequences (app_log_config.h).
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
@@ -99,9 +102,15 @@ def build_yyww(day: datetime.date) -> str:
     return f"{iso_year % 100:02d}{iso_week:02d}"
 
 
-def format_sn(yyww: str, sequence: str) -> str:
-    """Return the serial number "YYWW-NNNNN-C"."""
-    return f"{yyww}-{sequence}-{check_digit(yyww + sequence)}"
+def format_sn(family: str, yyww: str, sequence: str) -> str:
+    """Return the serial number "FFYYWWSSSSSC"."""
+    payload = family + yyww + sequence
+    return f"{payload}{check_digit(payload)}"
+
+
+def sn_is_valid(sn: str) -> bool:
+    """Report whether sn is twelve digits whose last is the check digit of the rest."""
+    return bool(SN_RE.fullmatch(sn)) and check_digit(sn[:-1]) == int(sn[-1])
 
 
 def fail(message: str, code: int) -> int:
@@ -170,7 +179,7 @@ def find_commander(explicit: Optional[str]) -> Optional[Path]:
     return None
 
 
-def check_defines(build_dir: Path, sequence: str, yyww: str) -> Optional[str]:
+def check_defines(build_dir: Path, family: str, sequence: str, yyww: str) -> Optional[str]:
     """Confirm the build inputs reached the compiler. Return a problem, or None.
 
     Reads the compile database the configure step was asked for, so that a
@@ -183,6 +192,7 @@ def check_defines(build_dir: Path, sequence: str, yyww: str) -> Optional[str]:
 
     expected = (
         "-DXBEE_APP=XBEE_APP_PROVISION",
+        f"-DSN_BURNER_FAMILY={family}",
         f"-DSN_BURNER_SEQUENCE={sequence}",
         f"-DSN_BURNER_BUILD_YYWW={yyww}",
     )
@@ -277,9 +287,12 @@ def flash_and_watch(args: argparse.Namespace, image: Path, expected_sn: str) -> 
 def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build the provisioning image for one unit, which writes its "
-                    "device serial number YYWW-NNNNN-C to MCU NVM3.")
+                    "device serial number FFYYWWSSSSSC to MCU NVM3.")
+    parser.add_argument("--family", required=True,
+                        help="the FF part, the product family code: exactly two digits, "
+                             "for example 18")
     parser.add_argument("--sequence", required=True,
-                        help="the NNNNN part: exactly five digits, for example 00123")
+                        help="the SSSSS part: exactly five digits, for example 00123")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD_DIR,
                         help="build directory (default: %(default)s)")
     parser.add_argument("--port",
@@ -299,6 +312,9 @@ def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
 
+    if not FAMILY_RE.fullmatch(args.family):
+        return fail(f'--family "{args.family}" is not exactly two digits, '
+                    "for example 18", EXIT_USAGE)
     if not SEQUENCE_RE.fullmatch(args.sequence):
         return fail(f'--sequence "{args.sequence}" is not exactly five digits, '
                     "for example 00123", EXIT_USAGE)
@@ -318,8 +334,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         yyww = build_yyww(today)
     except ValueError as exc:
         return fail(str(exc), EXIT_USAGE)
+    family = args.family
     sequence = args.sequence
-    expected_sn = format_sn(yyww, sequence)
+    expected_sn = format_sn(family, yyww, sequence)
+    # Nothing downstream checks the check digit, so check this script's own
+    # result before it is built into an image.
+    if not sn_is_valid(expected_sn):
+        return fail(f"internal error: {expected_sn} fails its own check", EXIT_USAGE)
     build_dir = args.build_dir.resolve()
 
     print(f"Serial number  {expected_sn}  (week {yyww} from the build date, {today.isoformat()})")
@@ -328,6 +349,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     configure = [str(cmake), "--preset", CONFIGURE_PRESET, "-B", str(build_dir),
                  "-DXBEE_APP_SELECT=PROVISION",
+                 f"-DSN_BURNER_FAMILY={family}",
                  f"-DSN_BURNER_SEQUENCE={sequence}",
                  f"-DSN_BURNER_BUILD_YYWW={yyww}",
                  # For check_defines().
@@ -340,7 +362,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if run(build, CMAKE_DIR) != 0:
         return fail("building failed", EXIT_BUILD)
 
-    problem = check_defines(build_dir, sequence, yyww)
+    problem = check_defines(build_dir, family, sequence, yyww)
     if problem:
         return fail(problem, EXIT_BUILD)
 

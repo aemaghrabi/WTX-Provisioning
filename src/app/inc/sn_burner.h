@@ -17,8 +17,11 @@
  * to NVM3 (replacing whatever is stored) and reads it back. If the run failed,
  * nothing is written.
  *
- * Build inputs, passed as compiler defines (tools/provision.py passes both):
- * - SN_BURNER_SEQUENCE: the NNNNN part, five digits, unquoted, for example
+ * Build inputs, passed as compiler defines (tools/provision.py passes all):
+ * - SN_BURNER_FAMILY: the FF product family code, two digits, unquoted, for
+ *   example -DSN_BURNER_FAMILY=18. Stringified like the sequence below.
+ *   Required in the provisioning build: app.c stops the build without it.
+ * - SN_BURNER_SEQUENCE: the SSSSS part, five digits, unquoted, for example
  *   -DSN_BURNER_SEQUENCE=00123. It is turned into a string by the preprocessor,
  *   so a leading zero is never read as an octal number. Required in the
  *   provisioning build: app.c stops the build without it.
@@ -27,7 +30,7 @@
  *   only changes when this file is recompiled.
  *
  * It ends with exactly one log line, which tools/provision.py waits for:
- * - "serial number written: YYWW-NNNNN-C"
+ * - "serial number written: FFYYWWSSSSSC"
  * - "serial number not written: <reason>"
  ******************************************************************************/
 

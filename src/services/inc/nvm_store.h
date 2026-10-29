@@ -39,22 +39,23 @@ sl_status_t nvm_store_init(void);
 /***************************************************************************//**
  * Read the device serial number object.
  *
- * Only a data object of exactly DEVICE_SN_STR_LEN bytes is accepted, which is
- * the rule WTX-FW applies when it reads the same object. Its content is
- * returned as stored: it is not guaranteed to be well formed, nor even NUL
- * terminated. Check it with device_sn_validate() before using it as a string.
+ * Only a data object of exactly DEVICE_SN_LEN bytes is accepted; WTX-FW must
+ * apply the same rule when it reads the same object. The object has no NUL
+ * terminator: its DEVICE_SN_LEN bytes are returned as stored, followed by a
+ * NUL added in out. The content is not guaranteed to be well formed; check it
+ * with device_sn_validate() before relying on it.
  *
- * @param[out] out        Destination, DEVICE_SN_STR_LEN bytes on success.
- * @param[in]  cap        Capacity of out, at least DEVICE_SN_STR_LEN.
+ * @param[out] out        Destination, DEVICE_SN_STR_SIZE bytes on success.
+ * @param[in]  cap        Capacity of out, at least DEVICE_SN_STR_SIZE.
  * @param[out] stored_len Size of the stored object, set whenever one exists,
  *                        including on SL_STATUS_INVALID_COUNT. May be NULL.
  *
  * @return SL_STATUS_OK on success,
  *         SL_STATUS_NULL_POINTER if out is NULL,
- *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_LEN,
+ *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE,
  *         SL_STATUS_NOT_FOUND if no object is stored under the key,
  *         SL_STATUS_INVALID_TYPE if a counter object is stored under it,
- *         SL_STATUS_INVALID_COUNT if the object is not DEVICE_SN_STR_LEN bytes,
+ *         SL_STATUS_INVALID_COUNT if the object is not DEVICE_SN_LEN bytes,
  *         otherwise the NVM3 status.
  ******************************************************************************/
 sl_status_t nvm_store_read_device_sn(char *out, size_t cap, size_t *stored_len);
@@ -70,7 +71,8 @@ sl_status_t nvm_store_read_device_sn(char *out, size_t cap, size_t *stored_len);
  *       8 kB page erase if NVM3 has to repack. Meant for a one-time factory
  *       step, called with nothing else in flight.
  *
- * @param[in] sn DEVICE_SN_STR_LEN bytes: "YYWW-NNNNN-C" and its NUL.
+ * @param[in] sn DEVICE_SN_LEN bytes, "FFYYWWSSSSSC". Only those bytes are
+ *               stored; no terminator is written.
  *
  * @return SL_STATUS_OK when the object was written and read back identical,
  *         SL_STATUS_NULL_POINTER if sn is NULL,

@@ -28,21 +28,25 @@ static void test_check_digit(void)
   TEST_ASSERT_EQ_UINT(device_sn_check_digit("0794", 4U, &check), SL_STATUS_OK);
   TEST_ASSERT_EQ_UINT(check, 5U);
 
-  // GitHub issue #4 shows 2640-00123-4; the standard gives 8.
-  TEST_ASSERT_EQ_UINT(device_sn_check_digit("264000123", 9U, &check), SL_STATUS_OK);
-  TEST_ASSERT_EQ_UINT(check, 8U);
+  // The specification shows 180726001234; the standard gives 0.
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("18072600123", 11U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(check, 0U);
 
-  TEST_ASSERT_EQ_UINT(device_sn_check_digit("264100123", 9U, &check), SL_STATUS_OK);
-  TEST_ASSERT_EQ_UINT(check, 3U);
-
-  TEST_ASSERT_EQ_UINT(device_sn_check_digit("265300001", 9U, &check), SL_STATUS_OK);
-  TEST_ASSERT_EQ_UINT(check, 9U);
-
-  TEST_ASSERT_EQ_UINT(device_sn_check_digit("000000000", 9U, &check), SL_STATUS_OK);
-  TEST_ASSERT_EQ_UINT(check, 6U);
-
-  TEST_ASSERT_EQ_UINT(device_sn_check_digit("999999999", 9U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("18264100123", 11U, &check), SL_STATUS_OK);
   TEST_ASSERT_EQ_UINT(check, 1U);
+
+  // Leading zeros change the result: FF = 00 is not the same as no FF.
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("00264100123", 11U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(check, 7U);
+
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("99265399999", 11U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(check, 5U);
+
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("00000000000", 11U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(check, 2U);
+
+  TEST_ASSERT_EQ_UINT(device_sn_check_digit("99999999999", 11U, &check), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(check, 0U);
 }
 
 /***************************************************************************//**
@@ -185,6 +189,34 @@ static void test_yyww_from_build_date_errors(void)
 }
 
 /***************************************************************************//**
+ * The family code is exactly two digits.
+ ******************************************************************************/
+static void test_parse_family(void)
+{
+  uint8_t family = 0xFFU;
+
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("18", &family), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(family, 18U);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("00", &family), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(family, 0U);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("07", &family), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(family, 7U);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("99", &family), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(family, 99U);
+
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family(NULL, &family), SL_STATUS_NULL_POINTER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("18", NULL), SL_STATUS_NULL_POINTER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("", &family), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("1", &family), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("180", &family),
+                      SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family("1A", &family),
+                      SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_parse_family(" 8", &family),
+                      SL_STATUS_INVALID_PARAMETER);
+}
+
+/***************************************************************************//**
  * The sequence number is exactly five digits.
  ******************************************************************************/
 static void test_parse_sequence(void)
@@ -245,30 +277,36 @@ static void test_parse_yyww(void)
 }
 
 /***************************************************************************//**
- * The serial number is exactly the 13 bytes WTX-FW expects.
+ * The serial number is the 12 digits WTX-FW stores, then a NUL for printing.
  ******************************************************************************/
 static void test_format(void)
 {
-  static const char expected[DEVICE_SN_STR_LEN] = {
-    '2', '6', '4', '1', '-', '0', '0', '1', '2', '3', '-', '3', '\0'
+  static const char expected[DEVICE_SN_STR_SIZE] = {
+    '1', '8', '2', '6', '4', '1', '0', '0', '1', '2', '3', '1', '\0'
   };
-  char sn[DEVICE_SN_STR_LEN + 1U];
+  char sn[DEVICE_SN_STR_SIZE + 1U];
 
   (void)memset(sn, 'X', sizeof(sn));
-  TEST_ASSERT_EQ_UINT(device_sn_format(2641U, 123U, sn, DEVICE_SN_STR_LEN),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2641U, 123U, sn, DEVICE_SN_STR_SIZE),
                       SL_STATUS_OK);
-  TEST_ASSERT_EQ_MEM(sn, expected, DEVICE_SN_STR_LEN);
+  TEST_ASSERT_EQ_MEM(sn, expected, DEVICE_SN_STR_SIZE);
   // Nothing written past the 13 bytes.
-  TEST_ASSERT_EQ_UINT((uint8_t)sn[DEVICE_SN_STR_LEN], (uint8_t)'X');
+  TEST_ASSERT_EQ_UINT((uint8_t)sn[DEVICE_SN_STR_SIZE], (uint8_t)'X');
 
-  TEST_ASSERT_EQ_UINT(device_sn_format(2640U, 123U, sn, sizeof(sn)), SL_STATUS_OK);
-  TEST_ASSERT_EQ_STR(sn, "2640-00123-8");
+  // The specification's example, with the right check digit.
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 726U, 123U, sn, sizeof(sn)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_STR(sn, "180726001230");
 
-  TEST_ASSERT_EQ_UINT(device_sn_format(2653U, 99999U, sn, sizeof(sn)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_format(0U, 2641U, 123U, sn, sizeof(sn)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_STR(sn, "002641001237");
+
+  TEST_ASSERT_EQ_UINT(device_sn_format(99U, 2653U, 99999U, sn, sizeof(sn)),
+                      SL_STATUS_OK);
+  TEST_ASSERT_EQ_STR(sn, "992653999995");
   TEST_ASSERT_EQ_UINT(device_sn_validate(sn), SL_STATUS_OK);
 
-  TEST_ASSERT_EQ_UINT(device_sn_format(1U, 0U, sn, sizeof(sn)), SL_STATUS_OK);
-  TEST_ASSERT_EQ_STR(sn, "0001-00000-8");
+  TEST_ASSERT_EQ_UINT(device_sn_format(0U, 1U, 0U, sn, sizeof(sn)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_STR(sn, "000001000004");
   TEST_ASSERT_EQ_UINT(device_sn_validate(sn), SL_STATUS_OK);
 }
 
@@ -277,23 +315,25 @@ static void test_format(void)
  ******************************************************************************/
 static void test_format_errors(void)
 {
-  char sn[DEVICE_SN_STR_LEN];
+  char sn[DEVICE_SN_STR_SIZE];
 
   (void)memset(sn, 'X', sizeof(sn));
 
-  TEST_ASSERT_EQ_UINT(device_sn_format(2641U, 123U, NULL, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2641U, 123U, NULL, sizeof(sn)),
                       SL_STATUS_NULL_POINTER);
-  TEST_ASSERT_EQ_UINT(device_sn_format(2641U, 123U, sn, DEVICE_SN_STR_LEN - 1U),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2641U, 123U, sn, DEVICE_SN_STR_SIZE - 1U),
                       SL_STATUS_WOULD_OVERFLOW);
-  TEST_ASSERT_EQ_UINT(device_sn_format(2641U, 100000U, sn, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(100U, 2641U, 123U, sn, sizeof(sn)),
                       SL_STATUS_INVALID_RANGE);
-  TEST_ASSERT_EQ_UINT(device_sn_format(2654U, 123U, sn, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2641U, 100000U, sn, sizeof(sn)),
                       SL_STATUS_INVALID_RANGE);
-  TEST_ASSERT_EQ_UINT(device_sn_format(2753U, 123U, sn, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2654U, 123U, sn, sizeof(sn)),
                       SL_STATUS_INVALID_RANGE);
-  TEST_ASSERT_EQ_UINT(device_sn_format(2600U, 123U, sn, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2753U, 123U, sn, sizeof(sn)),
                       SL_STATUS_INVALID_RANGE);
-  TEST_ASSERT_EQ_UINT(device_sn_format(10001U, 123U, sn, sizeof(sn)),
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 2600U, 123U, sn, sizeof(sn)),
+                      SL_STATUS_INVALID_RANGE);
+  TEST_ASSERT_EQ_UINT(device_sn_format(18U, 10001U, 123U, sn, sizeof(sn)),
                       SL_STATUS_INVALID_RANGE);
   TEST_ASSERT_EQ_UINT((uint8_t)sn[0], (uint8_t)'X');
 }
@@ -303,23 +343,26 @@ static void test_format_errors(void)
  ******************************************************************************/
 static void test_validate(void)
 {
-  static const char no_nul[DEVICE_SN_STR_LEN] = {
-    '2', '6', '4', '1', '-', '0', '0', '1', '2', '3', '-', '3', '3'
+  // Exactly 12 bytes, no terminator, as stored in NVM3.
+  static const char no_nul[DEVICE_SN_LEN] = {
+    '1', '8', '2', '6', '4', '1', '0', '0', '1', '2', '3', '1'
   };
 
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2641-00123-3"), SL_STATUS_OK);
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2640-00123-8"), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("182641001231"), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("180726001230"), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(device_sn_validate(no_nul), SL_STATUS_OK);
 
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2641-00123-4"), SL_STATUS_INVALID_SIGNATURE);
-  // The example in GitHub issue #4.
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2640-00123-4"), SL_STATUS_INVALID_SIGNATURE);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("182641001232"), SL_STATUS_INVALID_SIGNATURE);
+  // The example in the specification.
+  TEST_ASSERT_EQ_UINT(device_sn_validate("180726001234"), SL_STATUS_INVALID_SIGNATURE);
 
   TEST_ASSERT_EQ_UINT(device_sn_validate(NULL), SL_STATUS_NULL_POINTER);
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2641_00123-3"), SL_STATUS_INVALID_PARAMETER);
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2641-00123_3"), SL_STATUS_INVALID_PARAMETER);
-  TEST_ASSERT_EQ_UINT(device_sn_validate("26A1-00123-3"), SL_STATUS_INVALID_PARAMETER);
-  TEST_ASSERT_EQ_UINT(device_sn_validate("2641-00123-X"), SL_STATUS_INVALID_PARAMETER);
-  TEST_ASSERT_EQ_UINT(device_sn_validate(no_nul), SL_STATUS_INVALID_PARAMETER);
+  // The old YYWW-NNNNN-C form.
+  TEST_ASSERT_EQ_UINT(device_sn_validate("2641-00123-3"), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("18264-001231"), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("1826410O1231"), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("18264100123X"), SL_STATUS_INVALID_PARAMETER);
+  TEST_ASSERT_EQ_UINT(device_sn_validate("18264100123"), SL_STATUS_INVALID_PARAMETER);
 }
 
 /***************************************************************************//**
@@ -327,21 +370,21 @@ static void test_validate(void)
  ******************************************************************************/
 static void test_to_printable(void)
 {
-  static const char garbage[DEVICE_SN_STR_LEN] = {
-    '2', '6', '\x01', '1', '-', '\xFF', '0', '1', '2', '3', '-', '3', '9'
+  static const char garbage[DEVICE_SN_STR_SIZE] = {
+    '1', '8', '\x01', '6', '4', '\xFF', '0', '0', '1', '2', '3', '1', '9'
   };
-  static const char short_value[DEVICE_SN_STR_LEN] = {
+  static const char short_value[DEVICE_SN_STR_SIZE] = {
     '2', '6', '4', '1', '\0', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'
   };
-  char out[DEVICE_SN_STR_LEN];
+  char out[DEVICE_SN_STR_SIZE];
 
-  TEST_ASSERT_EQ_UINT(device_sn_to_printable("2641-00123-3", out, sizeof(out)),
+  TEST_ASSERT_EQ_UINT(device_sn_to_printable("182641001231", out, sizeof(out)),
                       SL_STATUS_OK);
-  TEST_ASSERT_EQ_STR(out, "2641-00123-3");
+  TEST_ASSERT_EQ_STR(out, "182641001231");
 
   // Non-printable bytes become dots, and the 13th byte is never copied.
   TEST_ASSERT_EQ_UINT(device_sn_to_printable(garbage, out, sizeof(out)), SL_STATUS_OK);
-  TEST_ASSERT_EQ_STR(out, "26.1-.0123-3");
+  TEST_ASSERT_EQ_STR(out, "18.64.001231");
 
   TEST_ASSERT_EQ_UINT(device_sn_to_printable(short_value, out, sizeof(out)),
                       SL_STATUS_OK);
@@ -351,7 +394,7 @@ static void test_to_printable(void)
                       SL_STATUS_NULL_POINTER);
   TEST_ASSERT_EQ_UINT(device_sn_to_printable(garbage, NULL, sizeof(out)),
                       SL_STATUS_NULL_POINTER);
-  TEST_ASSERT_EQ_UINT(device_sn_to_printable(garbage, out, DEVICE_SN_STR_LEN - 1U),
+  TEST_ASSERT_EQ_UINT(device_sn_to_printable(garbage, out, DEVICE_SN_STR_SIZE - 1U),
                       SL_STATUS_WOULD_OVERFLOW);
 }
 
@@ -363,6 +406,7 @@ int main(void)
   TEST_RUN(test_yyww_from_date_errors);
   TEST_RUN(test_yyww_from_build_date);
   TEST_RUN(test_yyww_from_build_date_errors);
+  TEST_RUN(test_parse_family);
   TEST_RUN(test_parse_sequence);
   TEST_RUN(test_parse_yyww);
   TEST_RUN(test_format);

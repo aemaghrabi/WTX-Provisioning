@@ -214,9 +214,9 @@ static const cli_node_t no_children[] = {
     M_CONF, CLI_CMD_NONE, no_xbee_children, 1U },
 };
 
-// "device serial-number <NNNNN> [week <YYWW>]": <NNNNN> is a complete command
-// on its own and also leads on to the optional week, which replaces the one
-// taken from the build date.
+// "device serial-number <FF> <SSSSS> [week <YYWW>]": <SSSSS> is a complete
+// command on its own and also leads on to the optional week, which replaces the
+// one taken from the build date.
 static const cli_node_t conf_sn_week_value[] = {
   { "<YYWW>", "Year and ISO week, for example 2641", CLI_NODE_ARG,
     M_CONF, CMD_DEVICE_SN_SET, NULL, 0U },
@@ -228,13 +228,18 @@ static const cli_node_t conf_sn_week[] = {
 };
 
 static const cli_node_t conf_sn_sequence[] = {
-  { "<NNNNN>", "Five-digit sequence number, for example 00123", CLI_NODE_ARG,
+  { "<SSSSS>", "Five-digit sequence number, for example 00123", CLI_NODE_ARG,
     M_CONF, CMD_DEVICE_SN_SET, conf_sn_week, 1U },
+};
+
+static const cli_node_t conf_sn_family[] = {
+  { "<FF>", "Two-digit product family code, for example 18", CLI_NODE_ARG,
+    M_CONF, CLI_CMD_NONE, conf_sn_sequence, 1U },
 };
 
 static const cli_node_t conf_device_children[] = {
   { "serial-number", "Write the serial number to MCU NVM", CLI_NODE_KEYWORD,
-    M_CONF, CLI_CMD_NONE, conf_sn_sequence, 1U },
+    M_CONF, CLI_CMD_NONE, conf_sn_family, 1U },
 };
 
 static const cli_node_t root[] = {
@@ -333,11 +338,11 @@ static bool provision_abort_refused;
 static uint32_t save_confirm_deadline;
 
 /// Serial number "device serial-number" will write once the operator agrees.
-static char pending_sn[DEVICE_SN_STR_LEN];
+static char pending_sn[DEVICE_SN_STR_SIZE];
 
 /// The different serial number already stored, made safe to print. Valid while
 /// sn_overwrite is true.
-static char stored_sn_shown[DEVICE_SN_STR_LEN];
+static char stored_sn_shown[DEVICE_SN_STR_SIZE];
 
 /// True when the question is whether to replace a different serial number.
 static bool sn_overwrite;
@@ -1174,19 +1179,29 @@ static void handle_confirm(void)
  * the operator is warned and asked whether to overwrite it; when the same one
  * is stored, nothing is asked and nothing is written.
  *
- * @param[in] sequence_text Typed NNNNN.
+ * @param[in] family_text   Typed FF.
+ * @param[in] sequence_text Typed SSSSS.
  * @param[in] yyww_text     Typed YYWW, or NULL to take the week from the date
  *                          this firmware was built, as "show version" prints it.
  *
  * @return true when the question is now waiting for an answer.
  ******************************************************************************/
-static bool cmd_device_sn_set(const char *sequence_text, const char *yyww_text)
+static bool cmd_device_sn_set(const char *family_text,
+                              const char *sequence_text,
+                              const char *yyww_text)
 {
-  char stored[DEVICE_SN_STR_LEN];
+  char stored[DEVICE_SN_STR_SIZE];
   size_t stored_len = 0U;
   uint32_t sequence = 0U;
   uint16_t yyww = 0U;
+  uint8_t family = 0U;
   sl_status_t status;
+
+  if (device_sn_parse_family(family_text, &family) != SL_STATUS_OK) {
+    (void)console_uart_printf("%% \"%s\" is not a two-digit product family "
+                              "code, for example 18\n", family_text);
+    return false;
+  }
 
   if (device_sn_parse_sequence(sequence_text, &sequence) != SL_STATUS_OK) {
     (void)console_uart_printf("%% \"%s\" is not a five-digit sequence number, "
@@ -1216,7 +1231,8 @@ static bool cmd_device_sn_set(const char *sequence_text, const char *yyww_text)
     }
   }
 
-  status = device_sn_format(yyww, sequence, pending_sn, sizeof(pending_sn));
+  status = device_sn_format(family, yyww, sequence, pending_sn,
+                            sizeof(pending_sn));
   if (status != SL_STATUS_OK) {
     (void)console_uart_printf("%% Could not form the serial number, status "
                               "0x%04X\n", (unsigned)status);
@@ -1233,7 +1249,7 @@ static bool cmd_device_sn_set(const char *sequence_text, const char *yyww_text)
 
   switch (status) {
     case SL_STATUS_OK:
-      if (memcmp(stored, pending_sn, DEVICE_SN_STR_LEN) == 0) {
+      if (memcmp(stored, pending_sn, DEVICE_SN_LEN) == 0) {
         (void)console_uart_puts("It is already stored. Nothing written.\n");
         return false;
       }
@@ -1252,7 +1268,7 @@ static bool cmd_device_sn_set(const char *sequence_text, const char *yyww_text)
                                 "number key is %u bytes, not %u, and reads as "
                                 "not set.\n",
                                 (unsigned)stored_len,
-                                (unsigned)DEVICE_SN_STR_LEN);
+                                (unsigned)DEVICE_SN_LEN);
       break;
 
     case SL_STATUS_INVALID_TYPE:
@@ -1413,8 +1429,8 @@ static bool execute(const cli_parse_result_t *result)
 
     case CMD_DEVICE_SN_SET:
       // The week argument is there only when "week <YYWW>" was typed.
-      started = cmd_device_sn_set(result->args[0],
-                                  (result->arg_count > 1U) ? result->args[1]
+      started = cmd_device_sn_set(result->args[0], result->args[1],
+                                  (result->arg_count > 2U) ? result->args[2]
                                   : NULL);
       break;
 

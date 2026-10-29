@@ -17,7 +17,8 @@
 /***************************************************************************//**
  * Read the serial number object, accepting only what WTX-FW accepts.
  *
- * @param[out] out        DEVICE_SN_STR_LEN writable bytes.
+ * @param[out] out        DEVICE_SN_STR_SIZE writable bytes. The stored bytes
+ *                        are followed by a NUL added here, in RAM only.
  * @param[out] stored_len Size of the stored object when there is one. May be
  *                        NULL.
  ******************************************************************************/
@@ -42,12 +43,20 @@ static sl_status_t read_device_sn_object(char *out, size_t *stored_len)
   if (type != NVM3_OBJECTTYPE_DATA) {
     return SL_STATUS_INVALID_TYPE;
   }
-  if (len != DEVICE_SN_STR_LEN) {
+  if (len != DEVICE_SN_LEN) {
     return SL_STATUS_INVALID_COUNT;
   }
 
-  return nvm3_readData(nvm3_defaultHandle, NVM_STORE_KEY_DEVICE_SN,
-                       out, DEVICE_SN_STR_LEN);
+  status = nvm3_readData(nvm3_defaultHandle, NVM_STORE_KEY_DEVICE_SN,
+                         out, DEVICE_SN_LEN);
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  // The object carries no terminator; add one so callers can print it.
+  out[DEVICE_SN_LEN] = '\0';
+
+  return SL_STATUS_OK;
 }
 
 /***************************************************************************//**
@@ -75,7 +84,7 @@ sl_status_t nvm_store_read_device_sn(char *out, size_t cap, size_t *stored_len)
   if (out == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
-  if (cap < DEVICE_SN_STR_LEN) {
+  if (cap < DEVICE_SN_STR_SIZE) {
     return SL_STATUS_WOULD_OVERFLOW;
   }
 
@@ -92,7 +101,7 @@ sl_status_t nvm_store_read_device_sn(char *out, size_t cap, size_t *stored_len)
  ******************************************************************************/
 sl_status_t nvm_store_write_device_sn(const char *sn)
 {
-  char readback[DEVICE_SN_STR_LEN];
+  char readback[DEVICE_SN_STR_SIZE];
   sl_status_t status;
 
   if (sn == NULL) {
@@ -115,7 +124,7 @@ sl_status_t nvm_store_write_device_sn(const char *sn)
   // a one-time factory step, run only with nothing else in flight, so it is not
   // worth a state machine. The XBee UART keeps receiving through UARTDRV's LDMA.
   status = nvm3_writeData(nvm3_defaultHandle, NVM_STORE_KEY_DEVICE_SN,
-                          sn, DEVICE_SN_STR_LEN);
+                          sn, DEVICE_SN_LEN);
   if (status != SL_STATUS_OK) {
     APP_LOG_ERROR("writing the serial number failed, status 0x%04X",
                   (unsigned)status);
@@ -129,7 +138,7 @@ sl_status_t nvm_store_write_device_sn(const char *sn)
     return status;
   }
 
-  if (memcmp(readback, sn, DEVICE_SN_STR_LEN) != 0) {
+  if (memcmp(readback, sn, DEVICE_SN_LEN) != 0) {
     APP_LOG_ERROR("the serial number read back differs from what was written");
     return SL_STATUS_FAIL;
   }

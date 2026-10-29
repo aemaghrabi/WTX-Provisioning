@@ -6,20 +6,23 @@
  * the factory into MCU NVM3 and read by the production firmware (WTX-FW). Its
  * form is
  *
- *     YYWW-NNNNN-C
+ *     FFYYWWSSSSSC
  *
+ * - FF: two-digit product family code. No value is assigned yet, so it is an
+ *   input of both the CLI and the provisioning build.
  * - YYWW: last two digits of the ISO 8601 week-numbering year, then the ISO
  *   week (01 to 53). The week-numbering year is used so that the pair is always
  *   a real ISO week: 2027-01-01 lies in week 53 of 2026 and gives 2653.
- * - NNNNN: five-digit sequence number, 00000 to 99999.
- * - C: ISO 7064 MOD 11-10 check digit over the nine digits YYWWNNNNN.
+ * - SSSSS: five-digit sequence number, 00000 to 99999.
+ * - C: ISO 7064 MOD 11-10 check digit over the eleven digits FFYYWWSSSSS.
  *
- * Digits only, dashes stored as literal characters, and the string is stored
- * with its NUL terminator: exactly DEVICE_SN_STR_LEN (13) bytes. WTX-FW
- * (lcd_menu.h, DEVICE_SN_STR_LEN) accepts that length and no other.
+ * Twelve decimal digits, no separators, no letters. It is stored as exactly
+ * DEVICE_SN_LEN (12) bytes with no NUL terminator; WTX-FW must accept that
+ * length. In RAM it is kept in DEVICE_SN_STR_SIZE bytes so it can be printed.
  *
- * Specification: GitHub issue #4. The issue's example "2640-00123-4" does not
- * satisfy ISO 7064 MOD 11-10; the check digit of 264000123 is 8.
+ * Specification: docs/plan/2026-10-29-serial-number-family-code.md. The
+ * specification's example "180726001234" does not satisfy ISO 7064 MOD 11-10;
+ * the check digit of 18072600123 is 0.
  *
  * The module is hardware independent and depends only on sl_status.h and the C
  * standard library, so it also builds for the host unit tests in test/.
@@ -32,21 +35,28 @@
 #include <stdint.h>
 #include "sl_status.h"
 
-/// Bytes of a stored serial number: "YYWW-NNNNN-C" plus the NUL terminator.
-/// Must equal DEVICE_SN_STR_LEN in WTX-FW lcd_menu.h.
-#define DEVICE_SN_STR_LEN          13U
+/// Bytes of a stored serial number: the twelve digits, no NUL terminator.
+/// Must equal the serial number length WTX-FW accepts.
+#define DEVICE_SN_LEN              12U
 
-/// Characters of a serial number, without the terminator.
-#define DEVICE_SN_TEXT_LEN         (DEVICE_SN_STR_LEN - 1U)
+/// Bytes of a RAM buffer holding a serial number as a C string.
+#define DEVICE_SN_STR_SIZE         (DEVICE_SN_LEN + 1U)
+
+/// Digits of the FF part.
+#define DEVICE_SN_FAMILY_DIGITS    2U
 
 /// Digits of the YYWW part.
 #define DEVICE_SN_YYWW_DIGITS      4U
 
-/// Digits of the NNNNN part.
+/// Digits of the SSSSS part.
 #define DEVICE_SN_SEQUENCE_DIGITS  5U
 
-/// Digits the check digit is computed over: YYWW followed by NNNNN.
-#define DEVICE_SN_PAYLOAD_DIGITS   (DEVICE_SN_YYWW_DIGITS + DEVICE_SN_SEQUENCE_DIGITS)
+/// Digits the check digit is computed over: FF, YYWW, then SSSSS.
+#define DEVICE_SN_PAYLOAD_DIGITS \
+  (DEVICE_SN_FAMILY_DIGITS + DEVICE_SN_YYWW_DIGITS + DEVICE_SN_SEQUENCE_DIGITS)
+
+/// Largest product family code.
+#define DEVICE_SN_FAMILY_MAX       99U
 
 /// Largest sequence number.
 #define DEVICE_SN_SEQUENCE_MAX     99999UL
@@ -112,7 +122,19 @@ sl_status_t device_sn_yyww_from_date(uint16_t year,
 sl_status_t device_sn_yyww_from_build_date(const char *date, uint16_t *yyww);
 
 /***************************************************************************//**
- * Parse the NNNNN part: exactly five decimal digits.
+ * Parse the FF part: exactly two decimal digits.
+ *
+ * @param[in]  text   NUL-terminated text.
+ * @param[out] family Value, 0 to 99.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if text or family is NULL,
+ *         SL_STATUS_INVALID_PARAMETER if text is not exactly two digits.
+ ******************************************************************************/
+sl_status_t device_sn_parse_family(const char *text, uint8_t *family);
+
+/***************************************************************************//**
+ * Parse the SSSSS part: exactly five decimal digits.
  *
  * @param[in]  text     NUL-terminated text.
  * @param[out] sequence Value, 0 to DEVICE_SN_SEQUENCE_MAX.
@@ -140,29 +162,41 @@ sl_status_t device_sn_parse_sequence(const char *text, uint32_t *sequence);
 sl_status_t device_sn_parse_yyww(const char *text, uint16_t *yyww);
 
 /***************************************************************************//**
- * Build the serial number string "YYWW-NNNNN-C" with its NUL terminator.
+ * Build the serial number "FFYYWWSSSSSC", followed by a NUL for printing.
  *
+ * Before anything is written to out, the result is checked independently: the
+ * check digit is recomputed from the formatted digits and the whole number is
+ * passed through device_sn_validate(). Only the first DEVICE_SN_LEN bytes are
+ * the serial number to store.
+ *
+ * @param[in]  family   0 to 99.
  * @param[in]  yyww     YYWW, which must name a real ISO week.
  * @param[in]  sequence 0 to DEVICE_SN_SEQUENCE_MAX.
- * @param[out] out      Destination, DEVICE_SN_STR_LEN bytes are written.
+ * @param[out] out      Destination, DEVICE_SN_STR_SIZE bytes are written.
  * @param[in]  cap      Capacity of out in bytes.
  *
  * @return SL_STATUS_OK on success,
  *         SL_STATUS_NULL_POINTER if out is NULL,
- *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_LEN,
- *         SL_STATUS_INVALID_RANGE if yyww is not a real ISO week or sequence is
- *         above DEVICE_SN_SEQUENCE_MAX. out is left untouched on error.
+ *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE,
+ *         SL_STATUS_INVALID_RANGE if family is above 99, yyww is not a real
+ *         ISO week or sequence is above DEVICE_SN_SEQUENCE_MAX,
+ *         SL_STATUS_FAIL if the self-check rejects the result.
+ *         out is left untouched on error.
  ******************************************************************************/
-sl_status_t device_sn_format(uint16_t yyww, uint32_t sequence, char *out, size_t cap);
+sl_status_t device_sn_format(uint8_t family,
+                             uint16_t yyww,
+                             uint32_t sequence,
+                             char *out,
+                             size_t cap);
 
 /***************************************************************************//**
  * Check a stored serial number: its shape, then its check digit.
  *
- * The shape is four digits, a dash, five digits, a dash, one digit and a NUL,
- * DEVICE_SN_STR_LEN bytes in all. Whether YYWW names a real week is not
- * checked, because WTX-FW does not check it either.
+ * The shape is DEVICE_SN_LEN decimal digits; no terminator is expected or
+ * read. Whether YYWW names a real week is not checked, because WTX-FW does not
+ * check it either.
  *
- * @param[in] sn DEVICE_SN_STR_LEN readable bytes, as read from NVM3.
+ * @param[in] sn DEVICE_SN_LEN readable bytes, as read from NVM3.
  *
  * @return SL_STATUS_OK if the serial number is well formed and its check digit
  *         is right,
@@ -175,16 +209,16 @@ sl_status_t device_sn_validate(const char *sn);
 /***************************************************************************//**
  * Make stored serial number bytes safe to print, whatever they hold.
  *
- * Copies at most DEVICE_SN_TEXT_LEN characters, stopping at a NUL, replaces
- * every byte outside printable ASCII with '.', and terminates the copy.
+ * Copies at most DEVICE_SN_LEN characters, stopping at a NUL, replaces every
+ * byte outside printable ASCII with '.', and terminates the copy.
  *
- * @param[in]  sn  DEVICE_SN_STR_LEN readable bytes.
+ * @param[in]  sn  DEVICE_SN_LEN readable bytes.
  * @param[out] out Destination text.
- * @param[in]  cap Capacity of out in bytes, at least DEVICE_SN_STR_LEN.
+ * @param[in]  cap Capacity of out in bytes, at least DEVICE_SN_STR_SIZE.
  *
  * @return SL_STATUS_OK on success,
  *         SL_STATUS_NULL_POINTER if sn or out is NULL,
- *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_LEN.
+ *         SL_STATUS_WOULD_OVERFLOW if cap is below DEVICE_SN_STR_SIZE.
  ******************************************************************************/
 sl_status_t device_sn_to_printable(const char *sn, char *out, size_t cap);
 
