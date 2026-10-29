@@ -123,18 +123,22 @@ Simplicity Studio and will be specified in the relevant plan under `docs/plan/`.
 
 The device serial number is the enclosure nameplate number. The provisioning firmware writes it to
 the EFM32's NVM3; the main product firmware (WTX-FW) only reads it, shows it on the LCD and sends
-it to the gateway at registration. Specification: GitHub issue #4. Design:
-`docs/plan/2026-10-06-device-serial-number.md`.
+it to the gateway at registration. Design: `docs/plan/2026-10-06-device-serial-number.md`, with the
+format changed by `docs/plan/2026-10-29-serial-number-family-code.md`.
 
 | Item | Value |
 | --- | --- |
-| Form | `YYWW-NNNNN-C`, digits only, dashes stored, for example `2641-00123-3` |
+| Form | `FFYYWWSSSSSC`, 12 decimal digits, no separators, no letters, for example `182641001231` |
+| `FF` | Two-digit product family code, given to the CLI or to `tools/provision.py`. No value is assigned for this product yet (TBD) |
 | `YYWW` | ISO week-numbering year (last two digits) and ISO week of the build date; 2027-01-01 gives `2653` |
-| `NNNNN` | Five-digit sequence number, given to the CLI or to `tools/provision.py` |
-| `C` | ISO 7064 MOD 11-10 check digit over `YYWWNNNNN` |
-| Storage | NVM3 default instance, data object, key `0x00003`, exactly 13 bytes (12 characters and a NUL) |
+| `SSSSS` | Five-digit sequence number, given to the CLI or to `tools/provision.py` |
+| `C` | ISO 7064 MOD 11-10 check digit over all eleven digits `FFYYWWSSSSS` |
+| Storage | NVM3 default instance, data object, key `0x00003`, exactly 12 bytes, no NUL terminator |
 
-The example in issue #4, `2640-00123-4`, has the wrong check digit: ISO 7064 MOD 11-10 gives 8.
+The specification's example, `180726001234`, has the wrong check digit: ISO 7064 MOD 11-10 gives 0.
+
+WTX-FW must accept the 12-byte object. Until its reader is changed from the earlier 13-byte form,
+it reports the serial number as not set.
 
 Both images must use the same NVM3 instance, so the NVM3 configuration here
 (`config/nvm3_default_config.h`: 40960 bytes, cache 200, max object 254, headroom 0) must stay
@@ -143,7 +147,7 @@ identical to WTX-FW's. The instance then sits at `0x080F4000` in both.
 **Provisioning (hex) build.** Each image carries one serial number, so it is built per unit:
 
 ```sh
-python tools/provision.py --sequence 00123
+python tools/provision.py --family 18 --sequence 00123
 ```
 
 The script builds the `PROVISION` variant in `cmake_gcc/build-provision/`, leaving the normal build
@@ -153,16 +157,17 @@ and waits for the board's result line. That step needs `--port COMx` and pyseria
 (`python -m pip install -r tools/requirements.txt`); `python tools/provision.py --help` lists every
 option. On the board, the serial number is written only after the XBee configuration has passed,
 and it replaces whatever is stored. The run ends with one log line,
-`serial number written: YYWW-NNNNN-C` or `serial number not written: <reason>`. Configuring the
-`PROVISION` variant without `-DSN_BURNER_SEQUENCE` fails the build on purpose.
+`serial number written: FFYYWWSSSSSC` or `serial number not written: <reason>`. Configuring the
+`PROVISION` variant without `-DSN_BURNER_FAMILY` or `-DSN_BURNER_SEQUENCE` fails the build on
+purpose.
 
 **Console (CLI) build.**
 
 ```text
 xbee> enable
 xbee# configure terminal
-xbee(config)# device serial-number 00123
-xbee(config)# device serial-number 00123 week 2653
+xbee(config)# device serial-number 18 00123
+xbee(config)# device serial-number 18 00123 week 2653
 xbee(config)# show device serial-number
 ```
 
@@ -232,11 +237,11 @@ The test build finds `sl_status.h` through `SDK_PATH`, which it reads from the g
 Flow for each new board (procedure details **TBD**):
 
 1. Connect the board to a debug probe (SWD) and, for the log, to a PC UART.
-2. Build the board's own provisioning image with `python tools/provision.py --sequence NNNNN`
+2. Build the board's own provisioning image with `python tools/provision.py --family FF --sequence SSSSS`
    (see [Device serial number](#device-serial-number)), and flash it over SWD, either from the
    script's prompt or with Simplicity Commander.
 3. Let the board run provisioning; observe the result on the UART log or via RTT. A pass ends with
-   `serial number written: YYWW-NNNNN-C`.
+   `serial number written: FFYYWWSSSSSC`.
 4. On pass: flash the main product firmware over SWD **without a mass or chip erase**, which would
    also erase the serial number in NVM3. On fail: set the board aside for investigation and record
    the reported error.

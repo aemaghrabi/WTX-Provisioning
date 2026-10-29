@@ -1,6 +1,6 @@
 # Device serial number (S/N) in MCU NVM3
 
-Status: Done, pending on-target verification
+Status: Superseded (serial number format only) by docs/plan/2026-10-29-serial-number-family-code.md; the rest is Done, pending on-target verification
 Date: 2026-10-06
 Related history: docs/history/2026-10-06-device-serial-number.md
 Related issue: GitHub #4, "Feat. Add Serial Number in MCU NVM"

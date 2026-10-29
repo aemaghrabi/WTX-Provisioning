@@ -215,7 +215,8 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
 - **NVM3:** default instance shared with the production firmware (WTX-FW). Its configuration in
   `config/nvm3_default_config.h` (40960 bytes, cache 200, max object 254, headroom 0) must stay
   identical to WTX-FW's, so both images find it at `0x080F4000`. Key `0x00003` is the device
-  serial number (`src/services/inc/nvm_store.h`); keys `0x00001` and `0x00002` belong to WTX-FW.
+  serial number, `FFYYWWSSSSSC`, exactly 12 bytes with no NUL (`src/services/inc/nvm_store.h`,
+  `src/utils/inc/device_sn.h`); keys `0x00001` and `0x00002` belong to WTX-FW.
 - **Global define:** `DEBUG_EFM`
 - **App model:** bare-metal super loop → `app_init()` once, `app_process_action()` every iteration
 
