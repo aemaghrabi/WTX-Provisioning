@@ -29,6 +29,7 @@
 #include "console_uart.h"
 #include "device_sn.h"
 #include "mfg_store.h"
+#include "sensor_variant.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -399,4 +400,38 @@ void cli_show_device_sn(void)
                                 (unsigned)status);
       break;
   }
+}
+
+/***************************************************************************//**
+ * Print one variant byte: its name, its value, and a note when it is not a
+ * value this firmware writes.
+ ******************************************************************************/
+static void print_variant_byte(const char *label, const char *name, uint8_t raw)
+{
+  if (raw == SENSOR_VARIANT_UNSET) {
+    (void)console_uart_printf("%-17s%s (0x%02X), WTX-FW treats it as not "
+                              "populated\n", label, name, (unsigned)raw);
+  } else {
+    (void)console_uart_printf("%-17s%s (0x%02X)\n", label, name, (unsigned)raw);
+  }
+}
+
+/***************************************************************************//**
+ * Print the sensor hardware variant stored in USERDATA.
+ ******************************************************************************/
+void cli_show_sensor_variant(void)
+{
+  sensor_variant_t variant;
+  sl_status_t status = mfg_store_read_sensor_variant(&variant);
+
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X\n",
+                              (unsigned)status);
+    return;
+  }
+
+  print_variant_byte("RTD", sensor_variant_rtd_name(variant.rtd), variant.rtd);
+  print_variant_byte("Pressure sensor",
+                     sensor_variant_pressure_name(variant.pressure),
+                     variant.pressure);
 }

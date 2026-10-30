@@ -36,6 +36,20 @@ _Static_assert(MFG_STORE_SN_WRITE_LEN <= USERDATA_FLASH_WRITE_MAX,
 _Static_assert((MFG_STORE_SN_OFFSET % USERDATA_FLASH_WORD_SIZE) == 0U,
                "the serial number slot must start on a flash word");
 
+/// Bytes programmed for the sensor variant: one flash word.
+#define MFG_STORE_VARIANT_WRITE_LEN  USERDATA_FLASH_WORD_SIZE
+
+_Static_assert((MFG_STORE_VARIANT_OFFSET % USERDATA_FLASH_WORD_SIZE) == 0U,
+               "the sensor variant must start on a flash word");
+_Static_assert(MFG_STORE_VARIANT_SIZE <= MFG_STORE_VARIANT_WRITE_LEN,
+               "the sensor variant must fit the word that is written");
+_Static_assert((MFG_STORE_VARIANT_OFFSET + MFG_STORE_VARIANT_WRITE_LEN)
+               <= USERDATA_FLASH_SIZE,
+               "the sensor variant word must stay inside USERDATA");
+_Static_assert(MFG_STORE_VARIANT_OFFSET
+               >= (MFG_STORE_SN_OFFSET + MFG_STORE_SN_SLOT_SIZE),
+               "the sensor variant must not overlap the serial number slot");
+
 /***************************************************************************//**
  * Report whether every one of len bytes reads as erased flash.
  ******************************************************************************/
@@ -158,6 +172,103 @@ sl_status_t mfg_store_write_device_sn(const char *sn)
 
   // All of what WTX-FW reads, the terminator included.
   if (memcmp(readback, image, DEVICE_SN_STORED_LEN) != 0) {
+    return SL_STATUS_FAIL;
+  }
+
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Read the sensor variant bytes as stored.
+ ******************************************************************************/
+sl_status_t mfg_store_read_sensor_variant(sensor_variant_t *variant)
+{
+  uint8_t stored[MFG_STORE_VARIANT_SIZE];
+  sl_status_t status;
+
+  if (variant == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+
+  status = userdata_flash_read(MFG_STORE_VARIANT_OFFSET, stored, sizeof(stored));
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  variant->rtd = stored[0];
+  variant->pressure = stored[1];
+
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Report whether both sensor variant bytes are still erased.
+ ******************************************************************************/
+sl_status_t mfg_store_sensor_variant_is_blank(bool *blank)
+{
+  uint8_t stored[MFG_STORE_VARIANT_SIZE];
+  sl_status_t status;
+
+  if (blank == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+
+  status = userdata_flash_read(MFG_STORE_VARIANT_OFFSET, stored, sizeof(stored));
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  *blank = all_erased(stored, sizeof(stored));
+
+  return SL_STATUS_OK;
+}
+
+/***************************************************************************//**
+ * Write the sensor variant, then verify it.
+ ******************************************************************************/
+sl_status_t mfg_store_write_sensor_variant(const sensor_variant_t *variant)
+{
+  uint8_t image[MFG_STORE_VARIANT_WRITE_LEN];
+  uint8_t readback[MFG_STORE_VARIANT_SIZE];
+  bool blank = false;
+  sl_status_t status;
+
+  if (variant == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+
+  // WTX-FW takes any value it does not know as undefined, so this is the last
+  // place a reserved or stray value can be stopped.
+  if (sensor_variant_validate(variant) != SL_STATUS_OK) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  // Programming only clears bits, and a double-word takes two writes between
+  // erases, so only erased bytes are written.
+  status = mfg_store_sensor_variant_is_blank(&blank);
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+  if (!blank) {
+    return SL_STATUS_ALREADY_EXISTS;
+  }
+
+  (void)memset(image, MFG_STORE_ERASED_BYTE, sizeof(image));
+  image[0] = variant->rtd;
+  image[1] = variant->pressure;
+
+  status = userdata_flash_write(MFG_STORE_VARIANT_OFFSET, image, sizeof(image));
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  status = userdata_flash_read(MFG_STORE_VARIANT_OFFSET, readback,
+                               sizeof(readback));
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+
+  if (memcmp(readback, image, sizeof(readback)) != 0) {
     return SL_STATUS_FAIL;
   }
 

@@ -30,6 +30,7 @@ add_executable(xbee_provision
     ../src/utils/src/device_sn.c
     ../src/utils/src/line_edit.c
     ../src/utils/src/ring_buffer.c
+    ../src/utils/src/sensor_variant.c
     ../src/drivers/src/console_uart.c
     ../src/drivers/src/userdata_flash.c
     ../src/drivers/src/xbee_power.c
@@ -90,11 +91,15 @@ target_compile_definitions(xbee_provision PUBLIC
     # given with -D at configure time, normally by tools/provision.py, and are
     # left out entirely when not given. The test is for an empty string rather
     # than $<BOOL:...>, so that 00 and 00000 are values.
-    # Both blocks again, because app.c checks SN_BURNER_FAMILY and
-    # SN_BURNER_SEQUENCE.
+    # SN_BURNER_RTD and SN_BURNER_PRESSURE are the sensor variant bytes (0 or 1
+    # each), also required by that build and given the same way.
+    # Both blocks again, because app.c checks SN_BURNER_FAMILY,
+    # SN_BURNER_SEQUENCE, SN_BURNER_RTD and SN_BURNER_PRESSURE.
     $<$<NOT:$<STREQUAL:${SN_BURNER_FAMILY},>>:SN_BURNER_FAMILY=${SN_BURNER_FAMILY}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_RTD},>>:SN_BURNER_RTD=${SN_BURNER_RTD}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_PRESSURE},>>:SN_BURNER_PRESSURE=${SN_BURNER_PRESSURE}>
 
     # Compile the human-readable AT command names, which the parameter dump
     # prints beside each command.
@@ -115,6 +120,8 @@ target_compile_definitions(slc PUBLIC
     $<$<NOT:$<STREQUAL:${SN_BURNER_FAMILY},>>:SN_BURNER_FAMILY=${SN_BURNER_FAMILY}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_SEQUENCE},>>:SN_BURNER_SEQUENCE=${SN_BURNER_SEQUENCE}>
     $<$<NOT:$<STREQUAL:${SN_BURNER_BUILD_YYWW},>>:SN_BURNER_BUILD_YYWW=${SN_BURNER_BUILD_YYWW}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_RTD},>>:SN_BURNER_RTD=${SN_BURNER_RTD}>
+    $<$<NOT:$<STREQUAL:${SN_BURNER_PRESSURE},>>:SN_BURNER_PRESSURE=${SN_BURNER_PRESSURE}>
     XBEE_AT_TABLE_NAMES=1
 )
 

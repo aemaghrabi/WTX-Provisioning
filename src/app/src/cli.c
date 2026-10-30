@@ -24,6 +24,8 @@
  * already stored there (flash cannot be rewritten in place), and writes only
  * once the operator has said yes. "erase device userdata" clears the way for a
  * new one: it erases the whole USERDATA page, again only after a yes.
+ * "device sensor-variant" writes the two sensor variant bytes that follow the
+ * same rules, in the same page, and "show device sensor-variant" reads them.
  ******************************************************************************/
 
 #include <stdbool.h>
@@ -39,6 +41,7 @@
 
 #include "cli_parser.h"
 #include "mfg_store.h"
+#include "sensor_variant.h"
 #include "xbee.h"
 #include "xbee_at_table.h"
 #include "xbee_dump_format.h"
@@ -100,6 +103,8 @@ enum {
   CMD_DEVICE_SN_SET,
   CMD_SHOW_DEVICE_SN,
   CMD_ERASE_USERDATA,
+  CMD_DEVICE_VARIANT_SET,
+  CMD_SHOW_DEVICE_VARIANT,
 };
 /// @}
 
@@ -118,6 +123,7 @@ typedef enum {
   CLI_STATE_SAVE_CONFIRM, ///< At the "do you want to save?" prompt of a provisioning run.
   CLI_STATE_SN_CONFIRM, ///< At the question asked before writing the serial number.
   CLI_STATE_ERASE_CONFIRM, ///< At the question asked before erasing USERDATA.
+  CLI_STATE_VARIANT_CONFIRM, ///< At the question asked before writing the sensor variant.
 } cli_state_t;
 
 // ---------------------------------------------------------------------------
@@ -140,13 +146,15 @@ static const cli_node_t show_xbee_children[] = {
 };
 
 static const cli_node_t show_device_children[] = {
+  { "sensor-variant", "Sensor variant stored in USERDATA", CLI_NODE_KEYWORD,
+    M_ALL, CMD_SHOW_DEVICE_VARIANT, NULL, 0U },
   { "serial-number", "Serial number stored in USERDATA", CLI_NODE_KEYWORD,
     M_ALL, CMD_SHOW_DEVICE_SN, NULL, 0U },
 };
 
 static const cli_node_t show_children[] = {
-  { "device", "Identity stored on this board", CLI_NODE_KEYWORD,
-    M_ALL, CLI_CMD_NONE, show_device_children, 1U },
+  { "device", "Identity and sensor variant stored on this board",
+    CLI_NODE_KEYWORD, M_ALL, CLI_CMD_NONE, show_device_children, 2U },
   { "version", "Firmware build and module identity", CLI_NODE_KEYWORD,
     M_ALL, CMD_SHOW_VERSION, NULL, 0U },
   { "xbee", "XBee module information", CLI_NODE_KEYWORD,
@@ -241,7 +249,33 @@ static const cli_node_t conf_sn_family[] = {
     M_CONF, CLI_CMD_NONE, conf_sn_sequence, 1U },
 };
 
+// "device sensor-variant rtd <present|absent> pressure <none|1-5vdc>": both
+// bytes are always given, so that a sensor is never left at the erased value,
+// which WTX-FW reads as not populated. The values are arguments rather than
+// keywords so that a new pressure type is one more table row, not a new branch.
+static const cli_node_t conf_variant_pressure_value[] = {
+  { "<TYPE>", "none or 1-5vdc", CLI_NODE_ARG,
+    M_CONF, CMD_DEVICE_VARIANT_SET, NULL, 0U },
+};
+
+static const cli_node_t conf_variant_pressure[] = {
+  { "pressure", "Pressure sensor fitted to this unit", CLI_NODE_KEYWORD,
+    M_CONF, CLI_CMD_NONE, conf_variant_pressure_value, 1U },
+};
+
+static const cli_node_t conf_variant_rtd_value[] = {
+  { "<RTD>", "present or absent", CLI_NODE_ARG,
+    M_CONF, CLI_CMD_NONE, conf_variant_pressure, 1U },
+};
+
+static const cli_node_t conf_variant_rtd[] = {
+  { "rtd", "3-wire PT100 fitted to this unit", CLI_NODE_KEYWORD,
+    M_CONF, CLI_CMD_NONE, conf_variant_rtd_value, 1U },
+};
+
 static const cli_node_t conf_device_children[] = {
+  { "sensor-variant", "Write the sensor variant to USERDATA", CLI_NODE_KEYWORD,
+    M_CONF, CLI_CMD_NONE, conf_variant_rtd, 1U },
   { "serial-number", "Write the serial number to USERDATA", CLI_NODE_KEYWORD,
     M_CONF, CLI_CMD_NONE, conf_sn_family, 1U },
 };
@@ -249,7 +283,7 @@ static const cli_node_t conf_device_children[] = {
 // "erase device userdata": privileged EXEC, like IOS "erase startup-config".
 // Flash is erased a page at a time, so it erases the whole page.
 static const cli_node_t erase_device_children[] = {
-  { "userdata", "The whole USERDATA page, serial number included",
+  { "userdata", "The whole USERDATA page, serial number and sensor variant included",
     CLI_NODE_KEYWORD, M_PRIV, CMD_ERASE_USERDATA, NULL, 0U },
 };
 
@@ -264,7 +298,7 @@ static const cli_node_t root[] = {
   { "configure", "Enter configuration mode", CLI_NODE_KEYWORD,
     M_PRIV, CLI_CMD_NONE, configure_children, 1U },
   { "device", "Identity stored on this board", CLI_NODE_KEYWORD,
-    M_CONF, CLI_CMD_NONE, conf_device_children, 1U },
+    M_CONF, CLI_CMD_NONE, conf_device_children, 2U },
   { "disable", "Leave privileged commands", CLI_NODE_KEYWORD,
     M_PRIV, CMD_DISABLE, NULL, 0U },
   { "enable", "Turn on privileged commands", CLI_NODE_KEYWORD,
@@ -369,8 +403,22 @@ static char erase_sn_shown[DEVICE_SN_STR_SIZE];
 /// erase question names it.
 static bool erase_has_sn;
 
+/// True when the sensor variant is not erased, so that the erase question
+/// names it.
+static bool erase_has_variant;
+
+/// The sensor variant the erase question names. Valid while erase_has_variant
+/// is true.
+static sensor_variant_t erase_variant;
+
 /// Tick by which the erase question must have been answered.
 static uint32_t erase_confirm_deadline;
+
+/// Sensor variant "device sensor-variant" will write once the operator agrees.
+static sensor_variant_t pending_variant;
+
+/// Tick by which the sensor variant question must have been answered.
+static uint32_t variant_confirm_deadline;
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -1018,14 +1066,26 @@ static void print_erase_hint(void)
  ******************************************************************************/
 static void print_erase_question(void)
 {
+  (void)console_uart_puts("Erase the whole USERDATA page (");
   if (erase_has_sn) {
-    (void)console_uart_printf("Erase the whole USERDATA page (serial number "
-                              "%s)? Everything stored there is lost. [N/y] ",
-                              erase_sn_shown);
+    (void)console_uart_printf("serial number %s", erase_sn_shown);
   } else {
-    (void)console_uart_puts("Erase the whole USERDATA page (no serial number "
-                            "set)? Everything stored there is lost. [N/y] ");
+    (void)console_uart_puts("no serial number set");
   }
+  if (erase_has_variant) {
+    (void)console_uart_printf(", sensor variant RTD %s, pressure %s",
+                              sensor_variant_rtd_name(erase_variant.rtd),
+                              sensor_variant_pressure_name(erase_variant.pressure));
+  }
+  (void)console_uart_puts(")? Everything stored there is lost. [N/y] ");
+}
+
+/***************************************************************************//**
+ * Write the question asked before the sensor variant is written to USERDATA.
+ ******************************************************************************/
+static void print_variant_question(void)
+{
+  (void)console_uart_puts("Write it to USERDATA? [N/y] ");
 }
 
 /***************************************************************************//**
@@ -1049,6 +1109,11 @@ static void show_answer_help(void)
     help_cb("Enter", "Do not write", NULL);
     help_cb("other", "Do not write", NULL);
     print_sn_question();
+  } else if (state == CLI_STATE_VARIANT_CONFIRM) {
+    help_cb("y, yes", "Write the sensor variant to USERDATA", NULL);
+    help_cb("Enter", "Do not write", NULL);
+    help_cb("other", "Do not write", NULL);
+    print_variant_question();
   } else if (state == CLI_STATE_ERASE_CONFIRM) {
     help_cb("y, yes", "Erase the whole USERDATA page", NULL);
     help_cb("Enter", "Do not erase", NULL);
@@ -1381,6 +1446,117 @@ static void handle_sn_confirm(void)
 }
 
 /***************************************************************************//**
+ * Print a sensor variant on one line, for the confirmation and the result.
+ ******************************************************************************/
+static void print_variant_line(const char *prefix, const sensor_variant_t *v)
+{
+  (void)console_uart_printf("%sRTD %s (0x%02X), pressure %s (0x%02X)\n", prefix,
+                            sensor_variant_rtd_name(v->rtd), (unsigned)v->rtd,
+                            sensor_variant_pressure_name(v->pressure),
+                            (unsigned)v->pressure);
+}
+
+/***************************************************************************//**
+ * Form the sensor variant, show it, and ask before writing it to USERDATA.
+ *
+ * Nothing is written here. Flash cannot be rewritten in place, so when either
+ * byte is already written, nothing is asked and nothing is written. The serial
+ * number is not touched either way: it is in another slot.
+ *
+ * @param[in] rtd_text      Typed RTD word, "present" or "absent".
+ * @param[in] pressure_text Typed pressure sensor word, "none" or "1-5vdc".
+ *
+ * @return true when the question is now waiting for an answer.
+ ******************************************************************************/
+static bool cmd_device_variant_set(const char *rtd_text,
+                                   const char *pressure_text)
+{
+  sensor_variant_t stored;
+  bool blank = false;
+  sl_status_t status;
+
+  if (sensor_variant_parse_rtd(rtd_text, &pending_variant.rtd) != SL_STATUS_OK) {
+    (void)console_uart_printf("%% \"%s\" is not an RTD setting: present or "
+                              "absent\n", rtd_text);
+    return false;
+  }
+
+  if (sensor_variant_parse_pressure(pressure_text, &pending_variant.pressure)
+      != SL_STATUS_OK) {
+    (void)console_uart_printf("%% \"%s\" is not a pressure sensor setting: none "
+                              "or 1-5vdc\n", pressure_text);
+    return false;
+  }
+
+  print_variant_line("Sensor variant  ", &pending_variant);
+
+  status = mfg_store_read_sensor_variant(&stored);
+  if (status == SL_STATUS_OK) {
+    status = mfg_store_sensor_variant_is_blank(&blank);
+  }
+  if (status != SL_STATUS_OK) {
+    (void)console_uart_printf("%% Could not read USERDATA, status 0x%04X. "
+                              "Nothing written.\n", (unsigned)status);
+    return false;
+  }
+
+  if (!blank) {
+    if ((stored.rtd == pending_variant.rtd)
+        && (stored.pressure == pending_variant.pressure)) {
+      (void)console_uart_puts("It is already stored. Nothing written.\n");
+    } else {
+      print_variant_line("% Sensor variant already stored: ", &stored);
+      (void)console_uart_puts("% Nothing written.\n");
+      print_erase_hint();
+    }
+    return false;
+  }
+
+  print_variant_question();
+  variant_confirm_deadline = deadline_from_ms(CLI_VARIANT_CONFIRM_TIMEOUT_MS);
+  state = CLI_STATE_VARIANT_CONFIRM;
+
+  return true;
+}
+
+/***************************************************************************//**
+ * Act on the answer to the sensor variant question.
+ *
+ * Only "y" or "yes" writes. Enter alone, and anything else, writes nothing.
+ ******************************************************************************/
+static void handle_variant_confirm(void)
+{
+  const char *answer = line_edit_line(&editor);
+  bool yes = (equals_ignore_case(answer, "y")
+              || equals_ignore_case(answer, "yes"));
+  sl_status_t status;
+
+  if (!yes) {
+    (void)console_uart_puts("% Not written\n");
+    back_to_prompt();
+    return;
+  }
+
+  // Blocks while flash is programmed; see mfg_store_write_sensor_variant().
+  // The console has no request in flight at this prompt.
+  status = mfg_store_write_sensor_variant(&pending_variant);
+  if (status == SL_STATUS_OK) {
+    print_variant_line("[OK] sensor variant written: ", &pending_variant);
+  } else if (status == SL_STATUS_ALREADY_EXISTS) {
+    // Checked when the question was asked; only something else writing
+    // USERDATA meanwhile gets here.
+    (void)console_uart_puts("% The sensor variant in USERDATA is no longer "
+                            "blank. Nothing written.\n");
+    print_erase_hint();
+  } else {
+    (void)console_uart_printf("%% Writing the sensor variant failed, status "
+                              "0x%04X\n", (unsigned)status);
+  }
+
+  back_to_prompt();
+}
+
+/***************************************************************************//**
  * Say what USERDATA holds and ask before erasing it.
  *
  * Nothing is erased here. When the page is already blank, nothing is asked.
@@ -1412,6 +1588,10 @@ static bool cmd_erase_userdata(void)
     (void)device_sn_to_printable(stored, erase_sn_shown,
                                  sizeof(erase_sn_shown));
   }
+
+  erase_has_variant = ((mfg_store_read_sensor_variant(&erase_variant) == SL_STATUS_OK)
+                       && ((erase_variant.rtd != SENSOR_VARIANT_UNSET)
+                           || (erase_variant.pressure != SENSOR_VARIANT_UNSET)));
 
   print_erase_question();
   erase_confirm_deadline = deadline_from_ms(CLI_ERASE_CONFIRM_TIMEOUT_MS);
@@ -1573,6 +1753,14 @@ static bool execute(const cli_parse_result_t *result)
       started = cmd_erase_userdata();
       break;
 
+    case CMD_DEVICE_VARIANT_SET:
+      started = cmd_device_variant_set(result->args[0], result->args[1]);
+      break;
+
+    case CMD_SHOW_DEVICE_VARIANT:
+      cli_show_sensor_variant();
+      break;
+
     default:
       // Cannot happen: every identifier in the tree has a case above.
       (void)console_uart_puts("% Command is not implemented\n");
@@ -1710,6 +1898,8 @@ static void feed_byte(char c)
         handle_save_confirm();
       } else if (state == CLI_STATE_SN_CONFIRM) {
         handle_sn_confirm();
+      } else if (state == CLI_STATE_VARIANT_CONFIRM) {
+        handle_variant_confirm();
       } else if (state == CLI_STATE_ERASE_CONFIRM) {
         handle_erase_confirm();
       } else {
@@ -1721,6 +1911,7 @@ static void feed_byte(char c)
       if ((state == CLI_STATE_CONFIRM)
           || (state == CLI_STATE_SAVE_CONFIRM)
           || (state == CLI_STATE_SN_CONFIRM)
+          || (state == CLI_STATE_VARIANT_CONFIRM)
           || (state == CLI_STATE_ERASE_CONFIRM)) {
         show_answer_help();
       } else {
@@ -1737,6 +1928,9 @@ static void feed_byte(char c)
       } else if (state == CLI_STATE_SAVE_CONFIRM) {
         decide_save(false);
       } else if (state == CLI_STATE_SN_CONFIRM) {
+        (void)console_uart_puts("% Not written\n");
+        back_to_prompt();
+      } else if (state == CLI_STATE_VARIANT_CONFIRM) {
         (void)console_uart_puts("% Not written\n");
         back_to_prompt();
       } else if (state == CLI_STATE_ERASE_CONFIRM) {
@@ -1763,6 +1957,10 @@ static void feed_byte(char c)
         break;
       } else if (state == CLI_STATE_SN_CONFIRM) {
         // Not a yes, so the serial number is not written.
+        (void)console_uart_puts("% Not written\n");
+        state = CLI_STATE_PROMPT;
+      } else if (state == CLI_STATE_VARIANT_CONFIRM) {
+        // Not a yes, so the sensor variant is not written.
         (void)console_uart_puts("% Not written\n");
         state = CLI_STATE_PROMPT;
       } else if (state == CLI_STATE_ERASE_CONFIRM) {
@@ -2068,6 +2266,14 @@ void cli_process(void)
 
     case CLI_STATE_SN_CONFIRM:
       if (tick_reached(sn_confirm_deadline)) {
+        (void)console_uart_puts("\n% Timed out waiting for an answer. "
+                                "Nothing written.\n");
+        back_to_prompt();
+      }
+      break;
+
+    case CLI_STATE_VARIANT_CONFIRM:
+      if (tick_reached(variant_confirm_deadline)) {
         (void)console_uart_puts("\n% Timed out waiting for an answer. "
                                 "Nothing written.\n");
         back_to_prompt();

@@ -70,12 +70,17 @@ add_module_test(test_line_edit "${PROJECT_ROOT}/src/utils/src/line_edit.c")
 # The vectors are the ones the provisioning tool and WTX-FW depend on.
 add_module_test(test_device_sn "${PROJECT_ROOT}/src/utils/src/device_sn.c")
 
+# The sensor hardware variant: the words typed, the bytes stored, and which
+# values may be written (the reserved pressure types may not).
+add_module_test(test_sensor_variant "${PROJECT_ROOT}/src/utils/src/sensor_variant.c")
+
 # Where the serial number lives in USERDATA, and the rules for writing it.
 # fake_userdata_flash.c stands in for src/drivers/src/userdata_flash.c with a
 # RAM page that, like flash, starts erased and can only have bits cleared.
 add_module_test(test_mfg_store
     "${PROJECT_ROOT}/src/services/src/mfg_store.c"
     "${PROJECT_ROOT}/src/utils/src/device_sn.c"
+    "${PROJECT_ROOT}/src/utils/src/sensor_variant.c"
     fake_userdata_flash.c)
 
 # The console's grammar. The tree in the test mirrors the real one closely

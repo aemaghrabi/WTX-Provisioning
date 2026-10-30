@@ -27,7 +27,16 @@
  * reads as not set and still cannot be written. Replacing a serial number needs
  * the USERDATA page erased first, with mfg_store_erase().
  *
- * Plan: docs/plan/2026-10-29-sn-userdata-storage.md.
+ * The sensor hardware variant (src/utils/inc/sensor_variant.h) is two bytes at
+ * offset 0x110 (RTD) and 0x111 (pressure sensor type). That address is WTX-FW's
+ * own, not an SDK token slot. The bytes 0x108 to 0x10F are a buffer the contract
+ * keeps free for a future SDK token and are never written. A byte reading 0xFF
+ * is "not populated". Both bytes are programmed in one flash word, once between
+ * erases; as with the serial number, they are written only while both still read
+ * erased.
+ *
+ * Plans: docs/plan/2026-10-29-sn-userdata-storage.md,
+ *        docs/plan/2026-10-30-sensor-variant-userdata.md.
  ******************************************************************************/
 
 #ifndef MFG_STORE_H
@@ -36,6 +45,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "sl_status.h"
+#include "sensor_variant.h"
 
 /// Offset of the serial number slot in USERDATA. Must equal
 /// TOKEN_MFG_SERIAL_NUMBER & 0x0FFF in the SDK token manager.
@@ -43,6 +53,12 @@
 
 /// Size of the serial number slot reserved by the SDK, in bytes.
 #define MFG_STORE_SN_SLOT_SIZE  16U
+
+/// Offset of the RTD byte in USERDATA; the pressure sensor byte follows it.
+#define MFG_STORE_VARIANT_OFFSET  0x110U
+
+/// Bytes of the sensor variant: the RTD byte, then the pressure sensor byte.
+#define MFG_STORE_VARIANT_SIZE    2U
 
 /***************************************************************************//**
  * Read the device serial number.
@@ -101,6 +117,56 @@ sl_status_t mfg_store_device_sn_slot_is_blank(bool *blank);
  *         otherwise the status of the failing flash step.
  ******************************************************************************/
 sl_status_t mfg_store_write_device_sn(const char *sn);
+
+/***************************************************************************//**
+ * Read the sensor variant bytes as stored.
+ *
+ * The bytes are returned raw, so an erased 0xFF or a value this firmware would
+ * not write shows as it is. Name them with sensor_variant_rtd_name() and
+ * sensor_variant_pressure_name().
+ *
+ * @param[out] variant Destination.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if variant is NULL,
+ *         otherwise the status of the flash read.
+ ******************************************************************************/
+sl_status_t mfg_store_read_sensor_variant(sensor_variant_t *variant);
+
+/***************************************************************************//**
+ * Report whether both sensor variant bytes are still erased, so that a variant
+ * can be written.
+ *
+ * @param[out] blank true when both bytes read 0xFF.
+ *
+ * @return SL_STATUS_OK on success,
+ *         SL_STATUS_NULL_POINTER if blank is NULL,
+ *         otherwise the status of the flash read.
+ ******************************************************************************/
+sl_status_t mfg_store_sensor_variant_is_blank(bool *blank);
+
+/***************************************************************************//**
+ * Write the sensor variant, then read it back to verify it.
+ *
+ * Only values sensor_variant_validate() accepts are written, so a reserved
+ * pressure type or a stray value never reaches the production firmware. Only
+ * erased bytes are written. One flash word is programmed: the two bytes and two
+ * bytes of 0xFF, which leaves the neighbouring bytes erased.
+ *
+ * @note Blocks while flash is programmed, one word. Meant for a one-time
+ *       factory step, called with nothing else in flight.
+ *
+ * @param[in] variant Bytes to store.
+ *
+ * @return SL_STATUS_OK when both bytes were written and read back identical,
+ *         SL_STATUS_NULL_POINTER if variant is NULL,
+ *         SL_STATUS_INVALID_PARAMETER if variant is not writable,
+ *         SL_STATUS_ALREADY_EXISTS if either byte is not erased; nothing is
+ *         written,
+ *         SL_STATUS_FAIL if the read-back differs,
+ *         otherwise the status of the failing flash step.
+ ******************************************************************************/
+sl_status_t mfg_store_write_sensor_variant(const sensor_variant_t *variant);
 
 /***************************************************************************//**
  * Report whether the whole USERDATA page is erased, so that there is nothing

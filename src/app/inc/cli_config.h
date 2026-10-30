@@ -64,6 +64,12 @@
 #define CLI_SN_CONFIRM_TIMEOUT_MS  30000U
 #endif
 
+/// Milliseconds to wait at the question asked by "device sensor-variant"
+/// before giving up and writing nothing.
+#ifndef CLI_VARIANT_CONFIRM_TIMEOUT_MS
+#define CLI_VARIANT_CONFIRM_TIMEOUT_MS  30000U
+#endif
+
 /// Milliseconds to wait at the question asked by "erase device userdata"
 /// before giving up and erasing nothing.
 #ifndef CLI_ERASE_CONFIRM_TIMEOUT_MS

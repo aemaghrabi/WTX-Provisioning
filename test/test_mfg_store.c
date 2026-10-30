@@ -11,6 +11,7 @@
 #include "test_util.h"
 #include "device_sn.h"
 #include "mfg_store.h"
+#include "sensor_variant.h"
 #include "userdata_flash.h"
 #include "fake_userdata_flash.h"
 
@@ -341,6 +342,200 @@ static void test_erase_failure(void)
   TEST_ASSERT_EQ_MEM(&page[MFG_STORE_SN_OFFSET], sn_a, DEVICE_SN_STORED_LEN);
 }
 
+/***************************************************************************//**
+ * The variant sits at the contract's address, clear of the serial number slot.
+ ******************************************************************************/
+static void test_variant_layout(void)
+{
+  TEST_ASSERT_EQ_UINT(MFG_STORE_VARIANT_OFFSET, 0x110U);
+  TEST_ASSERT_EQ_UINT(MFG_STORE_VARIANT_SIZE, 2U);
+  TEST_ASSERT((MFG_STORE_VARIANT_OFFSET % 4U) == 0U);
+  TEST_ASSERT(MFG_STORE_VARIANT_OFFSET >= (MFG_STORE_SN_OFFSET + MFG_STORE_SN_SLOT_SIZE));
+}
+
+/***************************************************************************//**
+ * An erased page reads both variant bytes as 0xFF, and as blank.
+ ******************************************************************************/
+static void test_variant_erased(void)
+{
+  sensor_variant_t v = { 0U, 0U };
+  bool blank = false;
+
+  fake_userdata_flash_reset();
+
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&v), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(v.rtd, 0xFFU);
+  TEST_ASSERT_EQ_UINT(v.pressure, 0xFFU);
+  TEST_ASSERT_EQ_UINT(mfg_store_sensor_variant_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(blank);
+}
+
+/***************************************************************************//**
+ * A written variant reads back, and nothing else in the page changes.
+ ******************************************************************************/
+static void test_variant_write_and_read(void)
+{
+  const sensor_variant_t want = { SENSOR_VARIANT_RTD_PRESENT,
+                                  SENSOR_VARIANT_PRESSURE_1_5VDC };
+  sensor_variant_t got = { 0U, 0U };
+  bool blank = true;
+  uint8_t *page;
+
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&want), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 1U);
+  TEST_ASSERT_EQ_UINT(page[0x110], 0x01U);
+  TEST_ASSERT_EQ_UINT(page[0x111], 0x01U);
+  TEST_ASSERT(page_erased(0x112U, 2U));
+  // The buffer the contract keeps free, and everything before and after.
+  TEST_ASSERT(page_erased(0U, 0x110U));
+  TEST_ASSERT(page_erased(0x114U, USERDATA_FLASH_SIZE - 0x114U));
+
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&got), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(got.rtd, 0x01U);
+  TEST_ASSERT_EQ_UINT(got.pressure, 0x01U);
+  TEST_ASSERT_EQ_UINT(mfg_store_sensor_variant_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(!blank);
+}
+
+/***************************************************************************//**
+ * Every writable combination is accepted, written as given.
+ ******************************************************************************/
+static void test_variant_combinations(void)
+{
+  const uint8_t rtds[] = { SENSOR_VARIANT_RTD_ABSENT, SENSOR_VARIANT_RTD_PRESENT };
+  const uint8_t pressures[] = { SENSOR_VARIANT_PRESSURE_NONE,
+                                SENSOR_VARIANT_PRESSURE_1_5VDC };
+  size_t r;
+  size_t p;
+
+  for (r = 0U; r < sizeof(rtds); r++) {
+    for (p = 0U; p < sizeof(pressures); p++) {
+      sensor_variant_t want;
+      sensor_variant_t got = { 0U, 0U };
+
+      want.rtd = rtds[r];
+      want.pressure = pressures[p];
+      fake_userdata_flash_reset();
+
+      TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&want), SL_STATUS_OK);
+      TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&got), SL_STATUS_OK);
+      TEST_ASSERT_EQ_UINT(got.rtd, rtds[r]);
+      TEST_ASSERT_EQ_UINT(got.pressure, pressures[p]);
+    }
+  }
+}
+
+/***************************************************************************//**
+ * A variant is written only over erased bytes, even when only one is written.
+ ******************************************************************************/
+static void test_variant_no_overwrite(void)
+{
+  const sensor_variant_t a = { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_PRESSURE_NONE };
+  const sensor_variant_t b = { SENSOR_VARIANT_RTD_ABSENT, SENSOR_VARIANT_PRESSURE_1_5VDC };
+  uint8_t *page;
+
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&a), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&b), SL_STATUS_ALREADY_EXISTS);
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&a), SL_STATUS_ALREADY_EXISTS);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 1U);
+  TEST_ASSERT_EQ_UINT(page[0x110], 0x01U);
+  TEST_ASSERT_EQ_UINT(page[0x111], 0x00U);
+
+  // One byte alone, set by hand, is enough to refuse.
+  fake_userdata_flash_reset();
+  page = fake_userdata_flash_page();
+  page[0x111] = 0x01U;
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&a), SL_STATUS_ALREADY_EXISTS);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 0U);
+}
+
+/***************************************************************************//**
+ * Reserved, erased and stray values are refused before anything is written.
+ ******************************************************************************/
+static void test_variant_rejects(void)
+{
+  const sensor_variant_t bad[] = {
+    { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_PRESSURE_MODBUS },
+    { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_PRESSURE_MV_BRIDGE },
+    { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_UNSET },
+    { SENSOR_VARIANT_UNSET, SENSOR_VARIANT_PRESSURE_NONE },
+    { 0x02U, SENSOR_VARIANT_PRESSURE_NONE },
+    { SENSOR_VARIANT_RTD_ABSENT, 0x04U },
+  };
+  size_t i;
+
+  fake_userdata_flash_reset();
+
+  for (i = 0U; i < (sizeof(bad) / sizeof(bad[0])); i++) {
+    TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&bad[i]),
+                        SL_STATUS_INVALID_PARAMETER);
+  }
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(NULL), SL_STATUS_NULL_POINTER);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(NULL), SL_STATUS_NULL_POINTER);
+  TEST_ASSERT_EQ_UINT(mfg_store_sensor_variant_is_blank(NULL), SL_STATUS_NULL_POINTER);
+  TEST_ASSERT_EQ_UINT(fake_userdata_flash_write_count(), 0U);
+  TEST_ASSERT(page_erased(0U, USERDATA_FLASH_SIZE));
+}
+
+/***************************************************************************//**
+ * A failing flash write is passed back, and the bytes stay erased.
+ ******************************************************************************/
+static void test_variant_write_failure(void)
+{
+  const sensor_variant_t v = { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_PRESSURE_1_5VDC };
+  bool blank = false;
+
+  fake_userdata_flash_reset();
+  fake_userdata_flash_fail_writes(SL_STATUS_FLASH_PROGRAM_FAILED);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&v), SL_STATUS_FLASH_PROGRAM_FAILED);
+  TEST_ASSERT_EQ_UINT(mfg_store_sensor_variant_is_blank(&blank), SL_STATUS_OK);
+  TEST_ASSERT(blank);
+}
+
+/***************************************************************************//**
+ * The serial number and the variant are independent, and both survive in the
+ * page together. An erase takes both, and both can then be written again.
+ ******************************************************************************/
+static void test_variant_with_serial_number(void)
+{
+  const sensor_variant_t v = { SENSOR_VARIANT_RTD_PRESENT, SENSOR_VARIANT_PRESSURE_1_5VDC };
+  sensor_variant_t got = { 0U, 0U };
+  char out[DEVICE_SN_STR_SIZE];
+
+  fake_userdata_flash_reset();
+
+  // The order of a unit provisioned before the variant existed: the serial
+  // number is already there when the variant is added.
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_a), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&v), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_MEM(out, sn_a, DEVICE_SN_STR_SIZE);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&got), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(got.rtd, 0x01U);
+  TEST_ASSERT_EQ_UINT(got.pressure, 0x01U);
+
+  TEST_ASSERT_EQ_UINT(mfg_store_erase(), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_NOT_FOUND);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&got), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(got.rtd, 0xFFU);
+  TEST_ASSERT_EQ_UINT(got.pressure, 0xFFU);
+
+  // The hex build's order: variant, then serial number.
+  TEST_ASSERT_EQ_UINT(mfg_store_write_sensor_variant(&v), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_write_device_sn(sn_b), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_device_sn(out, sizeof(out)), SL_STATUS_OK);
+  TEST_ASSERT_EQ_MEM(out, sn_b, DEVICE_SN_STR_SIZE);
+  TEST_ASSERT_EQ_UINT(mfg_store_read_sensor_variant(&got), SL_STATUS_OK);
+  TEST_ASSERT_EQ_UINT(got.rtd, 0x01U);
+}
+
 int main(void)
 {
   TEST_RUN(test_slot_layout);
@@ -356,5 +551,13 @@ int main(void)
   TEST_RUN(test_page_blank);
   TEST_RUN(test_erase_then_rewrite);
   TEST_RUN(test_erase_failure);
+  TEST_RUN(test_variant_layout);
+  TEST_RUN(test_variant_erased);
+  TEST_RUN(test_variant_write_and_read);
+  TEST_RUN(test_variant_combinations);
+  TEST_RUN(test_variant_no_overwrite);
+  TEST_RUN(test_variant_rejects);
+  TEST_RUN(test_variant_write_failure);
+  TEST_RUN(test_variant_with_serial_number);
   return TEST_SUMMARY();
 }

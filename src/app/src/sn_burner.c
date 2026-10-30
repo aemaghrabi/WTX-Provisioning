@@ -11,6 +11,7 @@
 #include "app_log.h"
 #include "device_sn.h"
 #include "mfg_store.h"
+#include "sensor_variant.h"
 
 #include "sn_burner.h"
 #include "xbee_provision.h"
@@ -53,6 +54,30 @@ _Static_assert(sizeof(build_yyww_text) == (DEVICE_SN_YYWW_DIGITS + 1U),
                "SN_BURNER_BUILD_YYWW must be exactly four digits, for example 2641");
 #endif
 
+#if defined(SN_BURNER_RTD) && defined(SN_BURNER_PRESSURE)
+_Static_assert(((SN_BURNER_RTD) == SENSOR_VARIANT_RTD_ABSENT)
+               || ((SN_BURNER_RTD) == SENSOR_VARIANT_RTD_PRESENT),
+               "SN_BURNER_RTD must be 0 (absent) or 1 (present)");
+_Static_assert(((SN_BURNER_PRESSURE) == SENSOR_VARIANT_PRESSURE_NONE)
+               || ((SN_BURNER_PRESSURE) == SENSOR_VARIANT_PRESSURE_1_5VDC),
+               "SN_BURNER_PRESSURE must be 0 (none) or 1 (1-5VDC); Modbus and "
+               "mV bridge are reserved and are never written");
+
+/// The sensor variant this image writes.
+static const sensor_variant_t build_variant = {
+  (uint8_t)(SN_BURNER_RTD),
+  (uint8_t)(SN_BURNER_PRESSURE),
+};
+#else
+/// No sensor variant in this image. Only the provisioning build calls this
+/// module, and app.c refuses to build that one without it. Erased bytes fail
+/// sensor_variant_validate(), so nothing would be written.
+static const sensor_variant_t build_variant = {
+  SENSOR_VARIANT_UNSET,
+  SENSOR_VARIANT_UNSET,
+};
+#endif
+
 /// True once the step has run, either way.
 static bool finished;
 
@@ -78,6 +103,8 @@ static sl_status_t build_week(uint16_t *yyww, const char **source)
  ******************************************************************************/
 static void report_before_erase(void)
 {
+  sensor_variant_t held;
+
   char stored[DEVICE_SN_STR_SIZE];
   char shown[DEVICE_SN_STR_SIZE];
   bool blank = false;
@@ -91,6 +118,15 @@ static void report_before_erase(void)
   } else {
     APP_LOG_INFO("erasing USERDATA (it held no serial number, but was not "
                  "blank)");
+  }
+
+  if ((mfg_store_read_sensor_variant(&held) == SL_STATUS_OK)
+      && ((held.rtd != SENSOR_VARIANT_UNSET)
+          || (held.pressure != SENSOR_VARIANT_UNSET))) {
+    APP_LOG_INFO("the erased sensor variant was RTD %s (0x%02X), pressure %s "
+                 "(0x%02X)", sensor_variant_rtd_name(held.rtd),
+                 (unsigned)held.rtd, sensor_variant_pressure_name(held.pressure),
+                 (unsigned)held.pressure);
   }
 }
 
@@ -137,6 +173,22 @@ static bool burn(void)
   APP_LOG_INFO("serial number %s, week %04u from the %s",
                sn, (unsigned)yyww, week_source);
 
+  // Checked before anything is erased, so that an image with a variant that
+  // cannot be written leaves the unit as it was.
+  if (sensor_variant_validate(&build_variant) != SL_STATUS_OK) {
+    APP_LOG_ERROR("serial number not written: the sensor variant built into "
+                  "this image (rtd=0x%02X pressure=0x%02X) is not one that may "
+                  "be written", (unsigned)build_variant.rtd,
+                  (unsigned)build_variant.pressure);
+    return false;
+  }
+
+  APP_LOG_INFO("sensor variant RTD %s (0x%02X), pressure %s (0x%02X)",
+               sensor_variant_rtd_name(build_variant.rtd),
+               (unsigned)build_variant.rtd,
+               sensor_variant_pressure_name(build_variant.pressure),
+               (unsigned)build_variant.pressure);
+
   // Flash cannot be rewritten in place, so every run starts from an erased
   // page. Flash is erased a page at a time: everything in USERDATA goes.
   report_before_erase();
@@ -146,6 +198,18 @@ static bool burn(void)
                   "status 0x%04X", (unsigned)status);
     return false;
   }
+
+  // The variant goes in before the serial number, which is the last thing
+  // written: a unit that has a serial number therefore has its variant too.
+  status = mfg_store_write_sensor_variant(&build_variant);
+  if (status != SL_STATUS_OK) {
+    APP_LOG_ERROR("serial number not written: the sensor variant could not be "
+                  "written, status 0x%04X", (unsigned)status);
+    return false;
+  }
+
+  APP_LOG_INFO("sensor variant written: rtd=0x%02X pressure=0x%02X",
+               (unsigned)build_variant.rtd, (unsigned)build_variant.pressure);
 
   status = mfg_store_write_device_sn(sn);
   if (status != SL_STATUS_OK) {

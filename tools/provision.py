@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Build the provisioning image for one unit, which writes its device serial number.
+"""Build the provisioning image for one unit, which writes its serial number and sensor variant.
 
 The provisioning firmware (XBEE_APP_PROVISION) configures the XBee module and,
-once that has passed, writes the device serial number FFYYWWSSSSSC to its slot
-in the MCU's USERDATA flash page, at 0x0FE0008C (src/app/inc/sn_burner.h).
-Every image carries one serial number, so it is built per unit:
+once that has passed, writes two things to the MCU's USERDATA flash page
+(src/app/inc/sn_burner.h): the sensor hardware variant, two bytes at
+0x0FE00110 (RTD) and 0x0FE00111 (pressure sensor type), and last the device
+serial number FFYYWWSSSSSC to its slot at 0x0FE0008C. Every image carries one
+serial number and one variant, so it is built per unit:
 
-    python tools/provision.py --family 18 --sequence 00123
+    python tools/provision.py --family 18 --sequence 00123 --rtd present --pressure 1-5vdc
 
 - FF is the --family argument, the product family code.
 - YYWW is the ISO week-numbering year and ISO week of today's date on this
   machine, which is the build date of the image.
 - SSSSS is the --sequence argument.
 - C is the ISO 7064 MOD 11-10 check digit over FFYYWWSSSSS.
+- --rtd is present or absent: whether the unit has a 3-wire PT100 fitted.
+- --pressure is none or 1-5vdc: which single pressure sensor the unit has. The
+  Modbus and mV bridge types are reserved by the contract and are not accepted
+  until WTX-FW supports them.
+- Both are required: a byte left unwritten is read by WTX-FW as "not fitted".
 
 The image is built in its own directory (cmake_gcc/build-provision by default),
 so the normal console build in cmake_gcc/build is left alone, and a copy named
@@ -23,7 +30,8 @@ board's log. Answering yes flashes it with Simplicity Commander (no mass erase;
 the image does not cover USERDATA, so only the firmware writes the serial
 number), reads the VCOM log at 115200 baud and waits for the firmware's result
 line. Before writing, the firmware erases the whole USERDATA page on every run:
-anything stored there, an earlier serial number included, is lost. That step
+anything stored there, an earlier serial number or sensor variant included, is
+lost. That step
 needs --port and pyserial (python -m pip install -r tools/requirements.txt).
 
 Exit codes:
@@ -32,7 +40,8 @@ Exit codes:
     2  configuring or building failed
     3  flashing failed
     4  the board reported that the serial number was not written
-    5  the board wrote a different serial number than this script expected
+    5  the board wrote a different serial number or sensor variant than this
+       script expected, or reported a serial number without its variant
     6  timed out waiting for the board's result
 """
 
@@ -48,7 +57,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CMAKE_DIR = REPO_ROOT / "cmake_gcc"
@@ -69,10 +78,16 @@ YEAR_MAX = 2099
 FAMILY_RE = re.compile(r"\d{2}")
 SEQUENCE_RE = re.compile(r"\d{5}")
 SN_RE = re.compile(r"\d{12}")
+# The values of the sensor variant bytes, as in src/utils/inc/sensor_variant.h.
+# Only the values WTX-FW supports today; the reserved pressure types (Modbus
+# 0x02, mV bridge 0x03) are left out on purpose, so argparse refuses them.
+RTD_VALUES = {"absent": 0, "present": 1}
+PRESSURE_VALUES = {"none": 0, "1-5vdc": 1}
 # The firmware's terminal lines (src/app/src/sn_burner.c). "not written" is
 # matched first; it does not contain "serial number written" anyway.
 NOT_WRITTEN_RE = re.compile(r"serial number not written: (.*)")
 WRITTEN_RE = re.compile(r"serial number written: (\d{12})")
+VARIANT_RE = re.compile(r"sensor variant written: rtd=0x([0-9A-Fa-f]{2}) pressure=0x([0-9A-Fa-f]{2})")
 # The log colours its lines with ANSI escape sequences (app_log_config.h).
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
@@ -181,7 +196,8 @@ def find_commander(explicit: Optional[str]) -> Optional[Path]:
     return None
 
 
-def check_defines(build_dir: Path, family: str, sequence: str, yyww: str) -> Optional[str]:
+def check_defines(build_dir: Path, family: str, sequence: str, yyww: str,
+                  rtd: int, pressure: int) -> Optional[str]:
     """Confirm the build inputs reached the compiler. Return a problem, or None.
 
     Reads the compile database the configure step was asked for, so that a
@@ -197,6 +213,8 @@ def check_defines(build_dir: Path, family: str, sequence: str, yyww: str) -> Opt
         f"-DSN_BURNER_FAMILY={family}",
         f"-DSN_BURNER_SEQUENCE={sequence}",
         f"-DSN_BURNER_BUILD_YYWW={yyww}",
+        f"-DSN_BURNER_RTD={rtd}",
+        f"-DSN_BURNER_PRESSURE={pressure}",
     )
     for entry in json.loads(database.read_text(encoding="utf-8")):
         if entry.get("file", "").replace("\\", "/").endswith("/src/app/src/sn_burner.c"):
@@ -218,10 +236,24 @@ def ask_yes_no(question: str) -> bool:
     return answer.strip().lower() in ("y", "yes")
 
 
-def watch_log(port, expected_sn: str, timeout_s: float) -> int:
-    """Echo the board's log until its serial number result line, or the timeout."""
+def format_variant(variant: Optional[Tuple[int, int]]) -> str:
+    """Describe the two variant bytes for a message; None means none was reported."""
+    if variant is None:
+        return "none"
+    return f"rtd=0x{variant[0]:02X} pressure=0x{variant[1]:02X}"
+
+
+def watch_log(port, expected_sn: str, expected_variant: Tuple[int, int],
+              timeout_s: float) -> int:
+    """Echo the board's log until its serial number result line, or the timeout.
+
+    The firmware writes the sensor variant before the serial number, so its line
+    must have been seen, with the expected bytes, by the time the serial number
+    is reported written.
+    """
     deadline = time.monotonic() + timeout_s
     pending = b""
+    variant_seen: Optional[Tuple[int, int]] = None
 
     while time.monotonic() < deadline:
         chunk = port.read(256)
@@ -238,10 +270,21 @@ def watch_log(port, expected_sn: str, timeout_s: float) -> int:
                 print(f"FAIL: the board did not write the serial number: {match.group(1)}")
                 return EXIT_NOT_WRITTEN
 
+            match = VARIANT_RE.search(line)
+            if match:
+                variant_seen = (int(match.group(1), 16), int(match.group(2), 16))
+                continue
+
             match = WRITTEN_RE.search(line)
             if match:
+                if variant_seen != expected_variant:
+                    print("FAIL: the board reported the serial number written, but the sensor "
+                          f"variant it wrote was {format_variant(variant_seen)}, "
+                          f"expected {format_variant(expected_variant)}")
+                    return EXIT_MISMATCH
                 if match.group(1) == expected_sn:
-                    print(f"PASS: serial number {expected_sn} written and verified by the board")
+                    print(f"PASS: serial number {expected_sn} and sensor variant "
+                          f"{format_variant(expected_variant)} written and verified by the board")
                     return EXIT_OK
                 print(f"FAIL: the board wrote {match.group(1)}, expected {expected_sn}")
                 return EXIT_MISMATCH
@@ -250,7 +293,8 @@ def watch_log(port, expected_sn: str, timeout_s: float) -> int:
     return EXIT_TIMEOUT
 
 
-def flash_and_watch(args: argparse.Namespace, image: Path, expected_sn: str) -> int:
+def flash_and_watch(args: argparse.Namespace, image: Path, expected_sn: str,
+                    expected_variant: Tuple[int, int]) -> int:
     """Flash the image, then watch the log for the serial number result."""
     if not args.port:
         return fail("--port is needed to watch the log, for example --port COM5", EXIT_USAGE)
@@ -283,18 +327,24 @@ def flash_and_watch(args: argparse.Namespace, image: Path, expected_sn: str) -> 
             return fail("flashing failed", EXIT_FLASH)
 
         print(f"Watching {args.port} at {LOG_BAUD} baud for up to {args.timeout:.0f} s...")
-        return watch_log(port, expected_sn, args.timeout)
+        return watch_log(port, expected_sn, expected_variant, args.timeout)
 
 
 def parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Build the provisioning image for one unit, which writes its "
-                    "device serial number FFYYWWSSSSSC to MCU USERDATA.")
+                    "device serial number FFYYWWSSSSSC and its sensor hardware "
+                    "variant to MCU USERDATA.")
     parser.add_argument("--family", required=True,
                         help="the FF part, the product family code: exactly two digits, "
                              "for example 18")
     parser.add_argument("--sequence", required=True,
                         help="the SSSSS part: exactly five digits, for example 00123")
+    parser.add_argument("--rtd", required=True, choices=sorted(RTD_VALUES),
+                        help="whether a 3-wire PT100 is fitted to this unit")
+    parser.add_argument("--pressure", required=True, choices=sorted(PRESSURE_VALUES),
+                        help="the pressure sensor fitted to this unit (one at most); "
+                             "Modbus and mV bridge are reserved and not accepted yet")
     parser.add_argument("--build-dir", type=Path, default=DEFAULT_BUILD_DIR,
                         help="build directory (default: %(default)s)")
     parser.add_argument("--port",
@@ -343,9 +393,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     # result before it is built into an image.
     if not sn_is_valid(expected_sn):
         return fail(f"internal error: {expected_sn} fails its own check", EXIT_USAGE)
+    rtd = RTD_VALUES[args.rtd]
+    pressure = PRESSURE_VALUES[args.pressure]
     build_dir = args.build_dir.resolve()
 
     print(f"Serial number  {expected_sn}  (week {yyww} from the build date, {today.isoformat()})")
+    print(f"Sensor variant RTD {args.rtd} (0x{rtd:02X}), pressure {args.pressure} (0x{pressure:02X})")
     print(f"Build dir      {build_dir}")
     print()
 
@@ -354,6 +407,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                  f"-DSN_BURNER_FAMILY={family}",
                  f"-DSN_BURNER_SEQUENCE={sequence}",
                  f"-DSN_BURNER_BUILD_YYWW={yyww}",
+                 f"-DSN_BURNER_RTD={rtd}",
+                 f"-DSN_BURNER_PRESSURE={pressure}",
                  # For check_defines().
                  "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"]
     if run(configure, CMAKE_DIR) != 0:
@@ -364,7 +419,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if run(build, CMAKE_DIR) != 0:
         return fail("building failed", EXIT_BUILD)
 
-    problem = check_defines(build_dir, family, sequence, yyww)
+    problem = check_defines(build_dir, family, sequence, yyww, rtd, pressure)
     if problem:
         return fail(problem, EXIT_BUILD)
 
@@ -379,6 +434,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     print()
     print(f"Serial number  {expected_sn}")
+    print(f"Sensor variant RTD {args.rtd}, pressure {args.pressure}")
     print(f"Image          {image}")
     print()
 
@@ -386,7 +442,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("Not flashed.")
         return EXIT_OK
 
-    return flash_and_watch(args, image, expected_sn)
+    return flash_and_watch(args, image, expected_sn, (rtd, pressure))
 
 
 if __name__ == "__main__":

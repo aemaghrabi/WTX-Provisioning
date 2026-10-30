@@ -24,7 +24,7 @@
 #include "xbee_provision.h"
 
 /// Configure the XBee module from xbee_provision_config.h, verify it, then
-/// write the device serial number to MCU NVM3.
+/// write the sensor variant and the device serial number to MCU USERDATA.
 #define XBEE_APP_PROVISION  1
 
 /// Only detect the module and report what it is, changing nothing.
@@ -70,6 +70,13 @@
 #endif
 #if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_SEQUENCE)
 #error "The provisioning build needs the serial number's sequence part. Build it with tools/provision.py --sequence SSSSS, or configure with -DSN_BURNER_SEQUENCE=SSSSS."
+#endif
+// Likewise the sensor variant: a unit left without it reads no sensor at all.
+#if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_RTD)
+#error "The provisioning build needs the RTD setting. Build it with tools/provision.py --rtd present|absent, or configure with -DSN_BURNER_RTD=1 (present) or 0 (absent)."
+#endif
+#if (XBEE_APP == XBEE_APP_PROVISION) && !defined(SN_BURNER_PRESSURE)
+#error "The provisioning build needs the pressure sensor setting. Build it with tools/provision.py --pressure none|1-5vdc, or configure with -DSN_BURNER_PRESSURE=1 (1-5VDC) or 0 (none)."
 #endif
 
 /***************************************************************************//**

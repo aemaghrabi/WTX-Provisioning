@@ -59,4 +59,15 @@ void cli_show_info(void);
  ******************************************************************************/
 void cli_show_device_sn(void);
 
+/***************************************************************************//**
+ * Print the sensor hardware variant stored in the USERDATA flash page, for
+ * "show device sensor-variant".
+ *
+ * Synchronous: one flash read, nothing sent to the module. Prints the RTD byte
+ * and the pressure sensor byte with their meaning. An erased byte is shown as
+ * "not set" and noted as not populated, which is how WTX-FW reads it; a byte
+ * holding anything this firmware would not write is flagged.
+ ******************************************************************************/
+void cli_show_sensor_variant(void);
+
 #endif  // CLI_SHOW_H
