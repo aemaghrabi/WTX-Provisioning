@@ -21,9 +21,10 @@ The provisioning firmware is responsible for:
    parameter the module stores and ships holding the factory defaults. See
    [XBee radio configuration](#xbee-radio-configuration).
 4. **Write MCU NVM data** -- store provisioning data on the EFM32 that the main firmware reads at
-   runtime. Implemented for the device serial number (in the USERDATA page), not yet run on
-   hardware; see
-   [Device serial number](#device-serial-number). Other data: **TBD**.
+   runtime. Implemented for the device serial number and the sensor hardware variant (both in the
+   USERDATA page), not yet run on hardware; see
+   [Device serial number](#device-serial-number) and
+   [Sensor hardware variant](#sensor-hardware-variant). Other data: **TBD**.
 5. **Report the result** -- over a UART log to a PC and via the debugger (RTT). Details: **TBD**.
 
 Out of scope: the main product firmware itself, and loading it. After provisioning, the main
@@ -151,7 +152,7 @@ the serial number in NVM3, which this firmware no longer reads or writes.
 **Provisioning (hex) build.** Each image carries one serial number, so it is built per unit:
 
 ```sh
-python tools/provision.py --family 18 --sequence 00123
+python tools/provision.py --family 18 --sequence 00123 --rtd present --pressure 1-5vdc
 ```
 
 The script builds the `PROVISION` variant in `cmake_gcc/build-provision/`, leaving the normal build
@@ -160,10 +161,13 @@ then asks whether to flash it and watch the log; answering yes flashes it with S
 and waits for the board's result line. That step needs `--port COMx` and pyserial
 (`python -m pip install -r tools/requirements.txt`); `python tools/provision.py --help` lists every
 option. On the board, the serial number is written only after the XBee configuration has passed.
-Every run first erases the whole USERDATA page, logging what it held, then writes and reads the
-serial number back. The run ends with one log line,
-`serial number written: FFYYWWSSSSSC` or `serial number not written: <reason>`. Configuring the
-`PROVISION` variant without `-DSN_BURNER_FAMILY` or `-DSN_BURNER_SEQUENCE` fails the build on
+Every run first erases the whole USERDATA page, logging what it held, then writes the
+[sensor variant](#sensor-hardware-variant) and, last, the serial number, reading each back. The run
+ends with one log line,
+`serial number written: FFYYWWSSSSSC` or `serial number not written: <reason>`; the line
+`sensor variant written: rtd=0x.. pressure=0x..` comes before it. Configuring the
+`PROVISION` variant without `-DSN_BURNER_FAMILY`, `-DSN_BURNER_SEQUENCE`, `-DSN_BURNER_RTD` or
+`-DSN_BURNER_PRESSURE` fails the build on
 purpose.
 
 **Console (CLI) build.**
@@ -187,6 +191,39 @@ stored value, `not set`, or what is wrong with it (malformed, wrong check digit,
 `erase device userdata` (privileged EXEC) erases the whole USERDATA page, the same as
 `commander device pageerase --region @userdata`. It names the serial number it is about to remove
 and asks first; only `y` or `yes` erases. It does nothing when the page is already blank.
+
+### Sensor hardware variant
+
+The production firmware (WTX-FW) is one binary for every assembly variant. Two bytes in USERDATA
+tell it which sensors this unit has, so that it reads only those and drives only the hardware that
+belongs to them. The two settings are independent: the RTD, and at most one pressure sensor type.
+Design: `docs/plan/2026-10-30-sensor-variant-userdata.md`.
+
+| Byte | Address | Value | Meaning |
+| --- | --- | --- | --- |
+| RTD | `0x0FE00110` | `0x00` | Not fitted (`absent`) |
+| RTD | `0x0FE00110` | `0x01` | 3-wire PT100 fitted (`present`) |
+| Pressure sensor | `0x0FE00111` | `0x00` | None (`none`) |
+| Pressure sensor | `0x0FE00111` | `0x01` | 1-5VDC (`1-5vdc`) |
+| Pressure sensor | `0x0FE00111` | `0x02`, `0x03` | Modbus, mV bridge: reserved, never written by this firmware |
+| Either | | `0xFF` | Erased: WTX-FW reads it as not fitted |
+
+A byte that is left at `0xFF` makes WTX-FW treat that sensor as absent, so both settings are always
+given together, on the console and to `tools/provision.py` (`--rtd present|absent`,
+`--pressure none|1-5vdc`). The bytes `0x108` to `0x10F` are kept free and never written. Both
+bytes are programmed in one flash word, once between erases, and only while both are still erased.
+
+```text
+xbee(config)# device sensor-variant rtd present pressure 1-5vdc
+xbee(config)# end
+xbee# show device sensor-variant
+```
+
+`device sensor-variant` shows the variant, and writes it after a `y` or `yes`. When either byte is
+already written it writes nothing and says to run `erase device userdata` first. It does not touch
+the serial number, so a unit that already has one can be given its variant without an erase.
+`show device sensor-variant` reports each byte, noting `not set` for `0xFF`. `erase device userdata`
+names the variant it is about to remove.
 
 ### Repository layout
 
@@ -248,8 +285,9 @@ The test build finds `sl_status.h` through `SDK_PATH`, which it reads from the g
 Flow for each new board (procedure details **TBD**):
 
 1. Connect the board to a debug probe (SWD) and, for the log, to a PC UART.
-2. Build the board's own provisioning image with `python tools/provision.py --family FF --sequence SSSSS`
-   (see [Device serial number](#device-serial-number)), and flash it over SWD, either from the
+2. Build the board's own provisioning image with `python tools/provision.py --family FF --sequence SSSSS --rtd present|absent --pressure none|1-5vdc`
+   (see [Device serial number](#device-serial-number) and
+   [Sensor hardware variant](#sensor-hardware-variant)), and flash it over SWD, either from the
    script's prompt or with Simplicity Commander.
 3. Let the board run provisioning; observe the result on the UART log or via RTT. A pass ends with
    `serial number written: FFYYWWSSSSSC`.

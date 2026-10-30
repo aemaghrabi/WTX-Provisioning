@@ -219,6 +219,14 @@ Unicode text character (for example `->`/`→`, `×`, `±`, `°`, `µ`, `Ω`) or
   `src/utils/inc/device_sn.h`). Replacing it erases the whole 1 kB USERDATA page
   (`erase device userdata`; the PROVISION image does so on every run). Plan:
   `docs/plan/2026-10-29-sn-userdata-storage.md`.
+- **Sensor hardware variant:** two bytes in the same USERDATA page, read by WTX-FW: RTD at
+  `0x0FE00110` (`0x00` absent, `0x01` present) and pressure sensor type at `0x0FE00111` (`0x00`
+  none, `0x01` 1-5VDC; `0x02` Modbus and `0x03` mV bridge are reserved and never written). `0xFF`
+  reads as "not fitted", and `0x108` to `0x10F` are never written. Both bytes go in one flash word,
+  only while both are erased (`src/utils/inc/sensor_variant.h`, `src/services/inc/mfg_store.h`).
+  The PROVISION image needs `SN_BURNER_RTD` and `SN_BURNER_PRESSURE` (`tools/provision.py --rtd
+  --pressure`) and writes the variant before the serial number. Plan:
+  `docs/plan/2026-10-30-sensor-variant-userdata.md`.
 - **NVM3:** default instance shared with the production firmware (WTX-FW). Its configuration in
   `config/nvm3_default_config.h` (40960 bytes, cache 200, max object 254, headroom 0) must stay
   identical to WTX-FW's, so both images find it at `0x080F4000`. Keys `0x00001` and `0x00002`

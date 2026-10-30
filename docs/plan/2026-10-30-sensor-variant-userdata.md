@@ -1,8 +1,8 @@
 # Plan: sensor hardware variant in USERDATA (contract Part 2)
 
-Status: Approved
+Status: In progress (all phases implemented; host tests pass, firmware compiles; full link and on-target verification pending)
 Date: 2026-10-30
-Related history: `docs/history/2026-10-30-sensor-variant-phaseN.md` (one per phase)
+Related history: `docs/history/2026-10-30-sensor-variant.md` (one entry for all phases)
 Builds on: `docs/plan/2026-10-29-sn-userdata-storage.md` (USERDATA driver, `mfg_store`, erase command)
 
 ## Context
